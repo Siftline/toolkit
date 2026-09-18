@@ -13,7 +13,8 @@ elsewhere and is not open source.
 | `@siftline/actions` | Adapters that carry a decision somewhere (webhook, Slack, email). |
 
 `@siftline/ui` and `@siftline/config` are private: they are consumed just-in-time from
-source inside this repo and are never published.
+source inside this repo and are never published. `config` holds what every package
+shares — the tsconfig bases, the Vitest base and the tsdown base.
 
 Nothing is released yet. Docs will live at [docs.siftline.dev](https://docs.siftline.dev).
 
@@ -40,7 +41,8 @@ future dependency needs one, add it there and say so here.
 bun run check   # turbo run build lint typecheck test format:check
 ```
 
-Every package exposes the same names, so you never have to look one up:
+The three published packages and `apps/docs` expose the same names, so you never have to
+look one up:
 
 | Script      | What it does                                                   |
 | ----------- | -------------------------------------------------------------- |
@@ -48,8 +50,14 @@ Every package exposes the same names, so you never have to look one up:
 | `dev`       | Watch mode.                                                    |
 | `lint`      | `oxlint --type-aware --deny-warnings`.                         |
 | `lint:fix`  | The same, with `--fix`.                                        |
-| `typecheck` | `tsc --noEmit` — the TypeScript 7 (Go) compiler.               |
+| `typecheck` | `tsc --noEmit` — TypeScript 7 (Go), except in `apps/docs`.     |
 | `test`      | Vitest, colocated `src/**/*.test.ts`, no globals, no coverage. |
+
+`@siftline/ui` and `@siftline/config` do not have all of them, and should not. They are
+private and consumed just-in-time from source: nothing bundles them, nothing watches them
+and neither has a test, so `build`, `dev` and `test` would be scripts that do nothing. Both
+carry `lint`, `lint:fix` and `typecheck`, which is all there is to run. `apps/docs` adds
+`api` (typedoc), `preview` and `deploy` on top of the shared six.
 
 Formatting is root-only, because there is one config for the repo:
 
@@ -93,8 +101,18 @@ on it. The single permitted escape hatch: a package **may pin `typescript@6.0.x`
 a `devDependency`, and only when a tool it runs imports the compiler API**. The pin must
 carry a comment naming that tool. Today that is exactly one package — `apps/docs`, for
 typedoc. The pin is devDependency-only: it may never appear in a published package's
-`dependencies`, and it never emits types. Every `typescript` entry in a `package.json` is
-therefore a declared, greppable escape hatch rather than drift.
+`dependencies`, and it never emits anything that is published. Every `typescript` entry in
+a `package.json` is therefore a declared, greppable escape hatch rather than drift.
+
+**That pin has a second, deliberate consequence: `apps/docs` is not checked by TypeScript 7.** Its `typecheck` script is `tsc --noEmit`, and the nearest `tsc` to `apps/docs` is the
+one its own `typescript@6.0.3` installs, so the docs app is typechecked by the JavaScript
+compiler at 6.0 semantics while everything else in the repo is checked by `tsgo` at 7.0.
+Nothing published passes through it — `apps/docs` is private and emits no types — so the
+blast radius is the docs app's own source, and a 6-to-7 difference there shows up as a
+failure the first time the app is moved onto 7. It is the price of having typedoc, and it
+is the reason "no `typescript` other than 7.0.2 appears in any `package.json`" is true of
+every package **except** `apps/docs`. If you need to know which compiler a package is
+about to run, `cd` into it and ask: `./node_modules/.bin/tsc --version`.
 
 `build` and `typecheck` are siblings, never a chain: declarations are emitted with
 `--noCheck`, so a green `build` is not a typecheck. `bun run check` and CI cover both.

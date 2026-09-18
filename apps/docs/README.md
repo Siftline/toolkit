@@ -9,13 +9,50 @@ The Siftline documentation site: [Fumadocs](https://fumadocs.dev) on
 
 | Script      | What it does                                                        |
 | ----------- | ------------------------------------------------------------------- |
+| `api`       | typedoc, regenerating `content/docs/api` from core's source.        |
 | `dev`       | Vite dev server on port 3000.                                       |
 | `build`     | `vite build`, then copies `_shell.html` to `index.html`.            |
 | `preview`   | `wrangler dev` over `.output/public`, the way Cloudflare serves it. |
 | `test`      | Vitest assertions over the built `.output/public`.                  |
-| `typecheck` | `tsc --noEmit`.                                                     |
+| `typecheck` | `tsc --noEmit` — on TypeScript **6.0.3** here, see below.           |
 | `lint`      | `oxlint --type-aware --deny-warnings`.                              |
+| `lint:fix`  | The same, with `--fix`.                                             |
 | `deploy`    | `wrangler deploy`.                                                  |
+
+`api` is a Turborepo task rather than something you usually run by hand: `build` depends on
+it, and it declares `packages/core/src/**` as an input, so changed Engine source regenerates
+the API pages before the site is built.
+
+## Three dependency lines worth knowing about
+
+**`typescript` is pinned to `6.0.3`, and that also decides what typechecks this app.**
+typedoc imports the TypeScript JavaScript compiler API, which the 7.0.2 package does not
+ship (ADR 0004, summarised in the [root README](../../README.md)). The pin is a
+devDependency and nothing published comes out of it — but the nearest `tsc` to this package
+is that one, so `bun run typecheck` here runs the 6.0 compiler with 6.0 semantics. The rest
+of the repo is checked by `tsgo` at 7.0. In other words: "no `typescript` other than 7.0.2
+appears in any `package.json`" holds everywhere **except** here, and this app is the one
+place TypeScript 7 semantics are not enforced. `./node_modules/.bin/tsc --version` prints
+`6.0.3` and settles the question.
+
+**`fumadocs-ui` is an npm alias, not the package of that name.** `package.json` declares
+`"fumadocs-ui": "npm:@fumadocs/base-ui@16.15.11"`. Fumadocs 16 is built on Base UI and ships
+its UI layer as `@fumadocs/base-ui`; the alias keeps the import specifier every Fumadocs
+template, doc and code sample uses (`fumadocs-ui/layouts/docs`, `fumadocs-ui/css/preset.css`)
+pointing at it. It came from `create-fumadocs-app`'s `tanstack-start-spa` template and is
+deliberate. The version still matches `fumadocs-core` exactly, as the pinned-version table
+requires — the name is what differs, so grep for `@fumadocs/base-ui` as well when auditing.
+
+**oxfmt sorts Tailwind classes against `src/styles/app.css`, not `packages/ui`.** The repo's
+spec asked for the global stylesheet in `packages/ui`, on the assumption this app would
+consume it. It does not: this app's stylesheet pulls in Tailwind plus the Fumadocs preset,
+and every `className` in the repo is in this app. Sorting against `packages/ui` left the
+Fumadocs utilities (`text-fd-muted-foreground`, `bg-fd-primary`, …) unknown to the sorter,
+so they were parked at the front of the class string instead of taking their place in
+Tailwind's order. Importing `@siftline/ui`'s tokens here instead was tried first and
+rejected: its `@theme` block redefines `--font-sans` and `--font-mono`, which visibly
+changes the site's typography. `.oxfmtrc.json` therefore points at `app.css`, and
+`packages/ui` stays unused until something here actually needs it.
 
 ## How the static build works
 

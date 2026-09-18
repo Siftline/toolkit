@@ -9,6 +9,11 @@
   "options": {
     "typeAware": true
   },
+  // `builtin` is oxlint's default and is restated only for clarity. `node` is load-bearing
+  // and was checked rather than assumed: `no-global-assign` (a correctness rule) only knows
+  // a name is a read-only global if some `env` declares it, so with `node` removed,
+  // `process = 1`, `console = 2` and `Buffer = 3` all lint clean. With it, all three are
+  // errors. Everything here runs on Node, so this stays.
   "env": {
     "builtin": true,
     "node": true
@@ -36,7 +41,14 @@
       }
     },
     {
-      // `_splat` is TanStack Router's own name for a wildcard route parameter.
+      // `_splat` is TanStack Router's own name for a wildcard route parameter, and reading
+      // `params._splat` is the only way to get at it.
+      //
+      // Not dead config, despite `no-underscore-dangle` being a `style` rule in ESLint: in
+      // oxlint 1.83.0 it is in the `suspicious` category, which this file denies. Checked,
+      // not assumed — `oxlint --print-config` lists it as `deny`, and removing this block
+      // fails `lint` with two errors in `src/routes/docs/$.tsx` and
+      // `src/routes/docs/{$}[.]md.ts`.
       "files": ["apps/docs/**"],
       "rules": {
         "no-underscore-dangle": "off"
