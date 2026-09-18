@@ -1,0 +1,173 @@
+name: Release
+
+# Releases follow a green trunk: this runs only after CI itself succeeded on `main`,
+# never in parallel with the build that produced the commit. `workflows:` matches
+# ci.yml's `name:`, not its filename — keep the two in sync.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+
+# No blanket grant: every job below asks for exactly what it needs.
+permissions: {}
+
+# One release at a time, and never cancelled: a half-published run would leave npm and
+# the git tags disagreeing.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  # Are there changesets waiting (-> open the version PR) or a versioned commit ready
+  # to go out (-> pack and publish)?
+  select-mode:
+    name: select mode
+    # `workflow_run` fires for failures too, and for every branch, so the conclusion and
+    # branch guards are load-bearing.
+    #
+    # The head_sha/github.sha guard: under `workflow_run` the changesets sub-actions
+    # create refs from `github.sha`, which is the head of the default branch — not
+    # necessarily the commit CI verified. They are the same commit unless main moved
+    # while CI was running. When they differ, skip: that newer commit's own CI run
+    # triggers a fresh release.
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_sha == github.sha
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      mode: ${{ steps.select-mode.outputs.mode }}
+      publish-plan-artifact-id: ${{ steps.select-mode.outputs.publish-plan-artifact-id }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+
+      # With no version input, setup-bun reads `packageManager` from package.json.
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      # No `registry-url`: it writes an .npmrc that sends npm down the token path and
+      # silently skips the OIDC exchange that trusted publishing needs.
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+
+      - name: Install (frozen lockfile)
+        run: bun ci
+
+      - name: Select mode
+        id: select-mode
+        uses: changesets/action/select-mode@v2.1.2
+
+  # Changesets are queued: open or update the "Version Packages" pull request.
+  version:
+    name: version
+    needs: select-mode
+    if: needs.select-mode.outputs.mode == 'version'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # commit the bumps onto changeset-release/main
+      pull-requests: write # open or update the version PR
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+
+      - name: Install (frozen lockfile)
+        run: bun ci
+
+      # `github.ref_name` under workflow_run is the default branch, so the default base
+      # is already right — set it anyway so the file does not depend on that.
+      - name: Version packages
+        uses: changesets/action/version@v2.1.2
+        with:
+          pr-base-branch: main
+
+  # No changesets left: the version PR has landed, so pack the tarballs to publish.
+  pack:
+    name: pack
+    needs: select-mode
+    if: needs.select-mode.outputs.mode == 'publish'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      pack-dir-artifact-id: ${{ steps.pack.outputs.pack-dir-artifact-id }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+
+      - name: Install (frozen lockfile)
+        run: bun ci
+
+      # `files: ["dist"]`, so npm pack needs the build to have run.
+      - name: Build
+        run: bun run build
+
+      - name: Pack
+        id: pack
+        uses: changesets/action/pack@v2.1.2
+        with:
+          publish-plan-artifact-id: ${{ needs.select-mode.outputs.publish-plan-artifact-id }}
+
+  # The only job that can mint an OIDC token, and the only one that talks to npm.
+  publish:
+    name: publish
+    needs: pack
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # git tags and GitHub releases
+      id-token: write # npm trusted publishing (OIDC) — this job only
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+          persist-credentials: false
+
+      - name: Set up Bun
+        uses: oven-sh/setup-bun@v2
+
+      # Node 24 brings npm >= 11.5.1, which performs the OIDC exchange and attaches
+      # provenance by itself. There is no NPM_TOKEN in this repo and no `registry-url`
+      # here on purpose: either one would put npm back on the token path.
+      - name: Set up Node
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+
+      - name: Install (frozen lockfile)
+        run: bun ci
+
+      - name: Publish
+        uses: changesets/action/publish@v2.1.2
+        with:
+          pack-dir-artifact-id: ${{ needs.pack.outputs.pack-dir-artifact-id }}
