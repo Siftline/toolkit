@@ -15,9 +15,6 @@ function read(relativePath: string): string {
   return readFileSync(join(publicDir, relativePath), "utf8");
 }
 
-/**
- * Ticket 06 adds `docs/api/index.html` here once typedoc generates the API reference.
- */
 const requiredFiles = [
   // The SPA fallback Cloudflare serves for any route that was not prerendered.
   "index.html",
@@ -25,6 +22,9 @@ const requiredFiles = [
   "_shell.html",
   // A prerendered docs page, proving the crawl reached the content.
   "docs/index.html",
+  // The typedoc-generated API reference, proving the `api` task ran and its output was
+  // picked up by fumadocs-mdx and then prerendered like any hand-written page.
+  "docs/api/index.html",
   // The static Orama index, extensionless and served without a content type.
   "api/search",
 ];
@@ -49,5 +49,15 @@ describe("static output", () => {
 
   it("prerenders page content, not just the shell", () => {
     expect(read("docs/index.html")).toContain("@siftline/core");
+  });
+
+  it("generates the API reference from core's source", () => {
+    // The symbol only exists in `packages/core/src/index.ts`, so finding it here proves the
+    // whole typedoc chain, not just the file copy.
+    expect(read("docs/api/index.html")).toContain("PLACEHOLDER");
+  });
+
+  it("indexes the API reference for search", () => {
+    expect(read("api/search")).toContain("/docs/api");
   });
 });
