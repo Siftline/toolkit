@@ -44,7 +44,7 @@ Every package exposes the same names, so you never have to look one up:
 
 | Script      | What it does                                                   |
 | ----------- | -------------------------------------------------------------- |
-| `build`     | Bundle with tsdown (published packages only).                  |
+| `build`     | Bundle with tsdown; `apps/docs` prerenders to `.output`.       |
 | `dev`       | Watch mode.                                                    |
 | `lint`      | `oxlint --type-aware --deny-warnings`.                         |
 | `lint:fix`  | The same, with `--fix`.                                        |
@@ -67,6 +67,13 @@ enter this repo. Install the [oxc VS Code
 extension](https://marketplace.visualstudio.com/items?itemName=oxc.oxc-vscode) and
 `.vscode/settings.json` gives you fix-and-format on save, so formatting never becomes a
 commit.
+
+## Documentation site
+
+`apps/docs` builds the site behind [docs.siftline.dev](https://docs.siftline.dev): Fumadocs
+on TanStack Start, prerendered to static HTML and served by Cloudflare as static assets with
+no Worker code at all. [`apps/docs/README.md`](./apps/docs/README.md) covers the static
+build, the Cloudflare asset config, and the SSR escape hatch if the docs ever need a server.
 
 ## TypeScript version rule (ADR 0004)
 
