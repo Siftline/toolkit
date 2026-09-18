@@ -21,6 +21,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+        with:
+          # `changeset status --since=origin/main` needs origin/main to exist locally.
+          # The default shallow fetch does not create that remote-tracking ref.
+          fetch-depth: 0
 
       # With no version input, setup-bun reads `packageManager` from package.json.
       - name: Set up Bun
@@ -36,3 +40,9 @@ jobs:
 
       - name: Check
         run: bun run check
+
+      # Fails when a published package changed without a changeset. `bun changeset
+      # --empty` is the deliberate "no release needed" escape hatch. On a push to main
+      # the diff is against the same commit, so nothing changed and the step is a no-op.
+      - name: Require a changeset
+        run: bun changeset status --since=origin/main
