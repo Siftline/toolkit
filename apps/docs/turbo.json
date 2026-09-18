@@ -1,0 +1,22 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    // Restating `^build` is required: a package-level task definition replaces the root
+    // one rather than merging with it.
+    //
+    // Ticket 06 adds the `api` task here (typedoc over `packages/core/src`, inputs
+    // `typedoc.json`, the frontmatter plugin and `$TURBO_ROOT$/packages/core/src/**`,
+    // outputs `content/docs/api/**`) and appends "api" to this `dependsOn`, so that a
+    // changed Engine source busts the generated API pages.
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": [".output/**", ".tanstack/**", ".source/**"]
+    },
+    // The static-output assertions read `.output/public`, so this package's own build
+    // has to have run first.
+    "test": {
+      "dependsOn": ["^build", "build"]
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "name": "@siftline/docs",
+  "version": "0.0.0",
+  "private": true,
+  "description": "The Siftline documentation site: Fumadocs on TanStack Start, prerendered to static assets.",
+  "type": "module",
+  "sideEffects": false,
+  "scripts": {
+    "build": "vite build && cp .output/public/_shell.html .output/public/index.html",
+    "deploy": "wrangler deploy",
+    "dev": "vite dev",
+    "lint": "oxlint --type-aware --deny-warnings",
+    "lint:fix": "oxlint --type-aware --deny-warnings --fix",
+    "preview": "wrangler dev",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tanstack/react-router": "1.170.38",
+    "@tanstack/react-start": "1.168.56",
+    "@tanstack/start-static-server-functions": "1.167.37",
+    "fumadocs-core": "16.15.11",
+    "fumadocs-mdx": "15.4.1",
+    "fumadocs-ui": "npm:@fumadocs/base-ui@16.15.11",
+    "lucide-react": "1.43.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@siftline/config": "workspace:*",
+    "@tailwindcss/vite": "4.3.3",
+    "@types/mdx": "2.0.14",
+    "@types/node": "24.13.5",
+    "@types/react": "19.2.18",
+    "@types/react-dom": "19.2.7",
+    "@vitejs/plugin-react": "6.1.1",
+    "nitro": "3.0.260903-beta",
+    "tailwindcss": "4.3.3",
+    "typescript": "7.0.2",
+    "vite": "8.3.0",
+    "vitest": "4.1.11",
+    "wrangler": "4.135.0"
+  }
+}
