@@ -1,0 +1,58 @@
+{
+  "name": "@siftline/actions",
+  "version": "0.0.1",
+  "description": "Siftline adapters for the places labels land: issue trackers, inboxes and queues.",
+  "keywords": [
+    "actions",
+    "classification",
+    "siftline",
+    "triage"
+  ],
+  "homepage": "https://docs.siftline.dev",
+  "bugs": {
+    "url": "https://github.com/Siftline/toolkit/issues"
+  },
+  "license": "MIT",
+  "author": "Todayweb",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Siftline/toolkit.git",
+    "directory": "packages/actions"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "default": "./dist/index.mjs"
+    }
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "scripts": {
+    "build": "tsdown",
+    "dev": "tsdown --watch",
+    "lint": "oxlint --type-aware --deny-warnings",
+    "lint:fix": "oxlint --type-aware --deny-warnings --fix",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@siftline/core": "^0.0.2"
+  },
+  "devDependencies": {
+    "@arethetypeswrong/core": "0.18.5",
+    "@siftline/config": "workspace:*",
+    "publint": "0.3.24",
+    "tsdown": "0.23.0",
+    "typescript": "7.0.2",
+    "vitest": "4.1.11"
+  },
+  "engines": {
+    "node": ">=22.14"
+  }
+}
