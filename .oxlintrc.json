@@ -28,7 +28,19 @@
   "overrides": [
     {
       "files": ["apps/docs/**", "packages/ui/**"],
-      "plugins": ["react", "jsx-a11y"]
+      "plugins": ["react", "jsx-a11y"],
+      "rules": {
+        // React 19's automatic JSX runtime needs no `React` in scope, but the rule is a
+        // correctness rule and fires as soon as the react plugin is on.
+        "react/react-in-jsx-scope": "off"
+      }
+    },
+    {
+      // `_splat` is TanStack Router's own name for a wildcard route parameter.
+      "files": ["apps/docs/**"],
+      "rules": {
+        "no-underscore-dangle": "off"
+      }
     },
     {
       "files": ["**/*.test.ts", "**/*.test.tsx"],
