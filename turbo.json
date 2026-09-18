@@ -1,0 +1,39 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "ui": "stream",
+  "globalDependencies": ["bun.lock", ".node-version"],
+  "globalPassThroughEnv": ["CLOUDFLARE_ACCOUNT_ID", "CLOUDFLARE_API_TOKEN", "TYPESAFE_API_KEY"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".output/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/.oxlintrc.json"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"]
+    },
+    "test": {
+      "dependsOn": ["^build"]
+    },
+    "deploy": {
+      "dependsOn": ["build"],
+      "cache": false
+    },
+    "//#format": {
+      "cache": false
+    },
+    "//#format:check": {
+      // oxfmt formats the whole repo from one config, so the root task hashes every
+      // git-tracked file. $TURBO_DEFAULT$ is git-aware; a bare glob would drag
+      // node_modules into the hash.
+      "inputs": ["$TURBO_DEFAULT$"]
+    }
+  }
+}

@@ -1,0 +1,24 @@
+# Dependencies
+node_modules
+
+# Build output — Turborepo hashes source, never artifacts
+dist
+.output
+.turbo
+.tanstack
+.source
+.wrangler
+*.tsbuildinfo
+
+# Generated API reference pages (typedoc writes these)
+apps/docs/content/docs/api
+
+# Local secrets
+.dev.vars
+.dev.vars.*
+
+# OS
+.DS_Store
+
+# Local pack output
+*.tgz

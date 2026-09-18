@@ -1,0 +1,4 @@
+{
+  "extends": "./library.json",
+  "include": ["vitest.ts", "tsdown.ts"]
+}

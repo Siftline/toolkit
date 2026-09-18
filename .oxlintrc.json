@@ -1,0 +1,62 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react", "jsx-a11y", "import", "unicorn", "promise", "vitest"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "warn"
+  },
+  "options": {
+    "typeAware": true
+  },
+  // `builtin` is oxlint's default and is restated only for clarity. `node` is load-bearing
+  // and was checked rather than assumed: `no-global-assign` (a correctness rule) only knows
+  // a name is a read-only global if some `env` declares it, so with `node` removed,
+  // `process = 1`, `console = 2` and `Buffer = 3` all lint clean. With it, all three are
+  // errors. Everything here runs on Node, so this stays.
+  "env": {
+    "builtin": true,
+    "node": true
+  },
+  // oxlint 1.83.0 ships no `import/order` rule, so there is nothing to switch off:
+  // oxfmt's `sortImports` owns import ordering.
+  "rules": {},
+  "ignorePatterns": [
+    "**/dist",
+    "**/.output",
+    "**/.wrangler",
+    "**/.tanstack",
+    "**/.source",
+    "**/routeTree.gen.ts",
+    "apps/docs/content/docs/api"
+  ],
+  "overrides": [
+    {
+      "files": ["apps/docs/**", "packages/ui/**"],
+      "plugins": ["react", "jsx-a11y"],
+      "rules": {
+        // React 19's automatic JSX runtime needs no `React` in scope, but the rule is a
+        // correctness rule and fires as soon as the react plugin is on.
+        "react/react-in-jsx-scope": "off"
+      }
+    },
+    {
+      // `_splat` is TanStack Router's own name for a wildcard route parameter, and reading
+      // `params._splat` is the only way to get at it.
+      //
+      // Not dead config, despite `no-underscore-dangle` being a `style` rule in ESLint: in
+      // oxlint 1.83.0 it is in the `suspicious` category, which this file denies. Checked,
+      // not assumed — `oxlint --print-config` lists it as `deny`, and removing this block
+      // fails `lint` with two errors in `src/routes/docs/$.tsx` and
+      // `src/routes/docs/{$}[.]md.ts`.
+      "files": ["apps/docs/**"],
+      "rules": {
+        "no-underscore-dangle": "off"
+      }
+    },
+    {
+      "files": ["**/*.test.ts", "**/*.test.tsx"],
+      "plugins": ["vitest"]
+    }
+  ]
+}

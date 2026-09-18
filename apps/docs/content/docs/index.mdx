@@ -1,0 +1,38 @@
+---
+title: Getting started
+description: Install the Siftline toolkit and find your way around it.
+icon: Rocket
+---
+
+Siftline turns messy inbound text into decisions you can act on. The toolkit is three
+published packages, all ESM-only and all requiring Node 22.14 or newer.
+
+<Cards>
+  <Card title="@siftline/core" href="/docs/packages" />
+  <Card title="@siftline/cli" href="/docs/packages" />
+  <Card title="@siftline/actions" href="/docs/packages" />
+</Cards>
+
+## Install
+
+```bash
+npm install @siftline/core
+```
+
+The CLI is usually a dev dependency, and the Action adapters are only needed where you wire
+Siftline into a workflow:
+
+```bash
+npm install --save-dev @siftline/cli
+npm install @siftline/actions
+```
+
+## Where to go next
+
+The [packages page](/docs/packages) describes what each one is for. The API reference is
+generated from `@siftline/core`'s source, so it always matches the published types.
+
+<Callout title="Early days">
+  The Engine is still being written. Every package currently ships a walking skeleton: the build,
+  type, test and publish path is real, the behaviour is not.
+</Callout>

@@ -1,0 +1,10 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@4.0.1/schema.json",
+  "changelog": ["@changesets/changelog-github", { "repo": "Siftline/toolkit" }],
+  "commit": false,
+  "access": "public",
+  "baseBranch": "main",
+  "updateInternalDependencies": "patch",
+  "ignore": ["@siftline/docs", "@siftline/ui", "@siftline/config"],
+  "format": "oxfmt"
+}

@@ -1,0 +1,34 @@
+---
+title: Packages
+description: What each published package is for.
+icon: Package
+---
+
+## `@siftline/core`
+
+The Engine. Recipes, rules, fixtures and the judge wrapper live here. It exposes two
+entries: the main one, and `@siftline/core/testing` for the fake client used in tests.
+
+```ts
+import { PLACEHOLDER, VERSION } from "@siftline/core";
+
+console.log(VERSION, PLACEHOLDER);
+```
+
+## `@siftline/cli`
+
+Ships the `siftline` bin. `siftline test` and `siftline label` are the commands the Engine
+work will fill in.
+
+```bash
+npx siftline --version
+```
+
+## `@siftline/actions`
+
+Adapters that let a Siftline decision drive something else: a label, a route, a webhook.
+
+<Callout>
+  All three packages are versioned independently. A change to one does not bump the others beyond
+  the internal dependency patch.
+</Callout>

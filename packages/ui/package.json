@@ -1,0 +1,25 @@
+{
+  "name": "@siftline/ui",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Just-in-time UI source for this repo: Tailwind 4 tokens and the cn helper. Never published.",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./styles/globals.css": "./src/styles/globals.css"
+  },
+  "scripts": {
+    "lint": "oxlint --type-aware --deny-warnings",
+    "lint:fix": "oxlint --type-aware --deny-warnings --fix",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "clsx": "2.1.1",
+    "tailwind-merge": "3.7.0"
+  },
+  "devDependencies": {
+    "@siftline/config": "workspace:*",
+    "tailwindcss": "4.3.3",
+    "typescript": "7.0.2"
+  }
+}

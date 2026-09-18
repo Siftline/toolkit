@@ -1,0 +1,32 @@
+name: Live
+
+# Manual only: these tests spend real TypeSafe calls, so they never run on a PR.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One live run at a time, and never cancelled. Two dispatches queued together would bill
+# two sets of real Jev calls in parallel; a cancelled one would still have paid for the
+# calls it had already made.
+concurrency:
+  group: live
+  cancel-in-progress: false
+
+jobs:
+  live:
+    name: core test:live
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up the toolchain
+        uses: ./.github/actions/setup
+
+      - name: Run live tests
+        run: bun run test:live
+        working-directory: packages/core
+        env:
+          TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}
