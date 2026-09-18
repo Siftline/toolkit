@@ -18,6 +18,8 @@
   },
   "devDependencies": {
     "@arethetypeswrong/core": "0.18.5",
+    "@changesets/changelog-github": "1.0.1",
+    "@changesets/cli": "3.0.3",
     "@types/node": "24.13.5",
     "oxfmt": "0.68.0",
     "oxlint": "1.83.0",
