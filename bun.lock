@@ -87,6 +87,11 @@
     "packages/config": {
       "name": "@siftline/config",
       "version": "0.0.0",
+      "devDependencies": {
+        "tsdown": "0.23.0",
+        "typescript": "7.0.2",
+        "vitest": "4.1.11",
+      },
     },
     "packages/core": {
       "name": "@siftline/core",
