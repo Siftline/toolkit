@@ -34,7 +34,7 @@
     "packageManager": {
       "name": "bun",
       "version": "1.4.2",
-      "onFail": "error"
+      "onFail": "warn"
     }
   },
   "packageManager": "bun@1.4.2"

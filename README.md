@@ -169,6 +169,12 @@ cd packages/cli     && npm publish --access public --otp <code> && cd -   # 0.0.
 cd packages/actions && npm publish --access public --otp <code> && cd -   # 0.0.1
 ```
 
+`devEngines.packageManager` names Bun, and npm treats a mismatch as fatal unless
+`onFail` says otherwise. The root `package.json` therefore sets `"onFail": "warn"`:
+without it every npm command inside this repo dies with `EBADDEVENGINES`, including
+the publishes above and the ones `release.yml` runs. The warning npm prints is
+expected, and Bun is still the declared package manager for installs.
+
 Pass `--otp` on the command line: Changesets strips `NPM_CONFIG_OTP` from the environment,
 and these publishes are local, so there is no OIDC and therefore **no provenance** on this
 first set of tarballs. That is expected — provenance starts with the first `release.yml`
