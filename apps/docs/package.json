@@ -6,6 +6,7 @@
   "type": "module",
   "sideEffects": false,
   "scripts": {
+    "api": "typedoc",
     "build": "vite build && cp .output/public/_shell.html .output/public/index.html",
     "deploy": "wrangler deploy",
     "dev": "vite dev",
@@ -36,9 +37,12 @@
     "@vitejs/plugin-react": "6.1.1",
     "nitro": "3.0.260903-beta",
     "tailwindcss": "4.3.3",
-    "typescript": "7.0.2",
+    "typedoc": "0.28.20",
+    "typedoc-plugin-markdown": "4.13.1",
+    "typescript": "6.0.3",
     "vite": "8.3.0",
     "vitest": "4.1.11",
     "wrangler": "4.135.0"
-  }
+  },
+  "//typescript": "typescript is pinned to 6.0.3 here, and here only, for typedoc. typedoc 0.28.20 imports the TypeScript JS compiler API, which the 7.0.2 package (the Go port the rest of the repo uses, ADR 0004) does not ship at all - it crashes on import. 6.0.3 is the last line with the JS API and is typedoc's own dev pin."
 }
