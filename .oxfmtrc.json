@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/oxfmt/configuration_schema.json",
+  "sortImports": true,
+  "sortTailwindcss": {
+    "functions": ["cn", "cva"],
+    "stylesheet": "./packages/ui/src/styles/globals.css"
+  },
+  "ignorePatterns": [
+    "apps/docs/content/docs/api",
+    "**/routeTree.gen.ts",
+    "bun.lock",
+    "**/dist",
+    "**/.output",
+    "**/.wrangler",
+    "**/.tanstack",
+    "**/.source"
+  ]
+}

@@ -1,0 +1,4 @@
+{
+  "extends": "@siftline/config/app.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
+}

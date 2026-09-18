@@ -1,0 +1,38 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "react", "jsx-a11y", "import", "unicorn", "promise", "vitest"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "error",
+    "perf": "warn"
+  },
+  "options": {
+    "typeAware": true
+  },
+  "env": {
+    "builtin": true,
+    "node": true
+  },
+  // oxlint 1.83.0 ships no `import/order` rule, so there is nothing to switch off:
+  // oxfmt's `sortImports` owns import ordering.
+  "rules": {},
+  "ignorePatterns": [
+    "**/dist",
+    "**/.output",
+    "**/.wrangler",
+    "**/.tanstack",
+    "**/.source",
+    "**/routeTree.gen.ts",
+    "apps/docs/content/docs/api"
+  ],
+  "overrides": [
+    {
+      "files": ["apps/docs/**", "packages/ui/**"],
+      "plugins": ["react", "jsx-a11y"]
+    },
+    {
+      "files": ["**/*.test.ts", "**/*.test.tsx"],
+      "plugins": ["vitest"]
+    }
+  ]
+}

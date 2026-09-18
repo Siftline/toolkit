@@ -1,0 +1,17 @@
+{
+  "name": "@siftline/config",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Shared tsconfig bases for this repo. Consumed just-in-time, never published.",
+  "files": [
+    "base.json",
+    "library.json",
+    "app.json"
+  ],
+  "type": "module",
+  "exports": {
+    "./base.json": "./base.json",
+    "./library.json": "./library.json",
+    "./app.json": "./app.json"
+  }
+}
