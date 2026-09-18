@@ -15,7 +15,8 @@ import { Suspense, use } from "react";
 
 import { useMDXComponents } from "@/components/mdx";
 import { baseOptions } from "@/lib/layout.shared";
-import { getPageMarkdownUrl, gitConfig } from "@/lib/shared";
+import { getPageMarkdownUrl } from "@/lib/markdown-url";
+import { contentSourceUrl } from "@/lib/repository";
 import { docs, source } from "@/lib/source";
 
 export const Route = createFileRoute("/docs/$")({
@@ -57,10 +58,7 @@ function Content({ path, markdownUrl }: { path: string; markdownUrl: string }) {
       <DocsDescription>{page.description}</DocsDescription>
       <div className="-mt-4 flex flex-row items-center gap-2 border-b pb-6">
         <MarkdownCopyButton markdownUrl={markdownUrl} />
-        <ViewOptionsPopover
-          markdownUrl={markdownUrl}
-          githubUrl={`https://github.com/${gitConfig.user}/${gitConfig.repo}/blob/${gitConfig.branch}/content/docs/${path}`}
-        />
+        <ViewOptionsPopover markdownUrl={markdownUrl} githubUrl={contentSourceUrl(path)} />
       </div>
       <DocsBody>
         <MDX components={useMDXComponents()} />

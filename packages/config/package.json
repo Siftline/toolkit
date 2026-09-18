@@ -2,16 +2,30 @@
   "name": "@siftline/config",
   "version": "0.0.0",
   "private": true,
-  "description": "Shared tsconfig bases for this repo. Consumed just-in-time, never published.",
+  "description": "Shared build config for this repo: tsconfig bases, the Vitest base and the tsdown base. Consumed just-in-time, never published.",
   "files": [
     "base.json",
     "library.json",
-    "app.json"
+    "app.json",
+    "vitest.ts",
+    "tsdown.ts"
   ],
   "type": "module",
   "exports": {
     "./base.json": "./base.json",
     "./library.json": "./library.json",
-    "./app.json": "./app.json"
+    "./app.json": "./app.json",
+    "./vitest": "./vitest.ts",
+    "./tsdown": "./tsdown.ts"
+  },
+  "scripts": {
+    "lint": "oxlint --type-aware --deny-warnings",
+    "lint:fix": "oxlint --type-aware --deny-warnings --fix",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "tsdown": "0.23.0",
+    "typescript": "7.0.2",
+    "vitest": "4.1.11"
   }
 }

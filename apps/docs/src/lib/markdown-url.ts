@@ -1,15 +1,13 @@
 import { createGetUrl } from "fumadocs-core/source";
 
-export const appName = "Siftline";
-export const docsRoute = "/docs";
-export const docsImageRoute = "/og/docs";
+import { docsRoute } from "./site";
 
-export const gitConfig = {
-  user: "Siftline",
-  repo: "toolkit",
-  branch: "main",
-};
-
+/**
+ * The codec for the `/docs/<slug>.md` routes: the plain-markdown twin of every docs page,
+ * which the copy button links to and agents fetch. `getPageMarkdownUrl` encodes a page's
+ * slugs into that URL; `decodeMarkdownUrl` is its inverse, used by the route handler to
+ * get back to the page. They are only ever correct as a pair, so they live together.
+ */
 const getDocsUrl = createGetUrl(docsRoute);
 
 export function getPageMarkdownUrl(page: { slugs: string[]; locale?: string }) {

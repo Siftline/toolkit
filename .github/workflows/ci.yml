@@ -26,17 +26,8 @@ jobs:
           # The default shallow fetch does not create that remote-tracking ref.
           fetch-depth: 0
 
-      # With no version input, setup-bun reads `packageManager` from package.json.
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Set up Node
-        uses: actions/setup-node@v7
-        with:
-          node-version-file: .node-version
-
-      - name: Install (frozen lockfile)
-        run: bun ci
+      - name: Set up the toolchain
+        uses: ./.github/actions/setup
 
       - name: Check
         run: bun run check
@@ -65,18 +56,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Set up Node
-        uses: actions/setup-node@v7
-        with:
-          node-version-file: .node-version
-
-      # Not `--production`: the docs build runs typedoc over core's source, which is a
-      # devDependency, and Vite and wrangler are too.
-      - name: Install (frozen lockfile)
-        run: bun ci
+      - name: Set up the toolchain
+        uses: ./.github/actions/setup
 
       - name: Build the docs site
         run: bun turbo run build --filter=@siftline/docs

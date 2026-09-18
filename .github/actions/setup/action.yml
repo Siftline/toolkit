@@ -1,0 +1,27 @@
+name: Set up the toolchain
+description: >-
+  Bun, Node and a frozen install — the preamble every job in this repo shares.
+  Checkout is deliberately not part of this: a local composite action can only be
+  resolved once the repository is already on disk, so each job keeps its own
+  `actions/checkout` step (and its own `ref`, `fetch-depth` and credential choices).
+
+runs:
+  using: composite
+  steps:
+    # With no version input, setup-bun reads `packageManager` from package.json.
+    - name: Set up Bun
+      uses: oven-sh/setup-bun@v2
+
+    # No `registry-url` anywhere: it writes an .npmrc that sends npm down the token path
+    # and silently skips the OIDC exchange that trusted publishing needs. Node 24 brings
+    # npm >= 11.5.1, which performs that exchange and attaches provenance by itself.
+    - name: Set up Node
+      uses: actions/setup-node@v7
+      with:
+        node-version-file: .node-version
+
+    # Not `--production` anywhere: the docs build runs typedoc over core's source, and
+    # Vite and wrangler are devDependencies too.
+    - name: Install (frozen lockfile)
+      run: bun ci
+      shell: bash

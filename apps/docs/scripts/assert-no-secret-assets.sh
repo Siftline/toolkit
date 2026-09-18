@@ -1,8 +1,19 @@
 #!/usr/bin/env bash
 #
+# Refuse to deploy when a secret could be served publicly.
+#
 # Every file in the assets directory is uploaded to Cloudflare and served publicly. Only
-# `.assetsignore`, `_headers` and `_redirects` are excluded by default — nothing else is
-# implicitly safe, and wrangler prints no warning when it uploads a secret.
+# `.assetsignore`, `_headers` and `_redirects` are excluded by default.
+#
+# `public/.assetsignore` is the single source of truth for what must not be uploaded. This
+# script reads it — it restates no pattern of its own — and then asserts three things:
+#
+#   1. the tracked list is present and lists at least one pattern;
+#   2. the copy that reached the assets directory is byte-identical to it, because a
+#      dropped or mangled `.assetsignore` means wrangler's own filter is gone;
+#   3. nothing matching a pattern in that list is actually sitting in the output, which is
+#      belt as well as braces: `.assetsignore` stops the upload, this stops the file from
+#      ever being built into the directory in the first place.
 #
 # This runs against the built assets directory, not against `wrangler deploy --dry-run
 # --outdir <dir>`. The outdir is esbuild's output for the Worker script alone: for an
@@ -14,37 +25,47 @@
 
 set -euo pipefail
 
+app_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)"
+tracked_ignore="$app_dir/public/.assetsignore"
+
 assets="${1:-.output/public}"
+shipped_ignore="$assets/.assetsignore"
 
-if [[ ! -d "$assets" ]]; then
-  echo "::error::assets directory '$assets' does not exist — run the build first" >&2
+fail() {
+  echo "::error::$1" >&2
   exit 1
+}
+
+[[ -d "$assets" ]] || fail "assets directory '$assets' does not exist — run the build first"
+[[ -f "$tracked_ignore" ]] || fail "'$tracked_ignore' is missing — there is no list to enforce"
+
+# The list, minus comments and blank lines. Read with a while loop rather than `mapfile`
+# so this also runs on the bash 3.2 that ships with macOS.
+patterns=()
+while IFS= read -r pattern; do
+  patterns+=("$pattern")
+done < <(grep -v -e '^[[:space:]]*#' -e '^[[:space:]]*$' "$tracked_ignore" || true)
+
+if [[ ${#patterns[@]} -eq 0 ]]; then
+  fail "'$tracked_ignore' lists no patterns — every file below '$assets' would be uploaded"
 fi
 
-# (1) Default deny. `.assetsignore` is read from the root of the *assets* directory and
-# nowhere else; a copy left at the package root is silently ignored. It is the only thing
-# covering names this script does not know to look for.
-if [[ ! -f "$assets/.assetsignore" ]]; then
-  echo "::error::$assets/.assetsignore is missing — the build dropped it, and every file below would be uploaded" >&2
-  exit 1
-fi
+[[ -f "$shipped_ignore" ]] ||
+  fail "$shipped_ignore is missing — the build dropped it, and every file below would be uploaded"
 
-for pattern in wrangler.json .dev.vars; do
-  if ! grep -qxF -- "$pattern" "$assets/.assetsignore"; then
-    echo "::error::$assets/.assetsignore no longer lists '$pattern'" >&2
-    exit 1
+cmp -s "$tracked_ignore" "$shipped_ignore" ||
+  fail "$shipped_ignore differs from the tracked $tracked_ignore — the build mangled the list"
+
+# One `find` expression built from the same patterns: `-name` takes the glob as written.
+find_expression=()
+for pattern in "${patterns[@]}"; do
+  if [[ ${#find_expression[@]} -gt 0 ]]; then
+    find_expression+=(-o)
   fi
+  find_expression+=(-name "$pattern")
 done
 
-# (2) Belt as well as braces. A secret-shaped file has no business in the build output at
-# all, whether or not `.assetsignore` happens to cover it today.
-strays=$(
-  find "$assets" \
-    \( -name '.dev.vars' -o -name '.dev.vars.*' \
-    -o -name '.env' -o -name '.env.*' \
-    -o -name 'wrangler.json' -o -name 'wrangler.jsonc' -o -name 'wrangler.toml' \) \
-    -print
-)
+strays=$(find "$assets" \( "${find_expression[@]}" \) -print)
 
 if [[ -n "$strays" ]]; then
   echo "::error::secret-shaped files in the asset output — these would be uploaded to Cloudflare:" >&2
@@ -52,4 +73,4 @@ if [[ -n "$strays" ]]; then
   exit 1
 fi
 
-echo "assets ok: $assets/.assetsignore is in place and no secret-shaped file reached the output"
+echo "assets ok: $shipped_ignore matches the tracked list (${#patterns[@]} patterns) and nothing in '$assets' matches it"

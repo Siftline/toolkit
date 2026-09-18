@@ -48,19 +48,8 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha }}
           persist-credentials: false
 
-      # With no version input, setup-bun reads `packageManager` from package.json.
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-
-      # No `registry-url`: it writes an .npmrc that sends npm down the token path and
-      # silently skips the OIDC exchange that trusted publishing needs.
-      - name: Set up Node
-        uses: actions/setup-node@v7
-        with:
-          node-version-file: .node-version
-
-      - name: Install (frozen lockfile)
-        run: bun ci
+      - name: Set up the toolchain
+        uses: ./.github/actions/setup
 
       - name: Select mode
         id: select-mode
@@ -82,16 +71,8 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha }}
           persist-credentials: false
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Set up Node
-        uses: actions/setup-node@v7
-        with:
-          node-version-file: .node-version
-
-      - name: Install (frozen lockfile)
-        run: bun ci
+      - name: Set up the toolchain
+        uses: ./.github/actions/setup
 
       # `github.ref_name` under workflow_run is the default branch, so the default base
       # is already right — set it anyway so the file does not depend on that.
@@ -117,16 +98,8 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha }}
           persist-credentials: false
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Set up Node
-        uses: actions/setup-node@v7
-        with:
-          node-version-file: .node-version
-
-      - name: Install (frozen lockfile)
-        run: bun ci
+      - name: Set up the toolchain
+        uses: ./.github/actions/setup
 
       # `files: ["dist"]`, so npm pack needs the build to have run.
       - name: Build
@@ -153,19 +126,10 @@ jobs:
           ref: ${{ github.event.workflow_run.head_sha }}
           persist-credentials: false
 
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-
-      # Node 24 brings npm >= 11.5.1, which performs the OIDC exchange and attaches
-      # provenance by itself. There is no NPM_TOKEN in this repo and no `registry-url`
-      # here on purpose: either one would put npm back on the token path.
-      - name: Set up Node
-        uses: actions/setup-node@v7
-        with:
-          node-version-file: .node-version
-
-      - name: Install (frozen lockfile)
-        run: bun ci
+      # No NPM_TOKEN in this repo, and `./.github/actions/setup` passes no `registry-url`
+      # to setup-node: either one would put npm back on the token path and drop provenance.
+      - name: Set up the toolchain
+        uses: ./.github/actions/setup
 
       - name: Publish
         uses: changesets/action/publish@v2.1.2

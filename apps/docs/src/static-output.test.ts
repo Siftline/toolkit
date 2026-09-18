@@ -15,6 +15,14 @@ function read(relativePath: string): string {
   return readFileSync(join(publicDir, relativePath), "utf8");
 }
 
+/** The patterns wrangler will act on: every line of `.assetsignore` that is not a comment. */
+function patternsOf(assetsIgnore: string): string[] {
+  return assetsIgnore
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line !== "" && !line.startsWith("#"));
+}
+
 const requiredFiles = [
   // The SPA fallback Cloudflare serves for any route that was not prerendered.
   "index.html",
@@ -40,11 +48,18 @@ describe("static output", () => {
     expect(read("index.html")).toBe(read("_shell.html"));
   });
 
-  it("carries the tracked .assetsignore into the uploaded directory", () => {
-    const assetsIgnore = read(".assetsignore");
+  it("carries the tracked .assetsignore into the uploaded directory unchanged", () => {
+    // Asserted against the tracked file rather than against a copy of its contents:
+    // `public/.assetsignore` is the single source of truth for what must never be
+    // uploaded, and `scripts/assert-no-secret-assets.sh` reads the same file. Adding a
+    // pattern there needs no edit here.
+    const tracked = readFileSync(
+      fileURLToPath(new URL("../public/.assetsignore", import.meta.url)),
+      "utf8",
+    );
 
-    expect(assetsIgnore).toContain("wrangler.json");
-    expect(assetsIgnore).toContain(".dev.vars");
+    expect(read(".assetsignore")).toBe(tracked);
+    expect(patternsOf(tracked).length).toBeGreaterThan(0);
   });
 
   it("prerenders page content, not just the shell", () => {

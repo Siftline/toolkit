@@ -1,8 +1,3 @@
-import { defineConfig } from "vitest/config";
+import { defineVitestConfig } from "@siftline/config/vitest";
 
-export default defineConfig({
-  test: {
-    globals: false,
-    include: ["src/**/*.test.ts"],
-  },
-});
+export default defineVitestConfig();

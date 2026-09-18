@@ -22,7 +22,7 @@ function Home() {
       <main className="flex flex-1 flex-col items-center justify-center gap-8 px-4 py-16 text-center">
         <div className="flex flex-col gap-4">
           <h1 className="text-3xl font-medium">Siftline toolkit</h1>
-          <p className="text-fd-muted-foreground max-w-xl">
+          <p className="max-w-xl text-fd-muted-foreground">
             Turn messy inbound text into decisions you can act on, with a toolchain that runs the
             same way on your laptop and in CI.
           </p>
@@ -31,14 +31,14 @@ function Home() {
           {packages.map((pkg) => (
             <li key={pkg.name} className="rounded-lg border p-4">
               <p className="font-mono text-sm font-medium">{pkg.name}</p>
-              <p className="text-fd-muted-foreground mt-2 text-sm">{pkg.summary}</p>
+              <p className="mt-2 text-sm text-fd-muted-foreground">{pkg.summary}</p>
             </li>
           ))}
         </ul>
         <Link
           to="/docs/$"
           params={{ _splat: "" }}
-          className="bg-fd-primary text-fd-primary-foreground rounded-lg px-3 py-2 text-sm font-medium"
+          className="rounded-lg bg-fd-primary px-3 py-2 text-sm font-medium text-fd-primary-foreground"
         >
           Read the docs
         </Link>

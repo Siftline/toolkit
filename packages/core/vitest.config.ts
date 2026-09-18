@@ -1,9 +1,4 @@
-import { defineConfig } from "vitest/config";
+import { defineVitestConfig } from "@siftline/config/vitest";
 
-export default defineConfig({
-  test: {
-    globals: false,
-    include: ["src/**/*.test.ts"],
-    exclude: ["src/**/*.live.test.ts"],
-  },
-});
+// `test:live` owns the live suite through its own config; the default run never picks it up.
+export default defineVitestConfig({ exclude: ["src/**/*.live.test.ts"] });

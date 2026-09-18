@@ -3,7 +3,14 @@
   "sortImports": true,
   "sortTailwindcss": {
     "functions": ["cn", "cva"],
-    "stylesheet": "./packages/ui/src/styles/globals.css"
+    // The stylesheet the sorter resolves against has to be the one whose utilities are
+    // actually in the class strings being sorted. Every `className` in this repo is in
+    // `apps/docs`, and that app's entry stylesheet pulls in Tailwind *and* the Fumadocs
+    // preset — utilities `packages/ui/src/styles/globals.css` knows nothing about. The
+    // spec named the `packages/ui` stylesheet on the assumption the docs app would consume
+    // it; it does not (see `apps/docs/README.md`), so pointing there would sort against a
+    // theme that is not in play.
+    "stylesheet": "./apps/docs/src/styles/app.css"
   },
   "ignorePatterns": [
     "apps/docs/content/docs/api",

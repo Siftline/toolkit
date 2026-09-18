@@ -2,7 +2,7 @@ import { llms, loader } from "fumadocs-core/source";
 import { lucideIconsPlugin } from "fumadocs-core/source/lucide-icons";
 import { defineDocs } from "fumadocs-mdx/macro";
 
-import { docsRoute } from "./shared";
+import { docsRoute } from "./site";
 
 export const docs = defineDocs({
   dir: "content/docs",

@@ -7,6 +7,13 @@ on:
 permissions:
   contents: read
 
+# One live run at a time, and never cancelled. Two dispatches queued together would bill
+# two sets of real Jev calls in parallel; a cancelled one would still have paid for the
+# calls it had already made.
+concurrency:
+  group: live
+  cancel-in-progress: false
+
 jobs:
   live:
     name: core test:live
@@ -15,17 +22,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
-      # With no version input, setup-bun reads `packageManager` from package.json.
-      - name: Set up Bun
-        uses: oven-sh/setup-bun@v2
-
-      - name: Set up Node
-        uses: actions/setup-node@v7
-        with:
-          node-version-file: .node-version
-
-      - name: Install (frozen lockfile)
-        run: bun ci
+      - name: Set up the toolchain
+        uses: ./.github/actions/setup
 
       - name: Run live tests
         run: bun run test:live

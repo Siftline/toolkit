@@ -1,4 +1,13 @@
 {
   "extends": "@siftline/config/library.json",
+  "compilerOptions": {
+    // The colocated test imports this package by its published name, which proves the
+    // `exports` map from a consumer's side when Vitest runs it against `dist`. For
+    // typechecking we point that name back at source, so `typecheck` never waits on
+    // `build` — the two stay siblings in the Turborepo graph (ADR 0004).
+    "paths": {
+      "@siftline/cli": ["./src/index.ts"]
+    }
+  },
   "include": ["src/**/*.ts", "tsdown.config.ts", "vitest.config.ts"]
 }
