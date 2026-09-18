@@ -43,6 +43,49 @@ matches the links TanStack Router generates. `/docs/` 307-redirects to `/docs`. 
 prerendered nested pages ever stop resolving, the recorded fallback is flipping
 `html_handling` to `auto-trailing-slash`.
 
+## Deploys
+
+Every push to `main` that passes `check` deploys this app: `ci.yml`'s `deploy` job builds it,
+then hands `apps/docs` to `cloudflare/wrangler-action@v4`, which runs
+`wrangler deploy --dry-run`, then `scripts/assert-no-secret-assets.sh`, then the real
+`wrangler deploy`. The job is on its own concurrency group with `cancel-in-progress: false`:
+an asset upload is not atomic, so deploys queue rather than interrupt each other.
+
+**The Worker runs no code, so there is nothing to break at request time.** A bad deploy
+cannot produce a 500 or a cold-start error; it can only fail the `deploy` job, or succeed and
+serve the wrong HTML. The failure surface is the Actions log, not a runtime dashboard — there
+are no logs to read after the fact because nothing executes. If the site ever does need a
+server, the [SSR escape hatch](#escape-hatch-running-this-app-with-ssr) below is the recipe.
+
+`scripts/assert-no-secret-assets.sh` runs against `.output/public`, the directory wrangler
+actually uploads — _not_ against `wrangler deploy --dry-run --outdir`, which for an
+assets-only Worker only ever contains the no-op Worker bundle. It refuses to deploy when
+`.assetsignore` did not survive the build or when anything `.dev.vars`/`.env`/`wrangler.*`
+shaped reached the output. Run it yourself after a build:
+
+```sh
+bun run build
+./scripts/assert-no-secret-assets.sh
+```
+
+### The first deploy is done by a human, not by CI
+
+`wrangler deploy` creates the `docs.siftline.dev` custom domain itself on first deploy —
+the DNS record and the certificate too. Do not pre-create a CNAME.
+
+Do that **first** deploy from a terminal, not by pushing to `main`. Interactively, wrangler
+prompts before clobbering a conflicting DNS record or taking a custom domain away from
+another Worker. In CI stdout is not a TTY, and wrangler then sets
+`override_existing_dns_record: true` and `override_existing_origin: true` unconditionally and
+silently — the prompts never appear and it overwrites whatever is there. Once the domain
+exists and is attached to `siftline-docs`, later deploys are a no-op for DNS and CI is safe.
+
+```sh
+bun run build
+./scripts/assert-no-secret-assets.sh
+bun run deploy   # answer the prompts
+```
+
 ## Escape hatch: running this app with SSR
 
 Nothing runs on Cloudflare today — `wrangler.jsonc` has no `main`, and the Worker wrangler

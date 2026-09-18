@@ -72,8 +72,14 @@ commit.
 
 `apps/docs` builds the site behind [docs.siftline.dev](https://docs.siftline.dev): Fumadocs
 on TanStack Start, prerendered to static HTML and served by Cloudflare as static assets with
-no Worker code at all. [`apps/docs/README.md`](./apps/docs/README.md) covers the static
-build, the Cloudflare asset config, and the SSR escape hatch if the docs ever need a server.
+no Worker code at all.
+
+Every push to `main` that passes `check` deploys it. Because nothing executes on the edge, a
+bad deploy cannot become a runtime error — it can only fail the `deploy` job. The one manual
+step is the very first deploy, which creates the `docs.siftline.dev` custom domain and its
+DNS record and should be run from a terminal rather than from CI.
+[`apps/docs/README.md`](./apps/docs/README.md) covers all of that, plus the static build, the
+Cloudflare asset config and the SSR escape hatch if the docs ever need a server.
 
 ## TypeScript version rule (ADR 0004)
 
