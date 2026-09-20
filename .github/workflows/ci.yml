@@ -5,8 +5,6 @@ on:
   push:
     branches: [main]
 
-# PRs cancel their own superseded runs; main never cancels, so every commit on the
-# trunk is verified.
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -23,7 +21,6 @@ jobs:
         uses: actions/checkout@v7
         with:
           # `changeset status --since=origin/main` needs origin/main to exist locally.
-          # The default shallow fetch does not create that remote-tracking ref.
           fetch-depth: 0
 
       - name: Set up the toolchain
@@ -32,30 +29,19 @@ jobs:
       - name: Check
         run: bun run check
 
-      # Fails when a published package changed without a changeset. `bun changeset
-      # --empty` is the deliberate "no release needed" escape hatch. On a push to main
-      # the diff is against the same commit, so nothing changed and the step is a no-op.
-      #
-      # Skipped on the version PR, and only there. That branch exists to consume the
-      # changesets while it bumps versions and writes changelogs, so it always looks
-      # like published packages changed with nothing queued — a gate it can never pass,
-      # on the one branch that has to merge for a release to go out. `head_ref` is set
-      # on `pull_request` events only, so pushes to main still run the step.
+      # Skipped on the version PR, and only there: that branch consumes the changesets
+      # as it bumps, so it can never pass a gate it has to merge through.
       - name: Require a changeset
         if: github.head_ref != 'changeset-release/main'
         run: bun changeset status --since=origin/main
 
-  # The docs site is static: `turbo run build --filter=@siftline/docs` prerenders it and
-  # wrangler uploads `.output/public` as Cloudflare assets. Nothing runs on the edge, so a
-  # broken deploy can only show up as a failed job here, never as a runtime error.
   deploy:
     name: deploy docs
     needs: check
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    # Its own group, overriding the workflow's: uploading assets is not atomic, so a
-    # cancelled deploy can leave the manifest and the uploaded files disagreeing. Queue
-    # instead, never cancel.
+    # Never cancel: uploading assets is not atomic, so a cancelled deploy can leave the
+    # manifest and the uploaded files disagreeing.
     concurrency:
       group: deploy-docs
       cancel-in-progress: false
@@ -69,22 +55,17 @@ jobs:
       - name: Build the docs site
         run: bun turbo run build --filter=@siftline/docs
 
-      # `preCommands` run in `workingDirectory` after the action has resolved wrangler, and
-      # a non-zero exit fails the job — so the dry run and the guard both gate the deploy
-      # that follows them. The dry run needs no credentials; it parses wrangler.jsonc and
-      # reads the asset directory without uploading anything.
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: apps/docs
-          # Detection only looks inside `workingDirectory`, and the lockfile is at the repo
-          # root. Without this the action falls back to npm and `npm i`s wrangler into a
-          # Bun workspace.
+          # Detection only looks inside `workingDirectory` and the lockfile is at the repo
+          # root; without this the action falls back to npm.
           packageManager: bun
-          # No `wranglerVersion` on purpose: with none given the action uses the wrangler
-          # this repo already pins (4.135.0 in apps/docs) and installs nothing.
+          # No `wranglerVersion` on purpose: the action then uses the wrangler this repo
+          # already pins and installs nothing.
           preCommands: |
             wrangler deploy --dry-run --outdir .wrangler/dry-run
             ./scripts/assert-no-secret-assets.sh

@@ -2,12 +2,7 @@ import { createGetUrl } from "fumadocs-core/source";
 
 import { docsRoute } from "./site";
 
-/**
- * The codec for the `/docs/<slug>.md` routes: the plain-markdown twin of every docs page,
- * which the copy button links to and agents fetch. `getPageMarkdownUrl` encodes a page's
- * slugs into that URL; `decodeMarkdownUrl` is its inverse, used by the route handler to
- * get back to the page. They are only ever correct as a pair, so they live together.
- */
+// `getPageMarkdownUrl` and `decodeMarkdownUrl` are only ever correct as a pair.
 const getDocsUrl = createGetUrl(docsRoute);
 
 export function getPageMarkdownUrl(page: { slugs: string[]; locale?: string }) {
@@ -21,7 +16,6 @@ export function getPageMarkdownUrl(page: { slugs: string[]; locale?: string }) {
   return { segments, url: getDocsUrl(segments, page.locale) };
 }
 
-/** @returns page slugs */
 export function decodeMarkdownUrl(segments: string[]) {
   const last = segments.at(-1);
   if (last === undefined) return [];

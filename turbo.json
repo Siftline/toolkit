@@ -30,9 +30,7 @@
       "cache": false
     },
     "//#format:check": {
-      // oxfmt formats the whole repo from one config, so the root task hashes every
-      // git-tracked file. $TURBO_DEFAULT$ is git-aware; a bare glob would drag
-      // node_modules into the hash.
+      // `$TURBO_DEFAULT$` is git-aware; a bare glob would drag node_modules into the hash.
       "inputs": ["$TURBO_DEFAULT$"]
     }
   }

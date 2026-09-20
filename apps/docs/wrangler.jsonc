@@ -2,16 +2,12 @@
   "$schema": "../../node_modules/wrangler/config-schema.json",
   "name": "siftline-docs",
   "compatibility_date": "2026-09-01",
-  // No `main`: nothing runs. The site is prerendered HTML served by the Asset Worker,
-  // so wrangler substitutes its own no-op Worker and never reaches it. Adding a server
+  // No `main`: the site is prerendered HTML served by the Asset Worker. Adding a server
   // entry is the SSR escape hatch documented in README.md, and is deliberately not wired.
   "assets": {
     "directory": ".output/public",
-    // Client-side routes that were never prerendered fall back to the SPA shell.
     "not_found_handling": "single-page-application",
-    // Canonical URLs carry no trailing slash, which is the form TanStack Router links
-    // use. `/docs/` 307s to `/docs`. Flip to "auto-trailing-slash" only if prerendered
-    // nested pages stop resolving.
+    // Flip to "auto-trailing-slash" only if prerendered nested pages stop resolving.
     "html_handling": "drop-trailing-slash",
   },
   "routes": [{ "pattern": "docs.siftline.dev", "custom_domain": true }],

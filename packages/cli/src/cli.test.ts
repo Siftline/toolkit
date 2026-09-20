@@ -6,8 +6,7 @@ import { expect, it } from "vitest";
 
 import packageJson from "../package.json" with { type: "json" };
 
-// Resolved through the `bin` field rather than a hard-coded path, so this also
-// asserts that what npm installs onto a consumer's PATH is a real, working file.
+// Resolved through the `bin` field, not a hard-coded path: asserts what npm puts on PATH.
 const packageRoot = new URL("../", import.meta.url);
 const binPath = fileURLToPath(new URL(packageJson.bin.siftline, packageRoot));
 
