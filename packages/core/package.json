@@ -1,6 +1,6 @@
 {
   "name": "@siftline/core",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "The Siftline engine: recipes, rules, fixtures and the judge wrapper.",
   "keywords": [
     "classification",
