@@ -1,9 +1,8 @@
 {
   "extends": "@siftline/config/library.json",
   "compilerOptions": {
-    // The colocated test imports this package by its published name, which proves the
-    // `exports` map from a consumer's side when Vitest runs it against `dist`. For
-    // typechecking we point that name back at source (ADR 0004).
+    // Maps the published name back at source so `typecheck` never waits on `build`. The
+    // colocated tests import by that name to prove the `exports` map (ADR 0004).
     "paths": {
       "@siftline/actions": ["./src/index.ts"]
     }

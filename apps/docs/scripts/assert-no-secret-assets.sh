@@ -2,24 +2,9 @@
 #
 # Refuse to deploy when a secret could be served publicly.
 #
-# Every file in the assets directory is uploaded to Cloudflare and served publicly. Only
-# `.assetsignore`, `_headers` and `_redirects` are excluded by default.
-#
-# `public/.assetsignore` is the single source of truth for what must not be uploaded. This
-# script reads it — it restates no pattern of its own — and then asserts three things:
-#
-#   1. the tracked list is present and lists at least one pattern;
-#   2. the copy that reached the assets directory is byte-identical to it, because a
-#      dropped or mangled `.assetsignore` means wrangler's own filter is gone;
-#   3. nothing matching a pattern in that list is actually sitting in the output, which is
-#      belt as well as braces: `.assetsignore` stops the upload, this stops the file from
-#      ever being built into the directory in the first place.
-#
-# This runs against the built assets directory, not against `wrangler deploy --dry-run
-# --outdir <dir>`. The outdir is esbuild's output for the Worker script alone: for an
-# assets-only Worker it contains exactly `no-op-worker.js`, its source map and a one-line
-# README, and asset upload is gated on `!dryRun`, so no asset ever lands there. Grepping
-# it for a stray secret would always pass and prove nothing.
+# Runs against the built assets directory, never `wrangler deploy --dry-run --outdir`:
+# that outdir holds the Worker script alone and no asset ever lands there, so grepping it
+# would always pass and prove nothing.
 #
 # Usage: assert-no-secret-assets.sh [assets-directory]   (default: .output/public)
 
@@ -39,8 +24,7 @@ fail() {
 [[ -d "$assets" ]] || fail "assets directory '$assets' does not exist — run the build first"
 [[ -f "$tracked_ignore" ]] || fail "'$tracked_ignore' is missing — there is no list to enforce"
 
-# The list, minus comments and blank lines. Read with a while loop rather than `mapfile`
-# so this also runs on the bash 3.2 that ships with macOS.
+# A while loop rather than `mapfile`, so this also runs on the bash 3.2 macOS ships.
 patterns=()
 while IFS= read -r pattern; do
   patterns+=("$pattern")
@@ -56,7 +40,6 @@ fi
 cmp -s "$tracked_ignore" "$shipped_ignore" ||
   fail "$shipped_ignore differs from the tracked $tracked_ignore — the build mangled the list"
 
-# One `find` expression built from the same patterns: `-name` takes the glob as written.
 find_expression=()
 for pattern in "${patterns[@]}"; do
   if [[ ${#find_expression[@]} -gt 0 ]]; then

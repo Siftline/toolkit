@@ -9,17 +9,12 @@
   "options": {
     "typeAware": true
   },
-  // `builtin` is oxlint's default and is restated only for clarity. `node` is load-bearing
-  // and was checked rather than assumed: `no-global-assign` (a correctness rule) only knows
-  // a name is a read-only global if some `env` declares it, so with `node` removed,
-  // `process = 1`, `console = 2` and `Buffer = 3` all lint clean. With it, all three are
-  // errors. Everything here runs on Node, so this stays.
+  // `node` is load-bearing: `no-global-assign` only treats `process`, `console` and
+  // `Buffer` as read-only globals when an `env` declares them.
   "env": {
     "builtin": true,
     "node": true
   },
-  // oxlint 1.83.0 ships no `import/order` rule, so there is nothing to switch off:
-  // oxfmt's `sortImports` owns import ordering.
   "rules": {},
   "ignorePatterns": [
     "**/dist",
@@ -41,14 +36,9 @@
       }
     },
     {
-      // `_splat` is TanStack Router's own name for a wildcard route parameter, and reading
-      // `params._splat` is the only way to get at it.
-      //
-      // Not dead config, despite `no-underscore-dangle` being a `style` rule in ESLint: in
-      // oxlint 1.83.0 it is in the `suspicious` category, which this file denies. Checked,
-      // not assumed — `oxlint --print-config` lists it as `deny`, and removing this block
-      // fails `lint` with two errors in `src/routes/docs/$.tsx` and
-      // `src/routes/docs/{$}[.]md.ts`.
+      // `params._splat` is the only way to read a TanStack Router wildcard. In oxlint
+      // 1.83.0 `no-underscore-dangle` is `suspicious`, which this file denies — removing
+      // this override fails `lint`.
       "files": ["apps/docs/**"],
       "rules": {
         "no-underscore-dangle": "off"

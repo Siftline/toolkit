@@ -1,15 +1,13 @@
 name: Live
 
-# Manual only: these tests spend real TypeSafe calls, so they never run on a PR.
+# Manual only: these tests spend real TypeSafe calls.
 on:
   workflow_dispatch:
 
 permissions:
   contents: read
 
-# One live run at a time, and never cancelled. Two dispatches queued together would bill
-# two sets of real Jev calls in parallel; a cancelled one would still have paid for the
-# calls it had already made.
+# One at a time, never cancelled: both concurrency and cancellation bill real Jev calls.
 concurrency:
   group: live
   cancel-in-progress: false

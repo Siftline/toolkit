@@ -1,13 +1,6 @@
-# The one list of things that must never be uploaded as a public asset.
-#
-# wrangler reads this file from the root of the *assets* directory (`.output/public`,
-# where Vite copies `public/` verbatim) and excludes every match from the upload. Nothing
-# else is implicitly safe: only this file, `_headers` and `_redirects` are excluded by
-# default, and wrangler prints no warning when it uploads a secret.
-#
-# `scripts/assert-no-secret-assets.sh` and `src/static-output.test.ts` both read this same
-# file rather than restating it, so adding a pattern here extends the guard too. Gitignore
-# syntax, so these comment lines are ignored by wrangler.
+# Nothing else is implicitly safe: only this file, `_headers` and `_redirects` are
+# excluded from upload by default, and wrangler prints no warning when it uploads a
+# secret. `assert-no-secret-assets.sh` and `static-output.test.ts` read this same file.
 .dev.vars
 .dev.vars.*
 .env

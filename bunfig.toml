@@ -1,3 +1,2 @@
-# Exact version pins repo-wide: upgrades are deliberate, never a caret drifting.
 [install]
 exact = true

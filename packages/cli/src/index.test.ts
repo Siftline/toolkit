@@ -1,9 +1,7 @@
 import { run, USAGE, VERSION } from "@siftline/cli";
 import { expect, it } from "vitest";
 
-// Imported by package name, not by relative path: this asserts the published `exports`
-// map the way a consumer meets it. `cli.test.ts` is the other half — it spawns the `bin`
-// the same consumer gets on their PATH.
+// Imported by package name, not by relative path: this asserts the published `exports` map.
 
 it("exposes the version from the package root", () => {
   expect(VERSION).toMatch(/^\d+\.\d+\.\d+/);

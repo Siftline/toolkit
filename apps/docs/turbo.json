@@ -2,29 +2,18 @@
   "$schema": "https://turborepo.com/schema.json",
   "extends": ["//"],
   "tasks": {
-    // typedoc reads core's source directly, not its build output, so `^build` is here only
-    // to keep the graph honest. `$TURBO_ROOT$` is what lets a package declare a file
-    // outside itself as an input: it is resolved by the turbo binary and is absent from
-    // schema.json, so a typo will not be flagged — the spelling below is the tested one.
-    //
-    // `api` is deliberately not part of the root `check` script. It runs as a dependency
-    // of this package's `build`, which is the only thing that needs the generated pages.
+    // `$TURBO_ROOT$` is absent from schema.json, so a typo here will not be flagged.
     "api": {
       "dependsOn": ["^build"],
       "inputs": ["typedoc.json", "typedoc-frontmatter.mjs", "$TURBO_ROOT$/packages/core/src/**"],
       "outputs": ["content/docs/api/**"]
     },
-    // Restating `^build` is required: a package-level task definition replaces the root
-    // one rather than merging with it.
-    //
-    // `api` writes into `content/docs`, which fumadocs-mdx globs at build time, so a
-    // changed Engine source busts the generated API pages and then this build.
+    // Restating `^build` is required: a package-level task replaces the root one rather
+    // than merging with it.
     "build": {
       "dependsOn": ["^build", "api"],
       "outputs": [".output/**", ".tanstack/**", ".source/**"]
     },
-    // The static-output assertions read `.output/public`, so this package's own build
-    // has to have run first.
     "test": {
       "dependsOn": ["^build", "build"]
     }

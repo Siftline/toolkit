@@ -44,6 +44,6 @@
     "vitest": "4.1.11",
     "wrangler": "4.135.0"
   },
-  "//fumadocs-ui": "fumadocs-ui is an npm alias for @fumadocs/base-ui, not the package published under that name. Fumadocs 16 is built on Base UI and ships its UI layer as @fumadocs/base-ui; the alias keeps the specifier every Fumadocs template and doc uses (fumadocs-ui/layouts/docs, fumadocs-ui/css/preset.css) resolving to it. It came from create-fumadocs-app tanstack-start-spa and is deliberate. The version tracks fumadocs-core exactly, so grep for @fumadocs/base-ui as well when auditing the pinned versions.",
-  "//typescript": "typescript is pinned to 6.0.3 here, and here only, for typedoc. typedoc 0.28.20 imports the TypeScript JS compiler API, which the 7.0.2 package (the Go port the rest of the repo uses, ADR 0004) does not ship at all - it crashes on import. 6.0.3 is the last line with the JS API and is typedoc's own dev pin. Deliberate second consequence, spelled out in README.md: this pin is also the nearest tsc to this package, so `bun run typecheck` here runs the 6.0 JS compiler at 6.0 semantics - apps/docs is the one place in the repo TypeScript 7 semantics are not enforced. Nothing published comes out of it."
+  "//fumadocs-ui": "An npm alias: Fumadocs 16 publishes its UI layer as @fumadocs/base-ui. The version must track fumadocs-core exactly.",
+  "//typescript": "6.0.3 here, and here only, for typedoc 0.28.20: it imports the TypeScript JS compiler API, which the 7.0.2 Go port does not ship — it crashes on import. Consequence, spelled out in README.md: typecheck here runs 6.0 semantics."
 }

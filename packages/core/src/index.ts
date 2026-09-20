@@ -1,15 +1,7 @@
 import packageJson from "../package.json" with { type: "json" };
 
-/**
- * The published version of `@siftline/core`, baked in at build time.
- *
- * Changesets bumps `package.json`; this constant follows it without a second edit.
- */
+/** The published version of `@siftline/core`, baked in at build time. */
 export const VERSION: string = packageJson.version;
 
-/**
- * Walking-skeleton export. It exists so the build, type, test, pack and publish path
- * can be proven before any Engine behaviour is written, and it will be deleted when
- * the first recipe lands.
- */
+/** Walking-skeleton export. Deleted when the first recipe lands — do not depend on it. */
 export const PLACEHOLDER = "siftline-core-walking-skeleton";
