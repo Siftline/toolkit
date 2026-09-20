@@ -35,7 +35,14 @@ jobs:
       # Fails when a published package changed without a changeset. `bun changeset
       # --empty` is the deliberate "no release needed" escape hatch. On a push to main
       # the diff is against the same commit, so nothing changed and the step is a no-op.
+      #
+      # Skipped on the version PR, and only there. That branch exists to consume the
+      # changesets while it bumps versions and writes changelogs, so it always looks
+      # like published packages changed with nothing queued — a gate it can never pass,
+      # on the one branch that has to merge for a release to go out. `head_ref` is set
+      # on `pull_request` events only, so pushes to main still run the step.
       - name: Require a changeset
+        if: github.head_ref != 'changeset-release/main'
         run: bun changeset status --since=origin/main
 
   # The docs site is static: `turbo run build --filter=@siftline/docs` prerenders it and
