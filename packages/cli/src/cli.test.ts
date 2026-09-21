@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url";
 import { expect, it } from "vitest";
 
 import packageJson from "../package.json" with { type: "json" };
+import { RECIPE_PATH } from "./harness";
 
 // Resolved through the `bin` field, not a hard-coded path: asserts what npm puts on PATH.
 const packageRoot = new URL("../", import.meta.url);
@@ -63,4 +64,16 @@ it("is executable through its own shebang", () => {
 
   expect(result.status).toBe(0);
   expect(result.stdout.trim()).toBe(packageJson.version);
+});
+
+// Proves `process.stdin` satisfies `InputStream` and that a lone `-` survives `parseArgs`.
+it("reads Records from stdin through the `-` sentinel", () => {
+  const result = spawnSync(process.execPath, [binPath, "label", RECIPE_PATH, "-"], {
+    encoding: "utf8",
+    env: { ...process.env, TYPESAFE_API_KEY: "test-key" },
+    input: '{"id":"r1","state":"hi","text":"nope"}\n',
+  });
+
+  expect(result.status).toBe(2);
+  expect(result.stderr).toContain('stdin line 1 is not a valid Record: unknown key "text"');
 });

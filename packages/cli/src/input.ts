@@ -1,8 +1,15 @@
 import { readFile } from "node:fs/promises";
 
-import { parseFixtures, parseRecipe, validateFixtures } from "@siftline/core";
-import type { Fixture, Recipe } from "@siftline/core";
+import {
+  parseFixtures,
+  parseRecipe,
+  ruleSchema,
+  validateFixtures,
+  validateRules,
+} from "@siftline/core";
+import type { EntryType, Fixture, Recipe, Record, Rule } from "@siftline/core";
 
+import type { InputStream } from "./deps";
 import { InputError } from "./deps";
 
 export async function readTextFile(path: string, what: string): Promise<string> {
@@ -42,6 +49,88 @@ export async function readFixturesFile(path: string, recipe: Recipe): Promise<Fi
   }
 
   return fixtures;
+}
+
+export async function readRulesFile(path: string, recipe: Recipe): Promise<Rule[]> {
+  const text = await readTextFile(path, "rules");
+
+  let rules: Rule[];
+  try {
+    rules = ruleSchema.array().parse(JSON.parse(text));
+  } catch (cause) {
+    throw new InputError(`${path} does not hold valid Rules: ${reason(cause)}`, { cause });
+  }
+
+  const problems = validateRules(rules, recipe);
+  const first = problems[0];
+  if (first) {
+    const more = problems.length === 1 ? "" : ` (and ${problems.length - 1} more)`;
+    throw new InputError(
+      `${path} does not fit the Recipe: rule ${first.rule}: ${first.problem}${more}`,
+    );
+  }
+
+  return rules;
+}
+
+/** `-` and an absent path both mean stdin. Every line is parsed before the caller judges any. */
+export async function readRecords(path: string | undefined, stdin: InputStream): Promise<Record[]> {
+  const fromStdin = path === undefined || path === "-";
+  const source = fromStdin ? "stdin" : path;
+  const text = fromStdin ? await readStdin(stdin) : await readTextFile(path, "records");
+
+  const records: Record[] = [];
+  for (const [offset, line] of text.split("\n").entries()) {
+    if (line.trim() === "") continue;
+    try {
+      records.push(parseRecord(line));
+    } catch (cause) {
+      throw new InputError(`${source} line ${offset + 1} is not a valid Record: ${reason(cause)}`, {
+        cause,
+      });
+    }
+  }
+
+  return records;
+}
+
+async function readStdin(stream: InputStream): Promise<string> {
+  const decoder = new TextDecoder();
+  let text = "";
+  for await (const chunk of stream) {
+    text += typeof chunk === "string" ? chunk : decoder.decode(chunk, { stream: true });
+  }
+  return text + decoder.decode();
+}
+
+const RECORD_KEYS = new Set(["id", "state", "trimmed"]);
+
+// Hand-rolled because core publishes no Record schema and the CLI carries no validator of
+// its own. Strict: an unknown key is a bad line, not a field to ignore.
+function parseRecord(line: string): Record {
+  const value: unknown = JSON.parse(line);
+  if (!isObject(value)) throw new Error("a Record is a JSON object");
+
+  for (const key of Object.keys(value)) {
+    if (!RECORD_KEYS.has(key)) throw new Error(`unknown key ${JSON.stringify(key)}`);
+  }
+
+  const { id, state, trimmed } = value;
+  if (typeof id !== "string" || id === "") throw new Error("id is a non-empty string");
+  if (!isEntry(state)) throw new Error("state is prose, a JSON object, a JSON array or null");
+  if (trimmed !== undefined && typeof trimmed !== "boolean")
+    throw new Error("trimmed is a boolean");
+
+  return trimmed === undefined ? { id, state } : { id, state, trimmed };
+}
+
+function isObject(value: unknown): value is { [key: string]: unknown } {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+// The line came through `JSON.parse`, so anything of type `object` is already a `JsonValue`.
+function isEntry(value: unknown): value is EntryType {
+  return value === null || typeof value === "string" || typeof value === "object";
 }
 
 interface Issue {

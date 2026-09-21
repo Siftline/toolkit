@@ -20,6 +20,18 @@ export const recordings: ReplayLine[] = parseReplayLines(
   readFileSync(new URL("replay/support-inbox.jsonl", coreFixtures), "utf8"),
 );
 
+const probes: ReplayLine[] = parseReplayLines(
+  readFileSync(new URL("replay/probes.jsonl", coreFixtures), "utf8"),
+);
+
+/** A recorded SDK failure, rebuilt the way the replay client rebuilds one. */
+export function recordedError(id: string): Error {
+  const line = probes.find((recorded) => recorded.id === id);
+  if (!line || !("error" in line)) throw new Error(`no recorded error ${id}`);
+  const { name, message, status, retryAfterMs, body } = line.error;
+  return Object.assign(new Error(message), { name, status, retryAfterMs, body });
+}
+
 export function stateOf(recordId: string): EntryType {
   const line = recordings.find((recorded) => recorded.id === `support-inbox/${recordId}`);
   if (!line) throw new Error(`no recording ${recordId}`);
