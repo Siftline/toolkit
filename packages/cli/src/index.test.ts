@@ -67,11 +67,12 @@ it("exits 2 for an unknown command", async () => {
   expect(stderr()).toContain("siftline: unknown command: frobnicate");
 });
 
-it("exits 2 for label, which ticket 09 fills in", async () => {
-  const { deps, stderr } = harness(noClient);
+it("dispatches label, which reads stdin when given no second positional", async () => {
+  const { deps, stdout, stderr } = harness(noClient);
 
-  await expect(run(["label", RECIPE_PATH], deps)).resolves.toBe(2);
-  expect(stderr()).toContain("siftline: label is not implemented yet");
+  await expect(run(["label", RECIPE_PATH, "--quiet"], deps)).resolves.toBe(0);
+  expect(stdout()).toBe("");
+  expect(stderr()).toBe("");
 });
 
 it("exits 2 before reading a file when the key is missing, and never prints it", async () => {

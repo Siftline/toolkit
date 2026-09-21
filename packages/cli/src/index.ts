@@ -2,6 +2,7 @@ import { SiftlineError } from "@siftline/core";
 
 import type { RunDeps } from "./deps";
 import { InputError, UsageError, writeLine } from "./deps";
+import { runLabel } from "./label";
 import { requireApiKey } from "./options";
 import { runTest } from "./test";
 import { USAGE, VERSION } from "./usage";
@@ -33,8 +34,7 @@ export async function run(argv: readonly string[], deps: RunDeps): Promise<numbe
 
     requireApiKey(deps.env);
 
-    if (command === "label") throw new UsageError("label is not implemented yet");
-    return await runTest(rest, deps);
+    return command === "label" ? await runLabel(rest, deps) : await runTest(rest, deps);
   } catch (error) {
     return report(error, deps);
   }
