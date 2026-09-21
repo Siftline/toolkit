@@ -9,19 +9,24 @@
 import {
   choice,
   createJudge,
+  defineFixtures,
   defineRecipe,
   evaluateRules,
+  fixtureSchema,
   noul,
   parseDecision,
+  parseFixtures,
   parseRecipe,
   recipeSchema,
   routeDecision,
   ruleSchema,
   score,
+  testRecipe,
 } from "@siftline/core";
 import type {
   Answers,
   Decision,
+  Fixture,
   Question,
   Questions,
   Recipe,
@@ -253,3 +258,36 @@ type _JudgedFromDisk = Expect<Equal<typeof judgedFromDisk, Promise<Decision>>>;
 
 // @ts-expect-error — `retry` has no default
 createJudge({ client });
+
+// ─── Fixtures ───────────────────────────────────────────────────────────────────────────
+
+// The erased Fixture is exactly what the schema parses, so a portal's exported rows go
+// straight into `validateFixtures` and `testRecipe`.
+type _ParsedFixtureNarrows = Narrows<z.infer<typeof fixtureSchema>, Fixture>;
+
+// `NoInfer` again: `Q` is fixed by the Recipe, so each `expect` is checked against it.
+const fixtures = defineFixtures(recipe, [
+  { state: "I was charged twice", expect: { team: "billing", angry: false } },
+  { state: "The app crashes", expect: { team: "product", urgency: 2 }, id: "f2" },
+  // @ts-expect-error — unknown label
+  { state: "x", expect: { team: "support" } },
+  // @ts-expect-error — unknown question
+  { state: "x", expect: { teem: "billing" } },
+  // @ts-expect-error — index out of range
+  { state: "x", expect: { urgency: 4 } },
+  // @ts-expect-error — string on a Noul
+  { state: "x", expect: { angry: "yes" } },
+]);
+
+// `Partial<>` adds the `| undefined`, and the label union survives it.
+type _FixtureExpect = Expect<
+  Equal<(typeof fixtures)[number]["expect"]["team"], "billing" | "product" | "sales" | undefined>
+>;
+
+// A typed Fixture array narrows to the erased one, which is what the runner takes.
+const erasedFixtures: Fixture[] = fixtures;
+void testRecipe(judge, recipe, fixtures);
+void testRecipe(judge, fromDisk, erasedFixtures);
+
+const parsedFixtures = parseFixtures("");
+type _ParsedFixtures = Expect<Equal<typeof parsedFixtures, Fixture[]>>;
