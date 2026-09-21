@@ -741,6 +741,23 @@ describe("the in-flight gate", () => {
 
     await expect(running).rejects.toBe(abort);
   });
+
+  it("still maps a 429 that lands while the signal is aborted", async () => {
+    const client = createGatedClient();
+    const judge = createJudge({ client, retry: "prompt", now: clock });
+    const controller = new AbortController();
+    const running = judge({ id: "a", state: "a" }, supportInbox, { signal: controller.signal });
+
+    await tick();
+    controller.abort();
+    client.fail("a", thrown({ name: "RateLimitError", status: 429, retryAfterMs: 1200 }));
+
+    await expect(running).rejects.toMatchObject({
+      name: "JudgeExhaustedError",
+      code: "jev_exhausted",
+      retryAfterMs: 1200,
+    });
+  });
 });
 
 // ─── Retry and the Decision's own fields ────────────────────────────────────────────────
