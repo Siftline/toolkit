@@ -31,3 +31,15 @@ export type {
   ScoreCriteria,
   ScoreQuestion,
 } from "./recipe";
+
+export type {
+  AnswerResponse,
+  ChoiceResponse,
+  NoulResponse,
+  RetryPolicy,
+  ScoreResponse,
+  SystemOneCallOptions,
+  SystemOneClient,
+  SystemOneRequest,
+  SystemOneResult,
+} from "./client";
