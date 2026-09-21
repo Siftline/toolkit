@@ -55,5 +55,6 @@
   },
   "engines": {
     "node": ">=22.14"
-  }
+  },
+  "//zod": "Direct, though core already depends on it: `Adapter<C>.configSchema` is a `ZodType<C>`, so zod is in this package's public types and must resolve from here. The spec's \"actions adds none beyond core\" is owed a correction."
 }

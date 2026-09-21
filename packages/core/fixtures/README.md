@@ -1,7 +1,8 @@
 # Fixtures
 
-Example JSONL fixture sets for `@siftline/core` live here: the inputs a recipe is measured
-against. Fixtures are test data, not published output, so this directory stays out of `files`.
+The test vectors for `@siftline/core` live here: the documents and recorded answers every
+package's tests are pinned against. They are test data, not published output, so this directory
+stays out of `files`.
 
 `recipes/` holds the three reference Recipes — `support-inbox`, `feedback-widget` and
 `doc-pair-check` — each written in `serializeRecipe` form, so the round-trip test compares

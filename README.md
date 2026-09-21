@@ -6,19 +6,20 @@ categories, then act on it.
 This repo holds the published packages and the documentation site. The hosted app lives
 elsewhere and is not open source.
 
-| Package             | What it is                                                        |
-| ------------------- | ----------------------------------------------------------------- |
-| `@siftline/core`    | The engine: recipes, rules, fixtures, and the judge wrapper.      |
-| `@siftline/cli`     | `siftline` — run a recipe against fixtures from the terminal.     |
-| `@siftline/actions` | Adapters that carry a decision somewhere (webhook, Slack, email). |
+| Package             | What it is                                                               |
+| ------------------- | ------------------------------------------------------------------------ |
+| `@siftline/core`    | The engine: recipes, rules, fixtures, the Judge and the Decision format. |
+| `@siftline/cli`     | `siftline test` and `siftline label` — a recipe from the terminal.       |
+| `@siftline/actions` | Adapters that carry a Decision somewhere: webhook and Slack.             |
 
 `@siftline/ui` and `@siftline/config` are private: they are consumed just-in-time from
 source inside this repo and are never published. `config` holds what every package
 shares — the tsconfig bases, the Vitest base and the tsdown base.
 
-All three are on npm with provenance (`core` 0.0.3, `cli` 0.0.2, `actions` 0.0.2) as walking
-skeletons: the build, type, test and publish path is real, the Engine is not written yet.
-Docs live at [docs.siftline.dev](https://docs.siftline.dev).
+All three are on npm with provenance. 0.1.0 is the first release with the Engine in it: the
+Recipe, Decision and Fixture formats, the Judge and its in-flight gate, Rules and routing, the
+two Action adapters, and the `siftline` bin. Each package README lists what it exports. Docs
+live at [docs.siftline.dev](https://docs.siftline.dev).
 
 ## Getting started
 
