@@ -1,0 +1,39 @@
+{
+  "format": 1,
+  "name": "feedback-widget",
+  "version": 3,
+  "model": "jev-1.13.0",
+  "reviewThreshold": 0.6,
+  "questions": {
+    "team": {
+      "type": "choice",
+      "instructions": {
+        "task": "Route to the team that owns the problem",
+        "note": "Pick billing only for money"
+      },
+      "criteria": {
+        "billing": "Charges, invoices, refunds",
+        "product": "Bugs and missing features",
+        "sales": "Pricing questions before buying"
+      }
+    },
+    "angry": {
+      "type": "noul",
+      "instructions": "Is the sender angry?",
+      "criteria": {
+        "true": "Insults, threats to leave, all caps",
+        "false": "Neutral or polite, even if critical"
+      }
+    },
+    "urgency": {
+      "type": "score",
+      "instructions": "How soon does this need a reply?",
+      "criteria": [
+        "Can wait a week",
+        "This week",
+        "Today",
+        "The service is down for them"
+      ]
+    }
+  }
+}

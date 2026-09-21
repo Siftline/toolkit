@@ -10,9 +10,21 @@ The Engine. Recipes, rules, fixtures and the judge wrapper live here. It exposes
 entries: the main one, and `@siftline/core/testing` for the fake client used in tests.
 
 ```ts
-import { PLACEHOLDER, VERSION } from "@siftline/core";
+import { choice, defineRecipe, noul } from "@siftline/core";
 
-console.log(VERSION, PLACEHOLDER);
+const recipe = defineRecipe({
+  name: "support-inbox",
+  version: 1,
+  model: "jev-1.13.0",
+  questions: {
+    category: choice("Which category best describes this message?", {
+      complaint: "The sender is unhappy with the product or service",
+      question: "The sender asks how something works",
+      other: "Anything else, including spam and thanks",
+    }),
+    wants_human: noul("Does the sender ask to speak to a person?"),
+  },
+});
 ```
 
 ## `@siftline/cli`

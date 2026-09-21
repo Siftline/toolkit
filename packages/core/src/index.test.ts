@@ -1,12 +1,8 @@
-import { PLACEHOLDER, VERSION } from "@siftline/core";
+import { VERSION } from "@siftline/core";
 import { createFakeTypeSafeClient } from "@siftline/core/testing";
 import { expect, it } from "vitest";
 
 // Imported by package name, not by relative path: this asserts the published `exports` map.
-
-it("exposes the placeholder export from the package root", () => {
-  expect(PLACEHOLDER).toBe("siftline-core-walking-skeleton");
-});
 
 it("reports the package version", () => {
   expect(VERSION).toMatch(/^\d+\.\d+\.\d+/);

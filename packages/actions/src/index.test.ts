@@ -4,5 +4,7 @@ import { expect, it } from "vitest";
 // Imported by package name, not by relative path: this asserts the published `exports` map.
 
 it("exposes the placeholder export from the package root", () => {
-  expect(PLACEHOLDER).toBe("siftline-actions-walking-skeleton(siftline-core-walking-skeleton)");
+  expect(PLACEHOLDER).toMatch(
+    /^siftline-actions-walking-skeleton\(@siftline\/core@\d+\.\d+\.\d+\)$/,
+  );
 });

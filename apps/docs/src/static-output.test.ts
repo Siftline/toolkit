@@ -55,9 +55,9 @@ describe("static output", () => {
   });
 
   it("generates the API reference from core's source", () => {
-    // `PLACEHOLDER` only exists in `packages/core/src/index.ts`, so finding it here proves
-    // the whole typedoc chain, not just the file copy.
-    expect(read("docs/api/index.html")).toContain("PLACEHOLDER");
+    // `serializeRecipe` only exists in `packages/core/src`, so finding it here proves the
+    // whole typedoc chain, not just the file copy.
+    expect(read("docs/api/index.html")).toContain("serializeRecipe");
   });
 
   it("indexes the API reference for search", () => {
