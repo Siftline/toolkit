@@ -59,7 +59,9 @@ export function score<const T extends ScoreCriteria>(
   return { type: "score", instructions, criteria };
 }
 
-const jsonValue: z.ZodType<JsonValue> = z.lazy(() =>
+// Exported inside the package only: a Fixture's `state` is the whole `EntryType`, which
+// nothing in a Recipe's own schema admits.
+export const jsonValue: z.ZodType<JsonValue> = z.lazy(() =>
   z.union([
     z.string(),
     z.number(),
