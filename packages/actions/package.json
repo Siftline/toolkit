@@ -42,7 +42,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@siftline/core": "^0.0.3"
+    "@siftline/core": "^0.0.3",
+    "zod": "4.6.5"
   },
   "devDependencies": {
     "@arethetypeswrong/core": "0.18.5",
