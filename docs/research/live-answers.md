@@ -74,22 +74,22 @@ Twenty calls: 17 answered, 3 probes. All 17 returned `model: "jev-1.13.0"`.
 
 ### Usage and latency
 
-| Recipe | input tokens per call | output tokens per call | latency |
-| --- | --- | --- | --- |
-| support-inbox (Choice + Noul) | 383 to 412 | 59 to 60 | 829 to 845 ms |
-| feedback-widget (all three) | 459 to 480 | 70 | 322 to 778 ms |
-| doc-pair-check (two Choices) | 453 to 466 | 83 to 85 | 265 to 356 ms |
+| Recipe                        | input tokens per call | output tokens per call | latency       |
+| ----------------------------- | --------------------- | ---------------------- | ------------- |
+| support-inbox (Choice + Noul) | 383 to 412            | 59 to 60               | 829 to 845 ms |
+| feedback-widget (all three)   | 459 to 480            | 70                     | 322 to 778 ms |
+| doc-pair-check (two Choices)  | 453 to 466            | 83 to 85               | 265 to 356 ms |
 
 Output tokens are constant per Recipe, so they measure the answer schema, not the state.
 Six calls in flight at once ran without a 429.
 
 ## 3. Probes (`probes.jsonl`)
 
-| Probe | Result |
-| --- | --- |
-| `model: "jev-0.0.0"` | `BadRequestError`, status 400, body `{"detail":{"error_type":"api_usage_error","message":"Unknown model: jev-0.0.0"}}`. No `usage`, so unbilled. |
-| `model: "jev-latest"` | Accepted; `response.model` is `jev-1.13.0`. The Recipe schema still rejects the alias (ticket 02); the API does not. |
-| state of ~240k characters | `BadRequestError`, status 400, body `{"detail":{"error_type":"max_tokens_exceeded"}}`, no `usage`. 2.7 s to reject. Not 413 or 422. |
+| Probe                     | Result                                                                                                                                           |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `model: "jev-0.0.0"`      | `BadRequestError`, status 400, body `{"detail":{"error_type":"api_usage_error","message":"Unknown model: jev-0.0.0"}}`. No `usage`, so unbilled. |
+| `model: "jev-latest"`     | Accepted; `response.model` is `jev-1.13.0`. The Recipe schema still rejects the alias (ticket 02); the API does not.                             |
+| state of ~240k characters | `BadRequestError`, status 400, body `{"detail":{"error_type":"max_tokens_exceeded"}}`, no `usage`. 2.7 s to reject. Not 413 or 422.              |
 
 Both failures are 400, so ticket 05's `JudgeError.status` alone cannot tell "over budget"
 from "unknown model". The SDK's `APIError.body.detail.error_type` can, and
@@ -99,13 +99,13 @@ Record too long to judge. Neither probe is retried by the SDK (400 is not in
 
 ## 4. Cost
 
-| | |
-| --- | --- |
-| Calls | 20 (17 answered, 1 alias probe answered, 2 rejected) |
-| Input tokens billed | 7,882 |
-| Output tokens | 1,253 (free) |
-| Price | $0.042 per million input tokens |
-| **Total** | **$0.00033** |
+|                     |                                                      |
+| ------------------- | ---------------------------------------------------- |
+| Calls               | 20 (17 answered, 1 alias probe answered, 2 rejected) |
+| Input tokens billed | 7,882                                                |
+| Output tokens       | 1,253 (free)                                         |
+| Price               | $0.042 per million input tokens                      |
+| **Total**           | **$0.00033**                                         |
 
 A full `siftline test` over a hundred Fixtures of this size costs about two tenths of a
 cent. Cost is not a design constraint for the MVP's Fixture volumes.
