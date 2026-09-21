@@ -6,8 +6,24 @@
 // once on purpose — which is what the rule flags.
 // oxlint-disable typescript/no-unnecessary-type-parameters
 
-import { choice, defineRecipe, noul, parseRecipe, recipeSchema, score } from "@siftline/core";
-import type { Question, Questions, Recipe } from "@siftline/core";
+import {
+  choice,
+  defineRecipe,
+  noul,
+  parseDecision,
+  parseRecipe,
+  recipeSchema,
+  score,
+} from "@siftline/core";
+import type {
+  Answers,
+  Decision,
+  Question,
+  Questions,
+  Recipe,
+  Record,
+  SiftlineError,
+} from "@siftline/core";
 import type { z } from "zod";
 
 type Expect<T extends true> = T;
@@ -81,3 +97,52 @@ const fromDisk = parseRecipe("{}");
 type _FromDisk = Expect<Equal<typeof fromDisk, Recipe>>;
 const anyQuestion = fromDisk.questions.anything;
 type _FromDiskQuestion = Expect<Equal<typeof anyQuestion, Question | undefined>>;
+
+// ─── Decision ───────────────────────────────────────────────────────────────────────────
+
+type _ErasedAnswers = Expect<Equal<Answers, { [x: string]: string | boolean | number }>>;
+type _RecordFields = Expect<Equal<keyof Record, "id" | "state" | "trimmed">>;
+
+declare const decision: Decision<(typeof recipe)["questions"]>;
+
+type _Team = Expect<Equal<typeof decision.answers.team, "billing" | "product" | "sales">>;
+type _Angry = Expect<Equal<typeof decision.answers.angry, boolean>>;
+type _Urgency = Expect<Equal<typeof decision.answers.urgency, 0 | 1 | 2 | 3>>;
+type _TeamEvidence = Expect<
+  Equal<keyof typeof decision.questions.team.probabilities, "billing" | "product" | "sales">
+>;
+type _UrgencyEvidence = Expect<
+  Equal<keyof (typeof decision)["questions"]["urgency"], "score" | "confidence" | "probabilities">
+>;
+type _UrgencyProbabilities = Expect<
+  Equal<keyof (typeof decision)["questions"]["urgency"]["probabilities"], 0 | 1 | 2 | 3>
+>;
+type _AngryEvidence = Expect<
+  Equal<keyof (typeof decision)["questions"]["angry"], "probability" | "confidence">
+>;
+
+// @ts-expect-error — no such question
+void decision.answers.teem;
+
+// @ts-expect-error — not one of the labels
+const wrong: "nope" = decision.answers.team;
+void wrong;
+
+// A Decision read from disk is erased, and indexing it admits `undefined`.
+const decisionFromDisk = parseDecision("{}");
+type _ErasedDecision = Expect<Equal<typeof decisionFromDisk, Decision>>;
+const anyAnswer = decisionFromDisk.answers.anything;
+type _ErasedAnswer = Expect<Equal<typeof anyAnswer, string | boolean | number | undefined>>;
+
+type _ErrorCodes = Expect<
+  Equal<
+    SiftlineError["code"],
+    "jev_exhausted" | "jev_error" | "fixture_invalid" | "action_failed" | "action_build"
+  >
+>;
+
+declare const failure: SiftlineError;
+// @ts-expect-error — `code` is readonly
+failure.code = "jev_error";
+// @ts-expect-error — `retryable` is readonly
+failure.retryable = true;
