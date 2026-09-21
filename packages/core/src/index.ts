@@ -40,6 +40,14 @@ export {
   validateRules,
 } from "./rules";
 export type { Routing, Rule, RuleCondition, RuleProblem } from "./rules";
+export { createJudge, DEFAULT_MAX_IN_FLIGHT, JudgeError, JudgeExhaustedError } from "./judge";
+export type {
+  CreateJudgeOptions,
+  Judge,
+  JudgeCallOptions,
+  JudgeErrorReason,
+  RetryMode,
+} from "./judge";
 
 export type {
   AnswerResponse,
