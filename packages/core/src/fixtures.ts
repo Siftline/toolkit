@@ -3,14 +3,10 @@ import { z } from "zod";
 import type { Answers, Decision } from "./decision";
 import { SiftlineError } from "./errors";
 import type { Judge } from "./judge";
-import { jsonValue, questionName } from "./recipe";
+import { entryType, questionName } from "./recipe";
 import type { EntryType, Questions, Recipe } from "./recipe";
 
 // ─── The line ───────────────────────────────────────────────────────────────────────────
-
-// A Recipe's `entry` rejects `null` and the empty string; a Fixture's `state` is the SDK's
-// whole `EntryType`, exactly as a Record's.
-const state = z.union([z.string(), z.record(z.string(), jsonValue), z.array(jsonValue), z.null()]);
 
 const answerValue = z.union([z.string(), z.boolean(), z.number()]);
 
@@ -19,7 +15,7 @@ export const fixtureSchema = z
     id: z.string().min(1).optional(),
     origin: z.string().min(1).optional(),
     by: z.string().min(1).optional(),
-    state,
+    state: entryType,
     expect: z
       .record(questionName, answerValue)
       .refine((e) => Object.keys(e).length >= 1, "at least one expectation"),
@@ -27,7 +23,7 @@ export const fixtureSchema = z
   .strict();
 
 /**
- * One hand-written example. `expect` is `Answers<Q>` made partial, so it carries the Recipe's
+ * One labelled Fixture. `expect` is `Answers<Q>` made partial, so it carries the Recipe's
  * literal labels and level indices and needs no second mapping.
  */
 export interface Fixture<Q extends Questions = Questions> {

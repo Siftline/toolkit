@@ -72,6 +72,15 @@ export const jsonValue: z.ZodType<JsonValue> = z.lazy(() =>
   ]),
 );
 
+// Exported inside the package only. A Recipe's `entry` rejects `null` and the empty string;
+// a Fixture's and a recorded line's `state` is the SDK's whole `EntryType`.
+export const entryType = z.union([
+  z.string(),
+  z.record(z.string(), jsonValue),
+  z.array(jsonValue),
+  z.null(),
+]);
+
 // Descriptions are typed as the SDK's `EntryType` but parsed as non-null: the spec's schema
 // sketch has no `null` in `entry`.
 const entry = z.union([z.string().min(1), z.record(z.string(), jsonValue), z.array(jsonValue)]);
