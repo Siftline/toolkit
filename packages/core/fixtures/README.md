@@ -12,5 +12,5 @@ bytes. Every package's tests reuse them.
 form: one line, no trailing newline, 518 bytes. It is the round-trip vector and the body of
 the pinned HMAC vector in `@siftline/actions`.
 
-`replay/` holds real `jev-1.13.0` request and response pairs for the three example Recipes,
+`replay/` holds real `jev-1.13.0` request and response pairs for the three reference Recipes,
 recorded 2026-09-21. Format and findings: `docs/research/live-answers.md`.

@@ -6,25 +6,9 @@ import type {
   SystemOneRequest,
   SystemOneResult,
 } from "./client";
-import { questionSchema } from "./recipe";
-import type { JsonValue } from "./recipe";
+import { entryType, jsonValue, questionSchema } from "./recipe";
 
 // ─── Replay line schema ─────────────────────────────────────────────────────────────────
-
-const jsonValue: z.ZodType<JsonValue> = z.lazy(() =>
-  z.union([
-    z.string(),
-    z.number(),
-    z.boolean(),
-    z.null(),
-    z.array(jsonValue),
-    z.record(z.string(), jsonValue),
-  ]),
-);
-
-// A Recipe's `entry` rejects `null` and the empty string; a recorded `state` is the SDK's
-// whole `EntryType`, so it gets its own schema.
-const state = z.union([z.string(), z.record(z.string(), jsonValue), z.array(jsonValue), z.null()]);
 
 const probability = z.number().min(0).max(1);
 const probabilities = z.record(z.string().min(1), z.number());
@@ -52,7 +36,7 @@ const answerSchema = z.discriminatedUnion("type", [
 
 const systemOneRequestSchema = z
   .object({
-    state,
+    state: entryType,
     questions: z.record(z.string().min(1), questionSchema),
     model: z.string().min(1),
   })
