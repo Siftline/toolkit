@@ -23,7 +23,9 @@ import type {
   Recipe,
   Record,
   SiftlineError,
+  SystemOneClient,
 } from "@siftline/core";
+import type { TypeSafeClient } from "@typesafe-ai/sdk";
 import type { z } from "zod";
 
 type Expect<T extends true> = T;
@@ -146,3 +148,15 @@ declare const failure: SiftlineError;
 failure.code = "jev_error";
 // @ts-expect-error — `retryable` is readonly
 failure.retryable = true;
+
+// ─── Testing client ─────────────────────────────────────────────────────────────────────
+
+// The seam's whole point: the real SDK client satisfies the interface core declares, so a
+// portal passes one straight to `createJudge`. `systemOne` is a property, not a method, so
+// this is a contravariant check on the request and options types, not a bivariant one.
+type _SdkClientIsSystemOneClient = Expect<TypeSafeClient extends SystemOneClient ? true : false>;
+
+// Not the other way round: `TypeSafeClient` is a class with private state and a whole API
+// surface besides.
+// @ts-expect-error — core's interface is the narrower of the two
+type _SystemOneClientIsSdkClient = Expect<SystemOneClient extends TypeSafeClient ? true : false>;
