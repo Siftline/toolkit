@@ -9,10 +9,13 @@
 import {
   choice,
   defineRecipe,
+  evaluateRules,
   noul,
   parseDecision,
   parseRecipe,
   recipeSchema,
+  routeDecision,
+  ruleSchema,
   score,
 } from "@siftline/core";
 import type {
@@ -22,6 +25,8 @@ import type {
   Questions,
   Recipe,
   Record,
+  Rule,
+  RuleCondition,
   SiftlineError,
   SystemOneClient,
 } from "@siftline/core";
@@ -160,3 +165,72 @@ type _SdkClientIsSystemOneClient = Expect<TypeSafeClient extends SystemOneClient
 // surface besides.
 // @ts-expect-error — core's interface is the narrower of the two
 type _SystemOneClientIsSdkClient = Expect<SystemOneClient extends TypeSafeClient ? true : false>;
+
+// ─── Rules ──────────────────────────────────────────────────────────────────────────────
+
+// Reads in argument order and fails at the constraint, not inside a conditional.
+type Narrows<A extends B, B> = A;
+
+type ParsedRule = z.infer<typeof ruleSchema>;
+
+// A narrowed Rule is always a valid parsed Rule, so the erased `evaluateRules` accepts one.
+// The reverse does not hold: a parsed `is` carries all three value types at once.
+type _RuleNarrows = Narrows<Rule<(typeof recipe)["questions"]>, ParsedRule>;
+type _RuleNarrows2 = Expect<Rule<(typeof recipe)["questions"]> extends ParsedRule ? true : false>;
+type _CondNarrows = Narrows<RuleCondition<(typeof recipe)["questions"]>, ParsedRule["condition"]>;
+type _ErasedRuleIsParsed = Expect<Rule extends ParsedRule ? true : false>;
+
+const rules: Rule<(typeof recipe)["questions"]>[] = [
+  {
+    id: "r1",
+    condition: { question: "urgency", comparator: "atLeast", value: 3 },
+    action: "act_pager",
+  },
+  {
+    id: "r2",
+    condition: { question: "team", comparator: "isOneOf", value: ["billing", "sales"] },
+    action: "act_slack_revenue",
+  },
+  { id: "r3", condition: { question: "angry", comparator: "is", value: true }, action: null },
+];
+
+const badRules: Rule<(typeof recipe)["questions"]>[] = [
+  // @ts-expect-error — unknown question
+  { id: "b1", condition: { question: "teem", comparator: "is", value: "billing" }, action: null },
+  // @ts-expect-error — unknown label in `is`
+  { id: "b2", condition: { question: "team", comparator: "is", value: "support" }, action: null },
+  {
+    id: "b3",
+    // @ts-expect-error — unknown label in `isOneOf`
+    condition: { question: "team", comparator: "isOneOf", value: ["billing", "support"] },
+    action: null,
+  },
+  // @ts-expect-error — level index out of range
+  { id: "b4", condition: { question: "urgency", comparator: "atLeast", value: 4 }, action: null },
+  // @ts-expect-error — boolean on a Choice
+  { id: "b5", condition: { question: "team", comparator: "is", value: true }, action: null },
+  // @ts-expect-error — `atLeast` on a Choice
+  { id: "b6", condition: { question: "team", comparator: "atLeast", value: 1 }, action: null },
+];
+void badRules;
+
+const routed = routeDecision(decision, rules);
+type _Routed = Expect<Equal<typeof routed, Decision<(typeof recipe)["questions"]>>>;
+
+// `NoInfer`: an unannotated array literal at the call site is checked against the Decision's Q.
+routeDecision(decision, [
+  // @ts-expect-error — unknown label, inferred from `decision`
+  { id: "x", condition: { question: "team", comparator: "is", value: "nope" }, action: null },
+]);
+
+// Rules read from cloud's rows are erased, and so must the Decision beside them be.
+const parsedRules: Rule[] = ruleSchema
+  .array()
+  .parse([
+    { id: "p", condition: { question: "team", comparator: "is", value: "billing" }, action: null },
+  ]);
+routeDecision(decisionFromDisk, parsedRules);
+void evaluateRules(decisionFromDisk.answers, parsedRules);
+void evaluateRules(decision.answers, parsedRules);
+// @ts-expect-error — an erased Rule is not a Rule<Q>: `value` is too wide
+routeDecision(decision, parsedRules);
