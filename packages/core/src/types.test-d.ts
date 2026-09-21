@@ -8,6 +8,7 @@
 
 import {
   choice,
+  createJudge,
   defineRecipe,
   noul,
   parseDecision,
@@ -160,3 +161,22 @@ type _SdkClientIsSystemOneClient = Expect<TypeSafeClient extends SystemOneClient
 // surface besides.
 // @ts-expect-error — core's interface is the narrower of the two
 type _SystemOneClientIsSdkClient = Expect<SystemOneClient extends TypeSafeClient ? true : false>;
+
+// ─── Judge ──────────────────────────────────────────────────────────────────────────────
+
+declare const client: SystemOneClient;
+declare const record: Record;
+
+const judge = createJudge({ client, retry: "prompt" });
+
+// The Recipe's literals survive the whole round trip, so the portal reads a typed Decision.
+const judged = judge(record, recipe);
+type _Judged = Expect<Equal<typeof judged, Promise<Decision<(typeof recipe)["questions"]>>>>;
+type _JudgedUrgency = Expect<Equal<Awaited<typeof judged>["answers"]["urgency"], 0 | 1 | 2 | 3>>;
+
+// A Recipe read from disk judges to the erased Decision.
+const judgedFromDisk = judge(record, fromDisk);
+type _JudgedFromDisk = Expect<Equal<typeof judgedFromDisk, Promise<Decision>>>;
+
+// @ts-expect-error — `retry` has no default
+createJudge({ client });
