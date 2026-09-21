@@ -71,8 +71,8 @@ review. `validateRules(rules, recipe)` reports every Rule the Recipe no longer s
 A Fixture is `{ state, expect, id?, origin?, by? }` on one JSONL line, where `expect` is a
 partial answer map: a Question left out of it is left out of that Question's denominator.
 `parseFixture`, `parseFixtures` and `serializeFixture` are the format's door, and
-`defineFixtures(recipe, fixtures)` writes a set in TypeScript and validates it against the
-Recipe at once. `testRecipe(judge, recipe, fixtures)` judges them all through the gate and
+`defineFixtures(recipe, fixtures)` writes a set in TypeScript, validates it against the
+Recipe and returns each `expect` in Recipe order. `testRecipe(judge, recipe, fixtures)` judges them all through the gate and
 returns a `TestReport`: one result per Fixture with its mismatches and its review flag,
 accuracy per Question, and the lowest Question accuracy as the report's own. `scoreResults` is
 the pure half when you already hold the Decisions, and `compareAnswers` the single-Fixture

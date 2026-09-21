@@ -167,7 +167,17 @@ export function defineFixtures(recipe: Recipe, fixtures: Fixture[]): Fixture[] {
   for (const fixture of fixtures) fixtureSchema.parse(fixture);
   const problems = validateFixtures(fixtures, recipe);
   if (problems.length > 0) throw new FixtureValidationError(problems);
-  return fixtures;
+  return fixtures.map((fixture) => ({ ...fixture, expect: inRecipeOrder(fixture.expect, recipe) }));
+}
+
+// Validation has already refused every unknown Question, so no expectation is dropped here.
+function inRecipeOrder(expect: Partial<Answers>, recipe: Recipe): Partial<Answers> {
+  const ordered: { [question: string]: string | boolean | number } = {};
+  for (const question of Object.keys(recipe.questions)) {
+    const expected = expect[question];
+    if (expected !== undefined) ordered[question] = expected;
+  }
+  return ordered;
 }
 
 // ─── Matching ───────────────────────────────────────────────────────────────────────────

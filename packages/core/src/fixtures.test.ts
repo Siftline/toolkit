@@ -190,6 +190,20 @@ describe("defineFixtures", () => {
     expect(written).toEqual([{ state: "x", expect: { category: "complaint" } }]);
   });
 
+  it("rebuilds `expect` in Recipe order", () => {
+    const written = defineFixtures(supportInbox, [
+      { state: "x", expect: { wants_human: true, category: "complaint" } },
+    ]);
+
+    const [first] = written;
+    if (!first) throw new Error("defineFixtures dropped the Fixture");
+
+    expect(Object.keys(first.expect)).toEqual(["category", "wants_human"]);
+    expect(serializeFixture(first)).toBe(
+      '{"state":"x","expect":{"category":"complaint","wants_human":true}}',
+    );
+  });
+
   it("throws a FixtureValidationError carrying every problem", () => {
     let thrown: unknown;
     try {
