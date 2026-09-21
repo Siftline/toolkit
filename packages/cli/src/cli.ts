@@ -1,15 +1,27 @@
 #!/usr/bin/env node
-import { run } from "./index";
+import type { SystemOneClient } from "@siftline/core";
+import { TypeSafeClient } from "@typesafe-ai/sdk";
 
-const result = run(process.argv.slice(2));
+import { API_KEY_ENV, run } from "./index";
 
-if (result.stdout !== "") {
-  process.stdout.write(result.stdout);
-}
+const controller = new AbortController();
+process.on("SIGINT", () => {
+  controller.abort();
+});
 
-if (result.stderr !== "") {
-  process.stderr.write(result.stderr);
-}
+// Built on first call, so a missing key is `run`'s exit 2 rather than the SDK's own throw.
+let client: SystemOneClient | undefined;
 
-// Set rather than `process.exit()`: the streams above still get to flush.
-process.exitCode = result.code;
+process.exitCode = await run(process.argv.slice(2), {
+  client: {
+    systemOne: (request, options) => {
+      client ??= new TypeSafeClient({ apiKey: process.env[API_KEY_ENV] });
+      return client.systemOne(request, options);
+    },
+  },
+  stdin: process.stdin,
+  stdout: process.stdout,
+  stderr: process.stderr,
+  env: process.env,
+  signal: controller.signal,
+});
