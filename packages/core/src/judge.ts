@@ -157,8 +157,14 @@ function reasonOf(thrown: { [key: string]: unknown }, status: number | null): Ju
   return "unknown";
 }
 
-function isAbort(thrown: { [key: string]: unknown }, signal?: AbortSignal): boolean {
-  if (signal?.aborted === true) return true;
+// An aborted signal is not enough on its own: a sibling's abort and a real 429 can land in
+// the same tick, and the 429 still has to be mapped.
+function isAbort(
+  cause: unknown,
+  thrown: { [key: string]: unknown },
+  signal?: AbortSignal,
+): boolean {
+  if (signal?.aborted === true && cause === signal.reason) return true;
   const name = thrown["name"];
   return name === "AbortError" || name === "APIUserAbortError";
 }
@@ -166,7 +172,7 @@ function isAbort(thrown: { [key: string]: unknown }, signal?: AbortSignal): bool
 /** Duck typing, because core cannot import the SDK's error classes. Never returns. */
 function mapClientError(cause: unknown, signal?: AbortSignal): never {
   const thrown = isRecordLike(cause) ? cause : {};
-  if (isAbort(thrown, signal)) throw cause;
+  if (isAbort(cause, thrown, signal)) throw cause;
 
   const rawStatus = thrown["status"];
   const status = typeof rawStatus === "number" ? rawStatus : null;
