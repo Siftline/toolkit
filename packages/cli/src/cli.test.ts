@@ -21,30 +21,39 @@ it("prints its version and exits 0 for --version", () => {
   expect(result.stdout.trim()).toBe(packageJson.version);
 });
 
-it("prints usage naming the unimplemented commands and exits 0 for --help", () => {
+it("prints the usage block and exits 0 for --help", () => {
   const result = runBin("--help");
 
   expect(result.status).toBe(0);
-  expect(result.stdout).toContain("siftline <command> [options]");
-  expect(result.stdout).toContain(
-    "test     Measure a recipe against its fixtures (not yet implemented)",
-  );
-  expect(result.stdout).toContain("label    Label inputs with a recipe (not yet implemented)");
+  expect(result.stdout).toContain("siftline test  <recipe.json> <fixtures.jsonl>");
+  expect(result.stdout).toContain("siftline label <recipe.json> [records.jsonl | -]");
+  expect(result.stdout).toContain("TYPESAFE_API_KEY        Required.");
 });
 
-it("exits 1 with usage on stderr when no command is given", () => {
+it("exits 2 with usage on stderr when no command is given", () => {
   const result = runBin();
 
-  expect(result.status).toBe(1);
+  expect(result.status).toBe(2);
   expect(result.stdout).toBe("");
   expect(result.stderr).toContain("siftline: no command given");
 });
 
-it("exits 1 with usage on stderr for an unknown command", () => {
+it("exits 2 with usage on stderr for an unknown command", () => {
   const result = runBin("frobnicate");
 
-  expect(result.status).toBe(1);
+  expect(result.status).toBe(2);
   expect(result.stderr).toContain("siftline: unknown command: frobnicate");
+});
+
+it("exits 2 without the key, before it reads a file", () => {
+  const result = spawnSync(process.execPath, [binPath, "test", "recipe.json", "fixtures.jsonl"], {
+    encoding: "utf8",
+    env: { ...process.env, TYPESAFE_API_KEY: "" },
+  });
+
+  expect(result.status).toBe(2);
+  expect(result.stderr).toContain("siftline: TYPESAFE_API_KEY is not set");
+  expect(result.stderr).not.toContain("recipe.json:");
 });
 
 it("is executable through its own shebang", () => {

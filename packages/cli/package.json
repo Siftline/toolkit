@@ -45,7 +45,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@siftline/core": "^0.0.3"
+    "@siftline/core": "^0.0.3",
+    "@typesafe-ai/sdk": "0.6.0"
   },
   "devDependencies": {
     "@arethetypeswrong/core": "0.18.5",

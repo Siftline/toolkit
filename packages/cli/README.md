@@ -2,15 +2,36 @@
 
 The Siftline command line: measure a recipe against its fixtures, then label for real.
 
-This package is a walking skeleton. The `siftline` bin prints its version and a usage
-block; `test` and `label` are named there but not implemented, which is enough to prove
-the bin, shebang, build, type, test, pack and publish path. The commands land next.
+`siftline test` runs a Recipe against a JSONL file of Fixtures and reports one accuracy per
+Question, the fold, the unsure count and the misses. `label` is named in the usage block and
+lands next.
 
 ```sh
-npx @siftline/cli --help
+export TYPESAFE_API_KEY=...
+npx @siftline/cli test recipe.json fixtures.jsonl
 ```
 
-Exit codes: `0` for `--help` and `--version`, `1` for anything else.
+```
+support-inbox v1 · jev-1.13.0
+
+category      4/5   0.80
+wants_human   5/5   1.00
+
+accuracy      0.80  (lowest question)
+unsure        1 of 5 would go to Review
+
+fixture:4  category: expected complaint, got question
+```
+
+`--json` prints the `TestReport` plus a top-level `drift`, `--min-accuracy <ratio>` fails CI on
+the lowest Question accuracy, `--max-in-flight <n>` sets the gate width and `--quiet` silences
+progress. `npx @siftline/cli --help` prints the rest.
+
+Exit codes: `0` success, `1` work that ran and failed, `2` usage and input errors, `130` after
+a SIGINT.
+
+The library door is `run(argv, deps)`, where `deps` is
+`{ client, stdin, stdout, stderr, env, signal }`. The bin is a wrapper around it.
 
 ESM only. Node 22.14 or newer.
 
