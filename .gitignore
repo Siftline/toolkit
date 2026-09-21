@@ -22,3 +22,6 @@ apps/docs/content/docs/api
 
 # Local pack output
 *.tgz
+
+# Local issue tracker
+.scratch/

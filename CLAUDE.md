@@ -2,42 +2,50 @@
 
 Bun installs, Node runs, Turborepo orchestrates. Start here, then read `README.md`.
 
-## Packages
+<!-- intent-skills:start -->
 
-| Path               | Name                | Published                |
-| ------------------ | ------------------- | ------------------------ |
-| `packages/core`    | `@siftline/core`    | yes                      |
-| `packages/cli`     | `@siftline/cli`     | yes                      |
-| `packages/actions` | `@siftline/actions` | yes                      |
-| `packages/ui`      | `@siftline/ui`      | no — just-in-time source |
-| `packages/config`  | `@siftline/config`  | no — shared build config |
-| `apps/docs`        | `@siftline/docs`    | no — the docs site       |
+## Skill Loading
 
-## Scripts
+Before editing files for a substantial task:
 
-The three published packages and `apps/docs` use the same names: `build`, `dev`, `lint`,
-`lint:fix`, `typecheck`, `test`. Formatting is root-only: `format` and `format:check`.
+- Run `bunx @tanstack/intent@latest list` from the workspace root to see available local skills.
+- If a listed skill matches the task, run `bunx @tanstack/intent@latest load <package>#<skill>` before changing files.
+- Use the loaded `SKILL.md` guidance while making the change.
+- Monorepos: when working across packages, run the skill check from the workspace root and prefer the local skill for the package being changed.
+- Multiple matches: prefer the most specific local skill for the package or concern you are changing; load additional skills only when the task spans multiple packages or concerns.
 
-`@siftline/ui` and `@siftline/config` are the exception, on purpose. They are consumed
-just-in-time from source, so there is nothing to bundle, nothing to watch and nothing to
-test; they carry only `lint`, `lint:fix` and `typecheck`. Do not add no-op scripts to make
-the table look even.
+<!-- intent-skills:end -->
 
-Before you hand work back, run `bun run check` at the root. It is exactly what CI runs.
+## Before you hand work back
+
+- `bun run check` at the root MUST pass. It is exactly what CI runs.
+- Every published package you touched MUST have a changeset: `bun changeset`.
+  Deliberately release-less: `bun changeset --empty`.
 
 ## Rules
 
-- Exact version pins for everything that comes from a registry — `bunfig.toml` sets
-  `exact = true`. Carets are for internal dependencies only: `@siftline/cli` and
-  `@siftline/actions` depend on `@siftline/core` through a plain caret range (`^0.0.2`)
-  because Changesets publishes with the npm CLI, which would ship a literal `workspace:`
-  protocol to npm. The private packages are consumed as `workspace:*` and never reach a
-  registry at all.
-- Anything that changes a published package needs a changeset: `bun changeset`.
-  Deliberately release-less? `bun changeset --empty`.
-- oxlint and oxfmt only. Never add ESLint or Prettier.
-- TypeScript 7 repo-wide. The one allowed `typescript@6.0.x` is `apps/docs`, for typedoc —
-  and because that pin is the nearest `typescript` to the docs app, its `typecheck` runs on
-  6.0.3 too. Nothing under `apps/docs` is covered by TypeScript 7 semantics.
-- Scripts run on Node, never `bun --bun`.
+- Registry dependencies are pinned exactly. Internal dependencies on `@siftline/core`
+  use a plain caret range, because Changesets publishes with the npm CLI, which would
+  ship a literal `workspace:` protocol. Private packages stay `workspace:*`.
+- `@siftline/ui` and `@siftline/config` are consumed just-in-time from source and carry
+  only `lint`, `lint:fix` and `typecheck`. Leave the script table uneven.
+- Lint with oxlint, format with oxfmt. ESLint and Prettier stay out.
+- TypeScript 7 everywhere except `apps/docs`, pinned to 6.0.x for typedoc. Its
+  `typecheck` runs on 6 too.
+- Run scripts on Node with `bun run`. `bun --bun` breaks Vitest, Vite and wrangler.
 - Conventional Commits, signed off: `git commit -s`.
+
+## Agent skills
+
+### Issue tracker
+
+Local markdown under `.scratch/<feature>/`, even though the remote is GitHub. See
+`docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+The defaults. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `CONTEXT.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
