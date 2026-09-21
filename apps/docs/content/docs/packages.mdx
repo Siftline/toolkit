@@ -11,21 +11,7 @@ exposes two entries: the main one, and `@siftline/core/testing` for the scripted
 clients tests judge against.
 
 ```ts
-import { choice, defineRecipe, noul } from "@siftline/core";
-
-const recipe = defineRecipe({
-  name: "support-inbox",
-  version: 1,
-  model: "jev-1.13.0",
-  questions: {
-    category: choice("Which category best describes this message?", {
-      complaint: "The sender is unhappy with the product or service",
-      question: "The sender asks how something works",
-      other: "Anything else, including spam and thanks",
-    }),
-    wants_human: noul("Does the sender ask to speak to a person?"),
-  },
-});
+import { createJudge, defineRecipe, routeDecision } from "@siftline/core";
 ```
 
 ## `@siftline/cli`
@@ -34,7 +20,7 @@ Ships the `siftline` bin. `siftline test` measures a Recipe against a JSONL file
 Fixtures; `siftline label` judges real Records and writes one Decision line each.
 
 ```bash
-npx siftline test recipe.json fixtures.jsonl
+npx siftline --version
 ```
 
 ## `@siftline/actions`
