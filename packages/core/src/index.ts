@@ -32,6 +32,15 @@ export type {
   ScoreQuestion,
 } from "./recipe";
 
+export {
+  evaluateRules,
+  routeDecision,
+  ruleConditionSchema,
+  ruleSchema,
+  validateRules,
+} from "./rules";
+export type { Routing, Rule, RuleCondition, RuleProblem } from "./rules";
+
 export type {
   AnswerResponse,
   ChoiceResponse,

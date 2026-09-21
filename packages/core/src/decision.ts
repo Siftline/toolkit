@@ -12,7 +12,8 @@ export interface Record {
 
 // `number extends S["length"]` is what collapses the erased tuple to `number`; without it
 // the index union would be `never`.
-type IndexOf<S extends readonly unknown[]> = number extends S["length"]
+// Exported inside the package only: a Score Rule's `value` is the same level index.
+export type IndexOf<S extends readonly unknown[]> = number extends S["length"]
   ? number
   : Extract<keyof S, `${number}`> extends `${infer N extends number}`
     ? N
