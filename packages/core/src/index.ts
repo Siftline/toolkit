@@ -49,6 +49,29 @@ export type {
   RetryMode,
 } from "./judge";
 
+export {
+  compareAnswers,
+  defineFixtures,
+  fixtureSchema,
+  FixtureParseError,
+  FixtureValidationError,
+  parseFixture,
+  parseFixtures,
+  scoreResults,
+  serializeFixture,
+  testRecipe,
+  validateFixtures,
+} from "./fixtures";
+export type {
+  Fixture,
+  FixtureProblem,
+  FixtureResult,
+  Mismatch,
+  QuestionAccuracy,
+  TestRecipeOptions,
+  TestReport,
+} from "./fixtures";
+
 export type {
   AnswerResponse,
   ChoiceResponse,
