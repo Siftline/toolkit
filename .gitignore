@@ -25,3 +25,6 @@ apps/docs/content/docs/api
 
 # Local issue tracker
 .scratch/
+
+# Agent worktrees
+.claude/

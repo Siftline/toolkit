@@ -16,7 +16,9 @@ elsewhere and is not open source.
 source inside this repo and are never published. `config` holds what every package
 shares — the tsconfig bases, the Vitest base and the tsdown base.
 
-Nothing is released yet. Docs will live at [docs.siftline.dev](https://docs.siftline.dev).
+All three are on npm with provenance (`core` 0.0.3, `cli` 0.0.2, `actions` 0.0.2) as walking
+skeletons: the build, type, test and publish path is real, the Engine is not written yet.
+Docs live at [docs.siftline.dev](https://docs.siftline.dev).
 
 ## Getting started
 
@@ -154,10 +156,12 @@ short-lived credentials and attaches provenance. There is no `NPM_TOKEN` in this
 One repository setting is required for step 1: **Settings → Actions → General → Allow
 GitHub Actions to create and approve pull requests** must be on, or the version job fails.
 
-### First publish (one time, by a human)
+### First publish (done 2026-09-17; kept for a fourth package)
 
-Trusted publishers can only be attached to a package that already exists on npm, so the
-very first release of each package is manual. From a clean `main` checkout on Node 24,
+This was run once for the three packages, and `release.yml` has published with provenance
+since (`@siftline/core@0.0.3` carries an attestation). It is needed again only for a new
+package, because trusted publishers can only be attached to a package that already exists
+on npm, so a new package's very first release is manual. From a clean `main` checkout on Node 24,
 logged in to npm as a maintainer with 2FA:
 
 ```sh
@@ -193,11 +197,9 @@ GitHub Actions, with
 Leave the environment blank. The publish job declares no `environment:`, and a name here
 would make the OIDC claim fail to match.
 
-Until those publishers exist, `release.yml` is expected to reach the publish step and
-**fail there**. That is the documented state between the release wiring landing and this
-procedure being run; nothing else in the workflow is wrong. Afterwards, re-run
-`release.yml` (or merge an empty changeset) and confirm the packages show a provenance
-badge on npm.
+Until the new package's publisher exists, `release.yml` reaches the publish step and
+**fails there**; nothing else in the workflow is wrong. Afterwards, re-run `release.yml`
+(or merge an empty changeset) and confirm the package shows a provenance badge on npm.
 
 ## Contributing
 
