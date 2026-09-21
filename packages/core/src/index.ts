@@ -32,6 +32,15 @@ export type {
   ScoreQuestion,
 } from "./recipe";
 
+export { createJudge, DEFAULT_MAX_IN_FLIGHT, JudgeError, JudgeExhaustedError } from "./judge";
+export type {
+  CreateJudgeOptions,
+  Judge,
+  JudgeCallOptions,
+  JudgeErrorReason,
+  RetryMode,
+} from "./judge";
+
 export type {
   AnswerResponse,
   ChoiceResponse,
