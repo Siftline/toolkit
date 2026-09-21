@@ -7,7 +7,8 @@
 // oxlint-disable typescript/no-unnecessary-type-parameters
 
 import { choice, defineRecipe, noul, parseRecipe, recipeSchema, score } from "@siftline/core";
-import type { Question, Questions, Recipe } from "@siftline/core";
+import type { Question, Questions, Recipe, SystemOneClient } from "@siftline/core";
+import type { TypeSafeClient } from "@typesafe-ai/sdk";
 import type { z } from "zod";
 
 type Expect<T extends true> = T;
@@ -81,3 +82,15 @@ const fromDisk = parseRecipe("{}");
 type _FromDisk = Expect<Equal<typeof fromDisk, Recipe>>;
 const anyQuestion = fromDisk.questions.anything;
 type _FromDiskQuestion = Expect<Equal<typeof anyQuestion, Question | undefined>>;
+
+// ─── Testing client ─────────────────────────────────────────────────────────────────────
+
+// The seam's whole point: the real SDK client satisfies the interface core declares, so a
+// portal passes one straight to `createJudge`. `systemOne` is a property, not a method, so
+// this is a contravariant check on the request and options types, not a bivariant one.
+type _SdkClientIsSystemOneClient = Expect<TypeSafeClient extends SystemOneClient ? true : false>;
+
+// Not the other way round: `TypeSafeClient` is a class with private state and a whole API
+// surface besides.
+// @ts-expect-error — core's interface is the narrower of the two
+type _SystemOneClientIsSdkClient = Expect<SystemOneClient extends TypeSafeClient ? true : false>;
