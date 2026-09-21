@@ -4,6 +4,7 @@ import type { JudgeErrorReason, Recipe, Record, Rule } from "@siftline/core";
 import type { OutputStream, RunDeps } from "./deps";
 import { UsageError, writeLine } from "./deps";
 import { readRecipeFile, readRecords, readRulesFile } from "./input";
+import type { CommandOptions } from "./options";
 import { parseCommandArgs } from "./options";
 import { driftMessage } from "./report";
 
@@ -23,7 +24,7 @@ export async function runLabel(args: readonly string[], deps: RunDeps): Promise<
   const rules = options.rules === null ? null : await readRulesFile(options.rules, recipe);
   const records = await readRecords(recordsPath, deps.stdin);
 
-  return await label(records, recipe, rules, deps, options.maxInFlight, options.quiet);
+  return await label(records, recipe, rules, deps, options);
 }
 
 async function label(
@@ -31,11 +32,11 @@ async function label(
   recipe: Recipe,
   rules: Rule[] | null,
   deps: RunDeps,
-  maxInFlight: number,
-  quiet: boolean,
+  options: CommandOptions,
 ): Promise<number> {
+  const { maxInFlight } = options;
   const judge = createJudge({ client: deps.client, retry: "patient", maxInFlight });
-  const progress = createProgress(deps.stderr, records.length, quiet);
+  const progress = createProgress(deps.stderr, records.length, options.quiet);
 
   // A Record that fails is skipped, so the buffer holds `null` in its place and the run
   // keeps writing the ones behind it in input order.

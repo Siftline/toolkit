@@ -30,47 +30,48 @@ export async function readRecipeFile(path: string): Promise<Recipe> {
 }
 
 export async function readFixturesFile(path: string, recipe: Recipe): Promise<Fixture[]> {
-  const text = await readTextFile(path, "fixtures");
-
-  let fixtures: Fixture[];
-  try {
-    fixtures = parseFixtures(text);
-  } catch (cause) {
-    throw new InputError(`${path} does not hold valid Fixtures: ${reason(cause)}`, { cause });
-  }
-
-  const problems = validateFixtures(fixtures, recipe);
-  const first = problems[0];
-  if (first) {
-    const more = problems.length === 1 ? "" : ` (and ${problems.length - 1} more)`;
-    throw new InputError(
-      `${path} does not fit the Recipe: fixture ${first.fixture}: ${first.problem}${more}`,
-    );
-  }
-
-  return fixtures;
+  return await readChecked(path, "fixtures", "Fixtures", parseFixtures, (fixtures) =>
+    validateFixtures(fixtures, recipe).map(
+      (problem) => `fixture ${problem.fixture}: ${problem.problem}`,
+    ),
+  );
 }
 
 export async function readRulesFile(path: string, recipe: Recipe): Promise<Rule[]> {
-  const text = await readTextFile(path, "rules");
+  return await readChecked(
+    path,
+    "rules",
+    "Rules",
+    (text) => ruleSchema.array().parse(JSON.parse(text)),
+    (rules) =>
+      validateRules(rules, recipe).map((problem) => `rule ${problem.rule}: ${problem.problem}`),
+  );
+}
 
-  let rules: Rule[];
+/** Parse the whole file, then refuse it on the first line that no longer fits the Recipe. */
+async function readChecked<T>(
+  path: string,
+  what: string,
+  kind: string,
+  parse: (text: string) => T[],
+  stale: (items: T[]) => string[],
+): Promise<T[]> {
+  const text = await readTextFile(path, what);
+
+  let items: T[];
   try {
-    rules = ruleSchema.array().parse(JSON.parse(text));
+    items = parse(text);
   } catch (cause) {
-    throw new InputError(`${path} does not hold valid Rules: ${reason(cause)}`, { cause });
+    throw new InputError(`${path} does not hold valid ${kind}: ${reason(cause)}`, { cause });
   }
 
-  const problems = validateRules(rules, recipe);
+  const problems = stale(items);
   const first = problems[0];
   if (first) {
-    const more = problems.length === 1 ? "" : ` (and ${problems.length - 1} more)`;
-    throw new InputError(
-      `${path} does not fit the Recipe: rule ${first.rule}: ${first.problem}${more}`,
-    );
+    throw new InputError(`${path} does not fit the Recipe: ${first}${andMore(problems.length)}`);
   }
 
-  return rules;
+  return items;
 }
 
 /** `-` and an absent path both mean stdin. Every line is parsed before the caller judges any. */
@@ -176,6 +177,10 @@ function describe(issues: readonly Issue[]): string {
   const first = issues[0];
   if (!first) return "invalid";
   const where = first.path.length === 0 ? "" : `${first.path.join(".")}: `;
-  const head = `${where}${first.message}`;
-  return issues.length === 1 ? head : `${head} (and ${issues.length - 1} more)`;
+  return `${where}${first.message}${andMore(issues.length)}`;
+}
+
+/** The tail every "here is the first of them" sentence in this file ends with. */
+function andMore(count: number): string {
+  return count === 1 ? "" : ` (and ${count - 1} more)`;
 }

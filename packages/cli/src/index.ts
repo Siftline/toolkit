@@ -36,11 +36,12 @@ export async function run(argv: readonly string[], deps: RunDeps): Promise<numbe
 
     return command === "label" ? await runLabel(rest, deps) : await runTest(rest, deps);
   } catch (error) {
-    return report(error, deps);
+    return exitFor(error, deps);
   }
 }
 
-function report(error: unknown, deps: RunDeps): number {
+/** Every failure's exit code and its one stderr line. */
+function exitFor(error: unknown, deps: RunDeps): number {
   if (deps.signal?.aborted) {
     writeLine(deps.stderr, "siftline: interrupted");
     return 130;
