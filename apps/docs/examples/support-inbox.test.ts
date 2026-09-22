@@ -4,14 +4,15 @@ import { fileURLToPath } from "node:url";
 import type { ActionFetch } from "@siftline/actions";
 import { run } from "@siftline/cli";
 import type { RunDeps } from "@siftline/cli";
-import { parseRecipe, serializeDecision } from "@siftline/core";
+import { parseRecipe, ruleSchema, serializeDecision, validateRules } from "@siftline/core";
 import type { JsonValue, SystemOneClient, SystemOneResult } from "@siftline/core";
 import { createReplayClient, parseReplayLines } from "@siftline/core/testing";
 import { describe, expect, it, onTestFinished, vi } from "vitest";
 
 import { preview, send } from "./support-inbox/act";
+import { actions } from "./support-inbox/actions";
 import { recipe } from "./support-inbox/recipe";
-import { route } from "./support-inbox/route";
+import { route, rules } from "./support-inbox/route";
 import { judgeScripted } from "./support-inbox/scripted";
 import { measure } from "./support-inbox/test";
 
@@ -139,6 +140,13 @@ describe("the guide's running example", () => {
     expect(parseRecipe(readFileSync(path("recipe-v2.json"), "utf8"))).toEqual(recipe);
   });
 
+  it("is the same Rules in JSON and in TypeScript, naming only defined Actions", () => {
+    const loaded = ruleSchema.array().parse(JSON.parse(readFileSync(path("rules.json"), "utf8")));
+
+    expect(loaded).toEqual(rules);
+    expect(validateRules(loaded, recipe, Object.keys(actions))).toEqual([]);
+  });
+
   it("siftline test", async () => {
     const terminal = cli(recorded);
     const code = await run(["test", path("recipe.json"), path("fixtures.jsonl")], terminal.deps);
@@ -173,7 +181,7 @@ describe("the guide's running example", () => {
 
     const routed = route(decision);
     await expect(serializeDecision(routed)).toMatchFileSnapshot(output("routed-decision.jsonl"));
-    expect(routed.action).toBe("slack_incoming_webhook");
+    expect(routed.action).toBe("escalations");
 
     const slack = await preview(routed, recipe);
     await expect(requestJson(slack)).toMatchFileSnapshot(output("slack-request.json"));

@@ -314,6 +314,54 @@ describe("validateRules", () => {
     expect(validateRules(rules, recipe)).toEqual([{ rule: "r1", problem: 'duplicate id "r1"' }]);
   });
 
+  it("is empty when every Action id is in the list", () => {
+    expect(validateRules(referenceRules, recipe, ["act_pager", "act_slack_revenue"])).toEqual([]);
+  });
+
+  it("reports an Action id not in the list alongside the condition's problems", () => {
+    const rules: Rule[] = [
+      {
+        id: "r1",
+        condition: { question: "team", comparator: "isOneOf", value: ["billing", "support"] },
+        action: "linear-tikets",
+      },
+      {
+        id: "r2",
+        condition: { question: "teem", comparator: "is", value: "billing" },
+        action: "escalate",
+      },
+      {
+        id: "r1",
+        condition: { question: "angry", comparator: "is", value: true },
+        action: "pager",
+      },
+    ];
+
+    expect(validateRules(rules, recipe, ["linear-tickets", "pager"])).toEqual([
+      { rule: "r1", problem: 'unknown Action "linear-tikets"' },
+      { rule: "r1", problem: 'unknown label "support"' },
+      { rule: "r2", problem: 'unknown Action "escalate"' },
+      { rule: "r2", problem: 'unknown question "teem"' },
+      { rule: "r1", problem: 'duplicate id "r1"' },
+    ]);
+  });
+
+  it("accepts action null whatever the list", () => {
+    const rules: Rule[] = [
+      { id: "r1", condition: { question: "angry", comparator: "is", value: true }, action: null },
+    ];
+
+    expect(validateRules(rules, recipe, [])).toEqual([]);
+  });
+
+  it("leaves Actions unchecked without a list", () => {
+    const rules: Rule[] = [
+      { id: "r1", condition: { question: "angry", comparator: "is", value: true }, action: "any" },
+    ];
+
+    expect(validateRules(rules, recipe)).toEqual([]);
+  });
+
   it("never runs inside evaluateRules", () => {
     const rules: Rule[] = [
       {

@@ -9,11 +9,13 @@
 import { defineActions, dispatch } from "@siftline/actions";
 import type {
   ActionDefinitions,
+  ActionId,
   Dispatched,
   SlackIncomingWebhookConfig,
   WebhookConfig,
 } from "@siftline/actions";
-import type { Decision, Recipe } from "@siftline/core";
+import { choice, defineRecipe } from "@siftline/core";
+import type { Decision, Recipe, Rule } from "@siftline/core";
 
 type Expect<T extends true> = T;
 
@@ -75,3 +77,41 @@ type _Sent = Expect<Equal<Awaited<typeof sent>, Dispatched | null>>;
 void dispatch(decision, { tickets: { url: "https://example.com/" } }, recipe);
 
 void sent;
+
+// ─── ActionId ───────────────────────────────────────────────────────────────────────────
+
+type _ActionIds = Expect<
+  Equal<ActionId<typeof actions>, "linear-tickets" | "escalations" | "audit">
+>;
+
+type _AnyId = Expect<Equal<ActionId<ActionDefinitions>, string>>;
+
+const inbox = defineRecipe({
+  name: "support-inbox",
+  version: 1,
+  model: "jev-1.13.0",
+  questions: {
+    category: choice("What is it?", { complaint: "Something is wrong", other: "Anything else" }),
+  },
+});
+
+const rules: Rule<(typeof inbox)["questions"], ActionId<typeof actions>>[] = [
+  {
+    id: "complaint",
+    condition: { question: "category", comparator: "is", value: "complaint" },
+    action: "linear-tickets",
+  },
+  {
+    id: "typo",
+    condition: { question: "category", comparator: "is", value: "complaint" },
+    // @ts-expect-error — `linear-tikets` is not a defined Action id
+    action: "linear-tikets",
+  },
+  {
+    id: "ignore",
+    condition: { question: "category", comparator: "is", value: "other" },
+    action: null,
+  },
+];
+
+void rules;

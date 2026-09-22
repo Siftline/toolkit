@@ -49,11 +49,15 @@ validates a Record as a `SiftlineRecord`.
 ## Rules
 
 `ruleSchema` and `ruleConditionSchema` parse a Rules file: a JSON array over four comparators,
-six pairings with a Question kind, and no more. `evaluateRules(answers, rules)` is pure, first match wins, and never throws: an
-answer that is missing or of the wrong type makes the condition false and the next Rule gets
-its turn. `routeDecision(decision, rules)` returns a copy with `rule` and `action` filled,
-and leaves both `null` on an Unsure Decision. `validateRules(rules, recipe)` reports every
-Rule the Recipe no longer supports.
+six pairings with a Question kind, and no more. `Rule<Q, A>` types a Rule against a Recipe's
+Questions and the Action ids its `action` may name. `A` defaults to any string, which is what a
+Rule read from JSON carries, and `null` is always allowed. `evaluateRules(answers, rules)` is
+pure, first match wins, and never throws: an answer that is missing or of the wrong type makes
+the condition false and the next Rule gets its turn. `routeDecision(decision, rules)` returns a
+copy with `rule` and `action` filled, and leaves both `null` on an Unsure Decision.
+`validateRules(rules, recipe, actionIds?)` reports every Rule the Recipe no longer supports.
+Given a list of Action ids, it also reports each non-null `action` outside it as
+`unknown Action "<id>"`.
 
 ## Fixtures
 

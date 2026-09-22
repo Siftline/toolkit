@@ -12,6 +12,8 @@ ESM only. Node 22.14 or newer. Depends on `@siftline/core` for the Decision and 
 `defineActions(definitions)` declares your Actions, keyed by Action id. Each value is
 `{ kind, config }`, with the config typed by that kind's Adapter. Every config is parsed against
 its kind's `configSchema` at once, and the ids stay literal keys in the result.
+`ActionId<typeof actions>` reads those ids back as a union, for typing Rules:
+`Rule<Q, ActionId<typeof actions>>` rejects an Action id you did not define.
 `dispatch(decision, actions, recipe, { fetch?, signal? })` sends a routed Decision to the Action
 it selected and returns `{ action, request, response }`, or `null` when the Decision went to
 Review or selected no Action.
