@@ -27,6 +27,13 @@ export type DefinedActions<Kinds extends { [id: string]: ActionKind }> = {
   [Id in keyof Kinds]: { kind: Kinds[Id]; config: ActionConfigs[Kinds[Id]] };
 };
 
+/**
+ * The Action ids of a `defineActions` result, as a union of literals. Pass it as the second
+ * argument to `Rule`, `Rule<Questions, ActionId<typeof actions>>`, so a Rule naming an Action
+ * you did not define fails to compile.
+ */
+export type ActionId<Actions extends ActionDefinitions> = keyof Actions & string;
+
 // Written as a mapped type so that indexing it with a generic kind keeps the config paired with
 // its Adapter. Also fails to compile if `ActionConfigs` misses a kind.
 const byKind: { [K in ActionKind]: Adapter<ActionConfigs[K]> } = adapters;

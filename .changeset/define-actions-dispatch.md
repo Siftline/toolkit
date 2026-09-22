@@ -11,4 +11,6 @@ Review or selected no Action, throws `ActionBuildError` for an Action id not in 
 otherwise builds with that Action's Adapter, performs once and returns
 `{ action, request, response }`. It adds no retry or timeout; a failed send throws `perform`'s
 `ActionFailedError` with `retryable` intact. `build`, `perform` and the `Idempotency-Key` are
-unchanged: with Action ids in your Rules the key reads `<decision id>:<action id>`.
+unchanged: with Action ids in your Rules the key reads `<decision id>:<action id>`. Add the
+`ActionId<typeof actions>` type, the union of a `defineActions` result's ids; type Rules as
+`Rule<Q, ActionId<typeof actions>>` so an undefined Action id fails to compile.
