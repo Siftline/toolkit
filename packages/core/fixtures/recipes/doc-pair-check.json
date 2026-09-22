@@ -1,0 +1,28 @@
+{
+  "format": 1,
+  "name": "doc-pair-check",
+  "version": 1,
+  "model": "jev-1.13.0",
+  "reviewThreshold": 0.8,
+  "questions": {
+    "language": {
+      "type": "choice",
+      "instructions": "Which language is `left.text` written in?",
+      "criteria": {
+        "en": "English",
+        "cs": "Czech",
+        "de": "German",
+        "other": "None of the listed languages"
+      }
+    },
+    "same_topic": {
+      "type": "choice",
+      "instructions": "Compare `left.text` and `right.text`",
+      "criteria": {
+        "same": "Both discuss the same subject",
+        "related": "Overlapping but distinct",
+        "unrelated": "Nothing in common"
+      }
+    }
+  }
+}

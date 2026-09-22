@@ -1,0 +1,9 @@
+{
+  "extends": "@siftline/config/library.json",
+  "include": [
+    "api-entries/*.ts",
+    "../../packages/core/src/**/*.ts",
+    "../../packages/actions/src/**/*.ts"
+  ],
+  "exclude": ["**/*.test.ts", "**/*.test-d.ts"]
+}

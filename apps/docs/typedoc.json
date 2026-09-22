@@ -1,16 +1,17 @@
 {
   "$schema": "https://typedoc-plugin-markdown.org/schema.json",
 
-  "entryPoints": ["../../packages/core/src/index.ts"],
+  "entryPoints": ["api-entries/core.ts", "api-entries/core-testing.ts", "api-entries/actions.ts"],
   "entryPointStrategy": "resolve",
-  "tsconfig": "../../packages/core/tsconfig.json",
+  "tsconfig": "tsconfig.typedoc.json",
 
   "plugin": ["typedoc-plugin-markdown", "./typedoc-frontmatter.mjs"],
   "out": "content/docs/api",
 
-  "outputFileStrategy": "modules",
+  "outputFileStrategy": "members",
   "fileExtension": ".mdx",
   "entryFileName": "index.mdx",
+  "modulesFileName": "index",
 
   "readme": "none",
   "githubPages": false,

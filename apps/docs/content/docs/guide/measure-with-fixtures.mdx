@@ -1,0 +1,58 @@
+---
+title: Measure it with Fixtures
+description: Label a handful of real Records, then let siftline test grade the Recipe.
+---
+
+A Fixture is one labelled example: a Record's `state` and the Answers a person says are
+right. Fixtures live one per line in a JSONL file. Here are five for the support inbox:
+
+<include lang="json" meta='title="fixtures.jsonl"'>
+  ../../../examples/support-inbox/fixtures.jsonl
+</include>
+
+`expect` holds the same values a Decision's `answers` would: a label for a Choice, a boolean
+for a yes/no. It can leave a Question out, and a left-out Question is not counted for that
+Fixture. A Fixture can also carry an `id`, and `origin` and `by` to say where the label came
+from; without an `id` it is named by its line number.
+
+Run the Recipe over the file:
+
+```bash
+npx siftline test recipe.json fixtures.jsonl
+```
+
+<include lang="txt" meta='title="stdout"'>
+  ../../../examples/support-inbox/output/siftline-test.txt
+</include>
+
+That report is real: the docs run this command against recorded model answers every time the
+site is built.
+
+Read it bottom up. The last block lists every miss, one per line: the fourth Fixture asked
+whether a March invoice will be corrected, the person labelled it a complaint, the model called
+it a question. The `accuracy` line is the lowest per-Question accuracy, not an average, because
+a Recipe is only as good as its weakest Question. `unsure` counts the Fixtures whose Decision
+fell under the review threshold; the same fourth Fixture, as it happens.
+
+Progress goes to stderr, one `ok` or `miss` line per Fixture, so stdout stays the report.
+
+## Fail the build on accuracy
+
+`--min-accuracy` turns the report into a gate. The exit code is `1` when the lowest Question
+accuracy is below the ratio, so a Recipe change that breaks a Question fails CI:
+
+```bash
+npx siftline test recipe.json fixtures.jsonl --min-accuracy 0.9
+```
+
+`--json` prints the full report as JSON instead of the table, with the per-Fixture Decisions
+and mismatches in it, plus a top-level `drift` that names the model that actually answered
+when it differs from the one the Recipe pins.
+
+## When a Fixture is wrong
+
+A Fixture whose `expect` names a label the Recipe does not have, or a boolean for a Choice,
+is refused before the first call is made. The command exits `2` and names the line. Nothing
+is charged for a file that cannot be graded.
+
+Next: [run the Recipe on real Records](/docs/guide/label-records).

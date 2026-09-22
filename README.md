@@ -6,17 +6,20 @@ categories, then act on it.
 This repo holds the published packages and the documentation site. The hosted app lives
 elsewhere and is not open source.
 
-| Package             | What it is                                                        |
-| ------------------- | ----------------------------------------------------------------- |
-| `@siftline/core`    | The engine: recipes, rules, fixtures, and the judge wrapper.      |
-| `@siftline/cli`     | `siftline` — run a recipe against fixtures from the terminal.     |
-| `@siftline/actions` | Adapters that carry a decision somewhere (webhook, Slack, email). |
+| Package             | What it is                                                               | Docs                                                                |
+| ------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------- |
+| `@siftline/core`    | The engine: recipes, rules, fixtures, the Judge and the Decision format. | [packages/core](https://docs.siftline.dev/docs/packages/core)       |
+| `@siftline/cli`     | `siftline test` and `siftline label` — a recipe from the terminal.       | [packages/cli](https://docs.siftline.dev/docs/packages/cli)         |
+| `@siftline/actions` | Adapters that carry a Decision somewhere: webhook and Slack.             | [packages/actions](https://docs.siftline.dev/docs/packages/actions) |
 
 `@siftline/ui` and `@siftline/config` are private: they are consumed just-in-time from
 source inside this repo and are never published. `config` holds what every package
 shares — the tsconfig bases, the Vitest base and the tsdown base.
 
-Nothing is released yet. Docs will live at [docs.siftline.dev](https://docs.siftline.dev).
+All three are on npm with provenance. 0.1.0 is the first release with the Engine in it: the
+Recipe, Decision and Fixture formats, the Judge and its in-flight gate, Rules and routing, the
+two Action adapters, and the `siftline` bin. Each package README is a quickstart; the guide,
+the package pages and the API reference live at [docs.siftline.dev](https://docs.siftline.dev).
 
 ## Getting started
 
@@ -154,10 +157,12 @@ short-lived credentials and attaches provenance. There is no `NPM_TOKEN` in this
 One repository setting is required for step 1: **Settings → Actions → General → Allow
 GitHub Actions to create and approve pull requests** must be on, or the version job fails.
 
-### First publish (one time, by a human)
+### First publish (done 2026-09-17; kept for a fourth package)
 
-Trusted publishers can only be attached to a package that already exists on npm, so the
-very first release of each package is manual. From a clean `main` checkout on Node 24,
+This was run once for the three packages, and `release.yml` has published with provenance
+since (`@siftline/core@0.0.3` carries an attestation). It is needed again only for a new
+package, because trusted publishers can only be attached to a package that already exists
+on npm, so a new package's very first release is manual. From a clean `main` checkout on Node 24,
 logged in to npm as a maintainer with 2FA:
 
 ```sh
@@ -193,11 +198,9 @@ GitHub Actions, with
 Leave the environment blank. The publish job declares no `environment:`, and a name here
 would make the OIDC claim fail to match.
 
-Until those publishers exist, `release.yml` is expected to reach the publish step and
-**fail there**. That is the documented state between the release wiring landing and this
-procedure being run; nothing else in the workflow is wrong. Afterwards, re-run
-`release.yml` (or merge an empty changeset) and confirm the packages show a provenance
-badge on npm.
+Until the new package's publisher exists, `release.yml` reaches the publish step and
+**fails there**; nothing else in the workflow is wrong. Afterwards, re-run `release.yml`
+(or merge an empty changeset) and confirm the package shows a provenance badge on npm.
 
 ## Contributing
 

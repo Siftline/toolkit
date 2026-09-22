@@ -9,6 +9,9 @@
     "stylesheet": "./apps/docs/src/styles/app.css"
   },
   "ignorePatterns": [
+    // Byte-for-byte test vectors. `serializeRecipe` is their only writer, and oxfmt
+    // collapses the arrays it expands.
+    "packages/core/fixtures",
     "apps/docs/content/docs/api",
     "**/routeTree.gen.ts",
     "bun.lock",

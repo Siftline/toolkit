@@ -42,7 +42,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@siftline/core": "^0.0.3"
+    "@siftline/core": "^0.0.3",
+    "zod": "4.6.5"
   },
   "devDependencies": {
     "@arethetypeswrong/core": "0.18.5",
@@ -54,5 +55,6 @@
   },
   "engines": {
     "node": ">=22.14"
-  }
+  },
+  "//zod": "Direct, though core already depends on it: `Adapter<C>.configSchema` is a `ZodType<C>`, so zod is in this package's public types and must resolve from here. The spec's \"actions adds none beyond core\" is owed a correction."
 }

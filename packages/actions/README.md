@@ -1,14 +1,24 @@
 # @siftline/actions
 
-Siftline adapters for the places labels land: issue trackers, inboxes and queues.
+Siftline adapters that carry a Decision to a webhook or to Slack.
 
-This package is a walking skeleton. It exports a placeholder constant built from
-`@siftline/core`'s own placeholder, which is enough to prove the build, type, test, pack
-and publish path and that the dependency on the engine resolves. The adapters land next.
+```sh
+npm install @siftline/actions
+```
 
 ```ts
-import { PLACEHOLDER } from "@siftline/actions";
+import { perform, webhook } from "@siftline/actions";
+
+const request = await webhook.build(decision, { url, secret }, recipe);
+const { status, body, truncated } = await perform(request, fetch);
 ```
+
+`build` is pure and `perform` sends once, so a preview is `build` without `perform`. The
+webhook body is the Decision line, signed with HMAC-SHA256 when a `secret` is set;
+`slackIncomingWebhook` posts one message.
+
+The guide and the full reference live at
+[docs.siftline.dev](https://docs.siftline.dev/docs/packages/actions).
 
 ESM only. Node 22.14 or newer.
 

@@ -5,7 +5,14 @@
     // `$TURBO_ROOT$` is absent from schema.json, so a typo here will not be flagged.
     "api": {
       "dependsOn": ["^build"],
-      "inputs": ["typedoc.json", "typedoc-frontmatter.mjs", "$TURBO_ROOT$/packages/core/src/**"],
+      "inputs": [
+        "typedoc.json",
+        "tsconfig.typedoc.json",
+        "typedoc-frontmatter.mjs",
+        "api-entries/**",
+        "$TURBO_ROOT$/packages/core/src/**",
+        "$TURBO_ROOT$/packages/actions/src/**"
+      ],
       "outputs": ["content/docs/api/**"]
     },
     // Restating `^build` is required: a package-level task replaces the root one rather
