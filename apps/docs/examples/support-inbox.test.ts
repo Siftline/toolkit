@@ -1,4 +1,5 @@
-import { readFileSync } from "node:fs";
+import { createReadStream, readFileSync } from "node:fs";
+import { createInterface } from "node:readline";
 import { fileURLToPath } from "node:url";
 
 import type { ActionFetch } from "@siftline/actions";
@@ -14,6 +15,7 @@ import { actions } from "./support-inbox/actions";
 import { recipe } from "./support-inbox/recipe";
 import { route, rules } from "./support-inbox/route";
 import { judgeScripted } from "./support-inbox/scripted";
+import { sendLines } from "./support-inbox/send";
 import { measure } from "./support-inbox/test";
 
 const dir = new URL("support-inbox/", import.meta.url);
@@ -128,11 +130,15 @@ function pinned(lines: string): string {
 }
 
 // The User-Agent names the published version, which a release bumps; the page shows the shape.
-function requestJson(request: { headers: { [name: string]: string }; body: string }): string {
+function readable(request: { headers: { [name: string]: string }; body: string }) {
   const headers = { ...request.headers, "User-Agent": "siftline-actions/<version>" };
 
-  // Trailing newline: the snapshot files are formatted by oxfmt like every other JSON here.
-  return `${JSON.stringify({ ...request, headers, body: JSON.parse(request.body) }, null, 2)}\n`;
+  return { ...request, headers, body: JSON.parse(request.body) };
+}
+
+// Trailing newline: the snapshot files are formatted by oxfmt like every other JSON here.
+function requestJson(request: { headers: { [name: string]: string }; body: string }): string {
+  return `${JSON.stringify(readable(request), null, 2)}\n`;
 }
 
 describe("the guide's running example", () => {
@@ -203,6 +209,36 @@ describe("the guide's running example", () => {
     expect(sent.action).toBe("linear-tickets");
     expect(sent.response).toEqual({ status: 200, body: "ok", truncated: false });
     await expect(requestJson(sent.request)).toMatchFileSnapshot(output("webhook-request.json"));
+  });
+
+  it("sends the routed CLI output by piping it into send.ts", async () => {
+    vi.stubEnv("SLACK_WEBHOOK_URL", actions.escalations.config.url);
+    vi.stubEnv("TICKETS_WEBHOOK_URL", actions["linear-tickets"].config.url);
+    vi.stubEnv("TICKETS_WEBHOOK_SECRET", "shared-secret");
+    onTestFinished(() => {
+      vi.unstubAllEnvs();
+    });
+
+    const fetchImpl = vi.fn<ActionFetch>(async () => new Response("ok", { status: 200 }));
+
+    const stdin = createInterface({
+      input: createReadStream(output("siftline-label-routed.jsonl")),
+    });
+
+    const requests = [];
+
+    for await (const sent of sendLines(stdin, recipe, { fetch: fetchImpl })) {
+      requests.push(readable(sent.request));
+    }
+
+    // msg-1 escalates, msg-2 becomes a ticket, msg-3 went to Review and sends nothing.
+    expect(fetchImpl.mock.calls.map(([url]) => url)).toEqual([
+      actions.escalations.config.url,
+      actions["linear-tickets"].config.url,
+    ]);
+    await expect(`${JSON.stringify(requests, null, 2)}\n`).toMatchFileSnapshot(
+      output("dispatch-requests.json"),
+    );
   });
 
   it("measures from code", async () => {
