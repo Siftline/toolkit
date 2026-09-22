@@ -1,0 +1,9 @@
+support-inbox v1 · jev-1.13.0
+
+category      4/5   0.80
+wants_human   5/5   1.00
+
+accuracy      0.80  (lowest question)
+unsure        1 of 5 would go to Review
+
+fixture:4  category: expected complaint, got question

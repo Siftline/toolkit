@@ -1,0 +1,56 @@
+---
+title: "@siftline/cli"
+description: siftline test and siftline label, a Recipe from the terminal.
+---
+
+```bash
+npm install --save-dev @siftline/cli
+export TYPESAFE_API_KEY=...
+npx siftline --help
+```
+
+ESM only. Node 22.14 or newer. The API key is read from the environment and from nowhere else.
+
+## Commands
+
+```
+siftline test  <recipe.json> <fixtures.jsonl> [--max-in-flight <n>] [--min-accuracy <ratio>] [--json] [--quiet]
+siftline label <recipe.json> [records.jsonl | -] [--rules <rules.json>] [--max-in-flight <n>] [--quiet]
+```
+
+`test` runs a Recipe over a file of Fixtures and reports one accuracy per Question, the lowest
+as the Recipe's own, the count that would be Unsure, and every miss. The guide shows
+[the report](/docs/guide/measure-with-fixtures).
+
+`label` runs a Recipe over Records, from a file or from stdin, and writes one Decision line per
+Record to stdout in input order. With `--rules` every Decision is routed first. The guide shows
+[both](/docs/guide/label-records).
+
+## Options
+
+| Option                   | Applies to | Effect                                                         |
+| ------------------------ | ---------- | -------------------------------------------------------------- |
+| `--max-in-flight <n>`    | both       | Records judged at once. Default 8.                             |
+| `--min-accuracy <ratio>` | `test`     | Exit `1` when the lowest Question accuracy is below the ratio. |
+| `--json`                 | `test`     | Print the `TestReport` as JSON, plus a top-level `drift`.      |
+| `--rules <rules.json>`   | `label`    | Route every Decision through these Rules.                      |
+| `--quiet`                | both       | Silence progress. Warnings and errors still print.             |
+
+Progress, warnings and errors go to stderr. stdout is only ever the report or the Decisions,
+so both commands compose with a pipe.
+
+## Exit codes
+
+| Code  | Meaning                                                                                                  |
+| ----- | -------------------------------------------------------------------------------------------------------- |
+| `0`   | Success.                                                                                                 |
+| `1`   | Work that ran and failed: a miss under `--min-accuracy`, a Record the model refused, a Judge error.      |
+| `2`   | Usage and input errors: bad arguments, a file that does not parse, a Fixture or Rule the Recipe rejects. |
+| `130` | Interrupted by SIGINT.                                                                                   |
+
+## From code
+
+`run(argv, deps)` is the library door and the bin is a wrapper around it. `deps` is
+`{ client, stdin, stdout, stderr, env, signal }`, so a test drives the whole CLI with a
+scripted client and string streams and asserts on the exit code and what was written. The
+docs do exactly that to produce what the guide shows.

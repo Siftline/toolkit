@@ -1,0 +1,59 @@
+{
+  "method": "POST",
+  "url": "https://example.com/hooks/siftline",
+  "headers": {
+    "Content-Type": "application/json",
+    "Idempotency-Key": "0192f3c2-7b1e-7c4a-9f0e-000000000001:webhook",
+    "User-Agent": "siftline-actions/<version>",
+    "X-Siftline-Signature": "sha256=5fd849bb3e744e169beb1d82082cd59543f73a40bc0306fdadf39923b76409a7"
+  },
+  "body": {
+    "format": 1,
+    "id": "0192f3c2-7b1e-7c4a-9f0e-000000000001",
+    "recordId": "msg-1",
+    "recipe": {
+      "name": "support-inbox",
+      "version": 2
+    },
+    "model": "jev-1.13.0",
+    "judgedAt": "2026-09-22T09:00:00.000Z",
+    "trimmed": false,
+    "answers": {
+      "category": "complaint",
+      "wants_human": true,
+      "urgency": 2
+    },
+    "questions": {
+      "category": {
+        "confidence": 0.97,
+        "probabilities": {
+          "complaint": 0.97,
+          "question": 0.02,
+          "other": 0.01
+        }
+      },
+      "wants_human": {
+        "probability": 0.99,
+        "confidence": 0.98
+      },
+      "urgency": {
+        "score": 1.9,
+        "confidence": 0.9,
+        "probabilities": {
+          "0": 0.01,
+          "1": 0.09,
+          "2": 0.9
+        }
+      }
+    },
+    "confidence": 0.9,
+    "review": false,
+    "rule": "escalate",
+    "action": "webhook",
+    "usage": {
+      "inputTokens": 412,
+      "outputTokens": 60
+    }
+  },
+  "idempotencyKey": "0192f3c2-7b1e-7c4a-9f0e-000000000001:webhook"
+}

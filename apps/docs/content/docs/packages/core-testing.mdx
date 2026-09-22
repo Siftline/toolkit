@@ -1,0 +1,39 @@
+---
+title: "@siftline/core/testing"
+description: Three clients that judge without the network.
+---
+
+The Judge takes any `SystemOneClient`. This entry ships three that never reach the network,
+so a test of code that judges is fast, free and deterministic: `createScriptedClient`,
+`createReplayClient` and `createRecordingClient`.
+
+## Scripted
+
+`createScriptedClient(script)` answers in call order from a list of steps, each a
+`{ response }` or an `{ error }` to throw. It exposes the `calls` it received and throws
+when the script runs out. The docs' own examples use it:
+
+<include lang="ts" meta='title="scripted.ts"'>
+  ../../../examples/support-inbox/scripted.ts
+</include>
+
+With `now` and `id` pinned, the Decision that produces is the same bytes every run:
+
+<include lang="json" meta='title="the Decision"'>
+  ../../../examples/support-inbox/output/decision.jsonl
+</include>
+
+## Replay
+
+`createReplayClient(lines)` matches each request deep-equal against recorded lines and returns
+the recorded answer, or throws the recorded error as an `Error` carrying its `name`,
+`status`, `retryAfterMs` and `body`. A request with no match throws. The
+`siftline test` output in the guide comes from a replay of real `jev-1.13.0` answers.
+
+## Recording
+
+`createRecordingClient(inner, sink, options?)` wraps a real client and writes one replay line
+per call to `sink`. `options.id` and `options.now` pin the line id and clock so a recording
+is byte-stable. `replayLineSchema` and `parseReplayLines` are the lines' JSONL door.
+
+Record once against the real API, commit the lines, and replay them in every test after that.

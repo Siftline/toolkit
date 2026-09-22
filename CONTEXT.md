@@ -34,6 +34,10 @@ _Avoid_: output, predictions, labels
 A Decision whose confidence, the lowest across its Questions, is below the Recipe's review threshold. Unsure Records go to Review instead of an Action.
 _Avoid_: low confidence, uncertain, flagged
 
+**Review**:
+Where an Unsure Record waits for a person to answer instead of the model. The hosted app has a queue for it; the toolkit hands the Record back with `review: true` and selects no Action.
+_Avoid_: queue, triage, manual
+
 **Rule**:
 One entry in a Recipe's ordered list that maps a Decision's answers to an Action or to nothing. The first matching Rule wins; "send to Review when unsure" is built in, not a Rule.
 _Avoid_: trigger, workflow, automation

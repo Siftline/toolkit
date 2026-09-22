@@ -1,0 +1,3 @@
+{"id":"msg-1","state":{"subject":"Charged twice","sender":"anna@example.com","text":"You charged my card twice this month. I want the second charge refunded now, and I want to talk to an actual person, not a bot."}}
+{"id":"msg-2","state":{"subject":"Export question","sender":"ben@example.com","text":"Hi, how do I export my projects to CSV? I found the export button but it only gives me JSON."}}
+{"id":"msg-3","state":{"subject":"Re: invoice","sender":"dan@example.com","text":"Is the invoice from March going to be corrected or should I just pay it? Somebody promised a call back last week."}}

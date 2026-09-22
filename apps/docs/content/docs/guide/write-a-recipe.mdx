@@ -1,0 +1,35 @@
+---
+title: Write a Recipe
+description: Put the questions you want answered about every Record in one JSON file.
+---
+
+The guide sorts a support inbox. Every page uses the same Recipe, and it grows as you go.
+
+A Recipe is a JSON file. It names the model, sets the review threshold, and lists the
+Questions. Save this as `recipe.json`:
+
+<include lang="json" meta='title="recipe.json"'>
+  ../../../examples/support-inbox/recipe.json
+</include>
+
+Two Questions so far. `category` is a Choice: the model picks one of the three labels, and the
+description beside each label is what it picks on, so write descriptions that separate the
+labels rather than restate them. `wants_human` is a yes/no Question, `"type": "noul"`. It has
+no criteria here, though it can carry a description for `true` and for `false` when the
+boundary needs spelling out.
+
+The fields around the Questions:
+
+- `format` is the Recipe file format, `1` today. A breaking change to the format bumps it.
+- `name` and `version` identify the Recipe. Every Decision names both, so change `version`
+  whenever you change a Question.
+- `model` pins the model that answers. `jev-1.13.0` is the current one.
+- `reviewThreshold` is the confidence below which a Decision is Unsure. It is required in the
+  file, so a Recipe on disk never silently gets a default.
+
+Question names are the keys under `questions`. They become keys in every Decision's
+`answers` and in every Fixture's `expect`, so pick names you are happy to see in JSON and
+in code.
+
+Next: [measure the Recipe against examples you label](/docs/guide/measure-with-fixtures)
+before it touches real Records.

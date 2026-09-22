@@ -1,0 +1,13 @@
+{
+  "title": "Guide",
+  "icon": "Route",
+  "pages": [
+    "write-a-recipe",
+    "measure-with-fixtures",
+    "label-records",
+    "route-with-rules",
+    "send-an-action",
+    "from-code",
+    "from-the-hosted-app"
+  ]
+}

@@ -1,0 +1,56 @@
+---
+title: Label real Records
+description: Feed siftline label a file of Records and get one Decision line per Record.
+---
+
+A Record is one piece of text with an id. Its `state` is what the model reads, and it can be a
+string, an object or an array, so the subject and sender can stay as fields:
+
+<include lang="json" meta='title="records.jsonl"'>
+  ../../../examples/support-inbox/records.jsonl
+</include>
+
+`siftline label` judges each one and writes a Decision line to stdout:
+
+```bash
+npx siftline label recipe.json records.jsonl > decisions.jsonl
+```
+
+<include lang="json" meta='title="decisions.jsonl"'>
+  ../../../examples/support-inbox/output/siftline-label.jsonl
+</include>
+
+Decisions come out in input order, whatever order the model answers in. Every line is parsed
+before the first call, so a bad Record costs nothing. Records are read from a file, or from
+stdin when the second argument is `-` or missing, so `label` sits at the end of a pipe.
+
+## Reading a Decision
+
+- `answers` are the plain values, one per Question. This is what Rules and receivers read.
+- `questions` is the evidence: the confidence behind each answer, the probability of every
+  label in Recipe order, and for a Score the model's expected value across the levels.
+- `confidence` is the lowest of those, and `review` is whether it fell under the Recipe's
+  threshold.
+- `recipe` and `model` say which questions were answered and by what.
+- `rule` and `action` are `null` here. [Rules](/docs/guide/route-with-rules) fill them.
+
+## Unsure Decisions
+
+Look at `msg-3`. The model leaned towards `question` at only 0.58, and was no surer whether
+the sender wanted a person. A Decision's confidence is the lowest across its Questions, 0.5
+here, which is under the Recipe's threshold of 0.7, so the Decision carries `review: true`. It is still written, with its
+answers, because a low-confidence answer is still information. What is different is what
+happens next: an Unsure Decision selects no Rule and no Action, however you configure them.
+
+The hosted Siftline app sends these to a Review queue where a person answers instead. The
+toolkit has no queue, so filtering on `review` is your job: send those lines to a person, and
+let the rest flow on.
+
+## Failures
+
+A Record the model refuses is named on stderr and skipped; the run continues and exits `1`
+at the end. A rate limit or an outage that outlives the retries aborts the run, since a partial
+file with no marker is worse than none. If the model that answered differs from the one the
+Recipe pins, one warning names both.
+
+Next: [turn Answers into an Action with Rules](/docs/guide/route-with-rules).

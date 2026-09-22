@@ -1,0 +1,5 @@
+{"state":{"subject":"Charged twice","sender":"anna@example.com","text":"You charged my card twice this month. I want the second charge refunded now, and I want to talk to an actual person, not a bot."},"expect":{"category":"complaint","wants_human":true}}
+{"state":{"subject":"Export question","sender":"ben@example.com","text":"Hi, how do I export my projects to CSV? I found the export button but it only gives me JSON."},"expect":{"category":"question","wants_human":false}}
+{"state":{"subject":"Thanks!","sender":"carla@example.com","text":"Just wanted to say the new dashboard is great. Keep it up."},"expect":{"category":"other","wants_human":false}}
+{"state":{"subject":"Re: invoice","sender":"dan@example.com","text":"Is the invoice from March going to be corrected or should I just pay it? Somebody promised a call back last week."},"expect":{"category":"complaint","wants_human":false}}
+{"state":{"subject":"hello","sender":"noreply@promo.example","text":"Boost your SEO ranking today with our premium backlink package. Reply STOP to unsubscribe."},"expect":{"category":"other","wants_human":false}}

@@ -28,12 +28,16 @@
     "react-dom": "19.3.0"
   },
   "devDependencies": {
+    "@siftline/actions": "workspace:*",
+    "@siftline/cli": "workspace:*",
     "@siftline/config": "workspace:*",
+    "@siftline/core": "workspace:*",
     "@tailwindcss/vite": "4.3.3",
     "@types/mdx": "2.0.14",
     "@types/node": "24.13.5",
     "@types/react": "19.2.18",
     "@types/react-dom": "19.2.7",
+    "@typesafe-ai/sdk": "0.6.0",
     "@vitejs/plugin-react": "6.1.1",
     "nitro": "3.0.260903-beta",
     "tailwindcss": "4.3.3",
@@ -44,6 +48,7 @@
     "vitest": "4.1.11",
     "wrangler": "4.135.0"
   },
+  "//examples": "The three published packages and the SDK are here for examples/: the site's snippets are typechecked and run against the built packages, never copied by hand.",
   "//fumadocs-ui": "An npm alias: Fumadocs 16 publishes its UI layer as @fumadocs/base-ui. The version must track fumadocs-core exactly.",
   "//typescript": "6.0.3 here, and here only, for typedoc 0.28.20: it imports the TypeScript JS compiler API, which the 7.0.2 Go port does not ship — it crashes on import. Consequence, spelled out in README.md: typecheck here runs 6.0 semantics."
 }

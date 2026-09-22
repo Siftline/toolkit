@@ -1,0 +1,86 @@
+---
+title: "@siftline/core"
+description: The Engine. Recipes, the Judge, Rules, Fixtures and the Decision format.
+---
+
+```bash
+npm install @siftline/core
+```
+
+ESM only. Node 22.14 or newer. Two entries: the main one, and
+[`@siftline/core/testing`](/docs/packages/core-testing) for tests. Every export is on the
+[API reference](/docs/api); this page is the map.
+
+A Recipe is a document of Questions. The Judge answers them for one Record and returns a
+Decision. Rules route that Decision to an Action. Fixtures measure the Recipe before any of it
+runs on real text. Every one of those is data with a schema, a parser and a single writer, so
+the same file works from the CLI, from code, and from the hosted app.
+
+## Recipes
+
+`choice`, `noul` and `score` build the three Question kinds and `defineRecipe` assembles
+them, keeping the literal labels and level indices in the type. `reviewThreshold` defaults to
+0.7 there and nowhere else.
+
+`recipeSchema` and `questionSchema` validate a document that arrives from elsewhere.
+`parseRecipe` and `serializeRecipe` are the only door to and from JSON, and
+`serializeRecipe(parseRecipe(text))` returns the same bytes. `parseRecipe` never defaults
+the threshold: a document on disk carries it or fails to parse.
+
+## The Judge
+
+`createJudge({ client, retry, maxInFlight, now })` returns `judge(record, recipe, { id, signal })`.
+
+- `client` is anything shaped like `SystemOneClient`, which core declares itself rather than
+  importing an SDK, so nothing here opens a socket of its own. `new TypeSafeClient({ apiKey })`
+  from `@typesafe-ai/sdk` is the real one.
+- `retry` is `"prompt"` or `"patient"` and picks the retry policy and the per-attempt timeout.
+- `maxInFlight` gates calls FIFO and defaults to `DEFAULT_MAX_IN_FLIGHT`, which is 8.
+- `now` and the call's `id` pin the clock and the Decision id for a byte-stable result.
+
+A Decision carries the Answers, one evidence block per Question, the folded confidence,
+`review` when that confidence is under the threshold, the model that answered and its token
+usage. `rule` and `action` come back `null`; routing fills them. `decisionSchema`,
+`parseDecision` and `serializeDecision` are the Decision line's door; `recordSchema`
+validates a Record.
+
+## Rules
+
+`ruleSchema` and `ruleConditionSchema` parse a Rules file: a JSON array over four comparators,
+six pairings with a Question kind, and no more. `evaluateRules(answers, rules)` is pure, first match wins, and never throws: an
+answer that is missing or of the wrong type makes the condition false and the next Rule gets
+its turn. `routeDecision(decision, rules)` returns a copy with `rule` and `action` filled,
+and leaves both `null` on an Unsure Decision. `validateRules(rules, recipe)` reports every
+Rule the Recipe no longer supports.
+
+## Fixtures
+
+A Fixture is `{ state, expect, id?, origin?, by? }` on one JSONL line, where `expect` is a
+partial answer map: a Question left out of it is left out of that Question's denominator.
+`parseFixture`, `parseFixtures` and `serializeFixture` are the format's door, and
+`defineFixtures(recipe, fixtures)` writes a set in TypeScript, validates it against the
+Recipe and returns each `expect` in Recipe order. `validateFixtures` is the check on its own.
+
+`testRecipe(judge, recipe, fixtures)` judges them all through the gate and returns a
+`TestReport`: one entry per Fixture with its mismatches and its review flag, accuracy per
+Question, and the lowest Question accuracy as the report's own. `scoreResults` is the pure
+half when you already hold the Decisions, and `compareAnswers` the single-Fixture comparison.
+
+## Errors
+
+Every error extends `SiftlineError`, whose `code` and `retryable` are what a caller maps to
+a status of its own.
+
+| Class                    | `code`            | Thrown when                                                |
+| ------------------------ | ----------------- | ---------------------------------------------------------- |
+| `JudgeExhaustedError`    | `jev_exhausted`   | A 429 or 529 outlived the retries. Carries `retryAfterMs`. |
+| `JudgeError`             | `jev_error`       | Any other Judge failure. Carries `reason` and `status`.    |
+| `FixtureParseError`      | `fixture_invalid` | A Fixture line does not parse. Carries the line number.    |
+| `FixtureValidationError` | `fixture_invalid` | A Fixture does not fit the Recipe. Carries the problems.   |
+
+## File formats
+
+Three formats, each with one strict schema and one serializer as its only writer: the Recipe
+document, the Decision line and the Fixture line. `format: 1` marks the first two; a Fixture
+carries none. A Rules file is a plain JSON array with no writer of its own. A breaking change
+to a format bumps its number.
