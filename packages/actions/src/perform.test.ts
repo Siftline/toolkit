@@ -1,6 +1,6 @@
 import { ActionFailedError, perform, webhook } from "@siftline/actions";
 import type { ActionFetch, ActionFetchInit, ActionRequest } from "@siftline/actions";
-import { beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { feedbackWidget, routedDecision } from "./fixtures";
 
@@ -15,6 +15,10 @@ beforeEach(async () => {
     { url: "https://hooks.example.com/siftline" },
     feedbackWidget(),
   );
+});
+
+afterEach(() => {
+  vi.unstubAllGlobals();
 });
 
 function responder(body: string | Uint8Array, status = 200): ActionFetch {
@@ -36,7 +40,7 @@ function rejecter(error: Error): ActionFetch {
 describe("perform", () => {
   it("sends the built request as it stands", async () => {
     const signal = new AbortController().signal;
-    const response = await perform(request, responder("ok"), { signal });
+    const response = await perform(request, { fetch: responder("ok"), signal });
 
     expect(response).toEqual({ status: 200, body: "ok", truncated: false });
     expect(calls[0]?.url).toBe(request.url);
@@ -46,9 +50,33 @@ describe("perform", () => {
     expect(calls[0]?.init.signal).toBe(signal);
   });
 
+  it("sends through the global fetch when none is passed", async () => {
+    vi.stubGlobal("fetch", responder("ok"));
+
+    const response = await perform(request);
+
+    expect(response).toEqual({ status: 200, body: "ok", truncated: false });
+    expect(calls).toEqual([
+      {
+        url: request.url,
+        init: { method: "POST", headers: request.headers, body: request.body },
+      },
+    ]);
+  });
+
+  it("hands the signal to the global fetch", async () => {
+    const signal = new AbortController().signal;
+
+    vi.stubGlobal("fetch", responder("ok"));
+
+    await perform(request, { signal });
+
+    expect(calls[0]?.init.signal).toBe(signal);
+  });
+
   it("keeps a body of exactly the limit whole", async () => {
     const body = "a".repeat(4096);
-    const response = await perform(request, responder(body));
+    const response = await perform(request, { fetch: responder(body) });
 
     expect(response.truncated).toBe(false);
     expect(response.body).toBe(body);
@@ -56,7 +84,7 @@ describe("perform", () => {
 
   it("cuts a longer body on a code-point boundary", async () => {
     // 4097 bytes: the byte at the 4096 limit is the second half of the final character.
-    const response = await perform(request, responder(`${"a".repeat(4095)}é`));
+    const response = await perform(request, { fetch: responder(`${"a".repeat(4095)}é`) });
 
     expect(response.truncated).toBe(true);
     expect(response.body).toBe("a".repeat(4095));
@@ -65,7 +93,7 @@ describe("perform", () => {
 
   it("keeps a character that ends exactly on the limit", async () => {
     // 4098 bytes: the limit falls between two two-byte characters.
-    const response = await perform(request, responder(`${"a".repeat(4094)}éé`));
+    const response = await perform(request, { fetch: responder(`${"a".repeat(4094)}éé`) });
 
     expect(response.truncated).toBe(true);
     expect(response.body).toBe(`${"a".repeat(4094)}é`);
@@ -84,7 +112,7 @@ describe("perform", () => {
 
     await Promise.all(
       cases.map(async ([status, retryable]) => {
-        const sending = perform(request, responder("nope", status));
+        const sending = perform(request, { fetch: responder("nope", status) });
 
         await expect(sending).rejects.toBeInstanceOf(ActionFailedError);
         await expect(sending).rejects.toMatchObject({
@@ -98,7 +126,7 @@ describe("perform", () => {
 
   it("fails retryably when fetch itself throws", async () => {
     const cause = new Error("ECONNRESET");
-    const sending = perform(request, rejecter(cause));
+    const sending = perform(request, { fetch: rejecter(cause) });
 
     await expect(sending).rejects.toMatchObject({
       name: "ActionFailedError",
@@ -110,7 +138,9 @@ describe("perform", () => {
   });
 
   it("neither retries nor times out", async () => {
-    await expect(perform(request, responder("nope", 500))).rejects.toThrow(ActionFailedError);
+    await expect(perform(request, { fetch: responder("nope", 500) })).rejects.toThrow(
+      ActionFailedError,
+    );
 
     expect(calls).toHaveLength(1);
   });

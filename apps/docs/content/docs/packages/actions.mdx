@@ -11,7 +11,7 @@ ESM only. Node 22.14 or newer. Depends on `@siftline/core` for the Decision and 
 
 Building a request and sending it are two steps. An Adapter's `build(decision, config, recipe)`
 turns a Decision into an `ActionRequest`: method, URL, headers, body and the idempotency key.
-`perform(request, fetch, { signal })` sends it. Preview is `build` without `perform`, and
+`perform(request, { fetch?, signal? })` sends it. Preview is `build` without `perform`, and
 nothing in a request depends on a clock or randomness, so the same Decision, config and Recipe
 always build the same bytes. The guide shows [both requests](/docs/guide/send-an-action).
 
@@ -35,8 +35,9 @@ twice.
 
 `perform` sends once, with no retries and no timeout of its own, and keeps the first 4096 bytes
 of the response body, cut on a code-point boundary. It returns `{ status, body, truncated }`.
-The `fetch` parameter is typed narrower than the global one, so the global `fetch` and a stub
-both fit without a cast.
+`fetch` defaults to the global one, read on each call. The option is typed narrower than the
+global `fetch`, so the global one and a stub both fit without a cast. `signal` goes to `fetch`
+unchanged.
 
 ## Errors
 
