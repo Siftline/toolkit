@@ -1,6 +1,13 @@
 import { run } from "@siftline/cli";
 import { parseDecision } from "@siftline/core";
-import type { Decision, Record, Rule, SystemOneClient, SystemOneRequest } from "@siftline/core";
+import type {
+  Decision,
+  JsonValue,
+  Record,
+  Rule,
+  SystemOneClient,
+  SystemOneRequest,
+} from "@siftline/core";
 import { createReplayClient, createScriptedClient } from "@siftline/core/testing";
 import type { ReplayLine } from "@siftline/core/testing";
 import { describe, expect, it } from "vitest";
@@ -34,6 +41,7 @@ function labelled(stdout: string): string[] {
 
 function indexOf(request: SystemOneRequest): number {
   const state = JSON.stringify(request.state);
+
   return RECORDS.findIndex((record) => JSON.stringify(record.state) === state);
 }
 
@@ -52,6 +60,7 @@ function reversing(completed: string[]): SystemOneClient {
       const index = indexOf(request);
       await delay((RECORDS.length - index) * 20);
       completed.push(`r${index + 1}`);
+
       return await replay.systemOne(request, options);
     },
   };
@@ -113,6 +122,7 @@ describe("the input", () => {
 
   it("carries `trimmed` to the Decision untouched", async () => {
     const { deps, stdout } = harness(replay);
+
     const path = recordsFile([
       { id: "r1", state: stateOf("si-01"), trimmed: true },
       { id: "r2", state: stateOf("si-02") },
@@ -132,7 +142,7 @@ describe("the input", () => {
 });
 
 describe("a bad Record line", () => {
-  const bad: { [what: string]: string } = {
+  const bad = {
     "is not JSON": "{",
     "is not an object": '"just prose"',
     "has no id": '{"state":"hi"}',
@@ -179,7 +189,8 @@ const ESCALATE: Rule[] = [
   },
 ];
 
-function rulesFile(rules: unknown): string {
+/** Rules as written, or a JSON document that is meant to be refused. */
+function rulesFile(rules: readonly Rule[] | JsonValue): string {
   return textFile(JSON.stringify(rules), "rules.json");
 }
 
@@ -236,6 +247,7 @@ describe("--rules", () => {
   it("exits 2 when validateRules refuses a stale Rule", async () => {
     const client = createScriptedClient([]);
     const { deps, stderr } = harness(client);
+
     const stale = rulesFile([
       {
         id: "stale",
@@ -254,11 +266,13 @@ describe("--rules", () => {
 
 // ─── Failures ───────────────────────────────────────────────────────────────────────────
 
-function failing(recorded: string, error: unknown): SystemOneClient {
+function failing(recorded: string, error: Error): SystemOneClient {
   const state = JSON.stringify(stateOf(recorded));
+
   return {
     systemOne: async (request, options) => {
       if (JSON.stringify(request.state) === state) throw error;
+
       return await replay.systemOne(request, options);
     },
   };
@@ -292,6 +306,7 @@ describe("a Record the Judge refuses", () => {
       status: 429,
       retryAfterMs: 1000,
     });
+
     const { deps, stderr } = harness(failing("si-01", exhausted));
 
     await expect(
@@ -304,6 +319,7 @@ describe("a Record the Judge refuses", () => {
 describe("SIGINT", () => {
   it("aborts waiting and in-flight calls and exits 130", async () => {
     const controller = new AbortController();
+
     const sample = harness({
       systemOne: async (_request, options) => {
         controller.abort();
@@ -311,6 +327,7 @@ describe("SIGINT", () => {
         throw new Error("the call outlived the abort");
       },
     });
+
     const deps = { ...sample.deps, signal: controller.signal };
 
     await expect(

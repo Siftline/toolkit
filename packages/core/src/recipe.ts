@@ -15,6 +15,7 @@ export type EntryType = string | { [key: string]: JsonValue } | JsonValue[] | nu
 export type Entry = Exclude<EntryType, null>;
 
 export type ChoiceCriteria = { [label: string]: EntryType };
+
 export type ScoreCriteria = readonly [EntryType, EntryType, ...EntryType[]];
 
 export interface ChoiceQuestion<T extends ChoiceCriteria = ChoiceCriteria> {
@@ -84,6 +85,7 @@ export const entryType = z.union([
 // Descriptions are typed as the SDK's `EntryType` but parsed as non-null: the spec's schema
 // sketch has no `null` in `entry`.
 const entry = z.union([z.string().min(1), z.record(z.string(), jsonValue), z.array(jsonValue)]);
+
 // Exported inside the package only: the Decision keys its `answers` and `questions` by the
 // same names.
 export const questionName = z.string().regex(/^[a-z][a-z0-9_]*$/);
@@ -162,7 +164,9 @@ export function defineRecipe<const Q extends Questions>(input: DefineRecipeInput
     reviewThreshold: input.reviewThreshold ?? 0.7,
     questions: input.questions,
   };
+
   recipeSchema.parse(recipe);
+
   return recipe;
 }
 
@@ -173,5 +177,6 @@ export function parseRecipe(text: string): Recipe {
 export function serializeRecipe(recipe: Recipe): string {
   const { format, name, version, model, reviewThreshold, questions } = recipe;
   const ordered = { format, name, version, model, reviewThreshold, questions };
+
   return `${JSON.stringify(ordered, null, 2)}\n`;
 }

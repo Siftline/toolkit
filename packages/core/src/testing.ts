@@ -7,10 +7,12 @@ import type {
   SystemOneResult,
 } from "./client";
 import { parseJsonLines } from "./jsonl";
-import { isObjectLike } from "./object";
 import { entryType, jsonValue, questionSchema } from "./recipe";
+import type { JsonValue } from "./recipe";
+import { decodeThrown } from "./thrown";
 
 const probability = z.number().min(0).max(1);
+
 const probabilities = z.record(z.string().min(1), z.number());
 
 const answerSchema = z.discriminatedUnion("type", [
@@ -138,31 +140,46 @@ export interface ScriptedClient extends SystemOneClient {
  */
 export function createScriptedClient(script: readonly ScriptStep[]): ScriptedClient {
   const calls: SystemOneRequest[] = [];
+
   return {
     calls,
     systemOne: async (request: SystemOneRequest): Promise<SystemOneResult> => {
       const step = script[calls.length];
       calls.push(request);
+
       if (!step) throw new Error(`scripted client exhausted after ${script.length} calls`);
+
       if ("error" in step) throw step.error;
+
       return step.response;
     },
   };
 }
 
-function deepEqual(a: unknown, b: unknown): boolean {
-  if (a === b) return true;
-  if (!isObjectLike(a) || !isObjectLike(b)) return false;
-  if (Array.isArray(a) !== Array.isArray(b)) return false;
-  const keys = Object.keys(a);
-  if (keys.length !== Object.keys(b).length) return false;
-  return keys.every((key) => key in b && deepEqual(a[key], b[key]));
+/** Objects write their keys sorted, so two values that differ only in key order match. */
+function canonicalJson(value: JsonValue): string {
+  if (value === null || !(value instanceof Object)) return JSON.stringify(value);
+
+  if (Array.isArray(value)) return `[${value.map(canonicalJson).join(",")}]`;
+
+  const members = Object.entries(value)
+    .toSorted(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(([key, member]) => `${JSON.stringify(key)}:${canonicalJson(member)}`);
+
+  return `{${members.join(",")}}`;
+}
+
+// A recorded request came through JSON, so the live one goes through it too: an `undefined`
+// member drops out of both the same way.
+function requestKey(request: SystemOneRequest): string {
+  return canonicalJson(jsonValue.parse(JSON.parse(JSON.stringify(request))));
 }
 
 /** Rebuilds what the SDK threw closely enough for the Judge's duck typing to see it. */
 function replayError(recorded: ReplayError): Error {
   const error = new Error(recorded.message);
   error.name = recorded.name;
+
   return Object.assign(error, {
     status: recorded.status,
     retryAfterMs: recorded.retryAfterMs,
@@ -173,15 +190,21 @@ function replayError(recorded: ReplayError): Error {
 
 /** Answers the line whose `request` is deep-equal to the incoming one. Key order is free. */
 export function createReplayClient(lines: readonly ReplayLine[]): SystemOneClient {
+  const keyed = lines.map((line) => ({ key: requestKey(line.request), line }));
+
   return {
     systemOne: async (request: SystemOneRequest): Promise<SystemOneResult> => {
-      const line = lines.find((candidate) => deepEqual(candidate.request, request));
+      const key = requestKey(request);
+      const line = keyed.find((candidate) => candidate.key === key)?.line;
+
       if (!line) {
         throw new Error(
           `no replay line matches the request for model ${request.model} and questions ${Object.keys(request.questions).join(", ")}`,
         );
       }
+
       if ("error" in line) throw replayError(line.error);
+
       return line.response;
     },
   };
@@ -193,24 +216,17 @@ export interface RecordingOptions {
   now?: () => Date;
 }
 
-function asString(value: unknown): string | undefined {
-  return typeof value === "string" ? value : undefined;
-}
-
-function asNumber(value: unknown): number | null {
-  return typeof value === "number" ? value : null;
-}
-
-/** Duck typing, because core cannot name the SDK's error classes. */
+/** Core cannot name the SDK's error classes, so it decodes their fields. */
 function recordError(cause: unknown): ReplayError {
-  const thrown = isObjectLike(cause) ? cause : {};
+  const thrown = decodeThrown(cause);
+
   return {
-    name: asString(thrown["name"]) ?? "Error",
-    message: asString(thrown["message"]) ?? String(cause),
-    status: asNumber(thrown["status"]),
-    retryAfterMs: asNumber(thrown["retryAfterMs"]),
-    requestId: asString(thrown["requestId"]),
-    body: thrown["body"],
+    name: thrown.name ?? "Error",
+    message: thrown.message ?? String(cause),
+    status: thrown.status ?? null,
+    retryAfterMs: thrown.retryAfterMs ?? null,
+    requestId: thrown.requestId,
+    body: thrown.body,
   };
 }
 
@@ -223,21 +239,25 @@ export function createRecordingClient(
   const now = options.now ?? ((): Date => new Date());
   const nextId = options.id ?? ((_request: SystemOneRequest, index: number): string => `${index}`);
   let calls = 0;
+
   return {
     systemOne: async (
       request: SystemOneRequest,
       callOptions?: SystemOneCallOptions,
     ): Promise<SystemOneResult> => {
       const startedAt = now();
+
       const head = {
         format: 1 as const,
         id: nextId(request, ++calls),
         recordedAt: startedAt.toISOString(),
         request,
       };
+
       try {
         const response = await inner.systemOne(request, callOptions);
         sink({ ...head, durationMs: now().getTime() - startedAt.getTime(), response });
+
         return response;
       } catch (cause) {
         sink({

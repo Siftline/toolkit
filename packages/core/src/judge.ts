@@ -1,8 +1,11 @@
+import { z } from "zod";
+
 import type { AnswerResponse, RetryPolicy, SystemOneClient, SystemOneResult } from "./client";
 import type { AnswerValue, Decision, Evidence, Record } from "./decision";
 import { SiftlineError } from "./errors";
-import { isObjectLike } from "./object";
 import type { Question, Questions, Recipe } from "./recipe";
+import { decodeThrown } from "./thrown";
+import type { Thrown } from "./thrown";
 
 /** The gate's width when the caller sets none (cloud ADR 0005). */
 export const DEFAULT_MAX_IN_FLIGHT = 8;
@@ -74,7 +77,7 @@ interface RetrySettings {
   readonly timeout: number;
 }
 
-const RETRY_MODES: { readonly [M in RetryMode]: RetrySettings } = {
+const RETRY_MODES = {
   prompt: {
     retry: { maxRetries: 1, backoffMaxMs: 2000, maxRetryAfterMs: 5000 },
     timeout: 10000,
@@ -83,7 +86,7 @@ const RETRY_MODES: { readonly [M in RetryMode]: RetrySettings } = {
     retry: { maxRetries: 5, backoffMaxMs: 30000, maxRetryAfterMs: 60000 },
     timeout: 30000,
   },
-};
+} satisfies { readonly [M in RetryMode]: RetrySettings };
 
 interface Waiter {
   admit: () => void;
@@ -99,85 +102,85 @@ function createGate(limit: number): (signal?: AbortSignal) => Promise<() => void
 
   function release(): void {
     const next = queue.shift();
+
     if (next) next.admit();
     else inFlight -= 1;
   }
 
   return async (signal?: AbortSignal): Promise<() => void> => {
     signal?.throwIfAborted();
+
     if (inFlight < limit) {
       inFlight += 1;
+
       return release;
     }
+
     await new Promise<void>((resolve, reject) => {
       let onAbort: (() => void) | undefined;
+
       const waiter: Waiter = {
         admit: () => {
           if (onAbort) signal?.removeEventListener("abort", onAbort);
           resolve();
         },
       };
+
       if (signal) {
         onAbort = (): void => {
           const index = queue.indexOf(waiter);
+
           if (index >= 0) queue.splice(index, 1);
           reject(signal.reason);
         };
+
         signal.addEventListener("abort", onAbort, { once: true });
       }
+
       queue.push(waiter);
     });
+
     return release;
   };
 }
 
-function errorType(thrown: { [key: string]: unknown }): string | undefined {
-  const body = thrown["body"];
-  if (!isObjectLike(body)) return undefined;
-  const detail = body["detail"];
-  if (!isObjectLike(detail)) return undefined;
-  const type = detail["error_type"];
-  return typeof type === "string" ? type : undefined;
-}
+const errorBodySchema = z.object({ detail: z.object({ error_type: z.string() }) });
 
-function reasonOf(thrown: { [key: string]: unknown }, status: number | null): JudgeErrorReason {
-  if (status === null) {
-    const name = thrown["name"];
-    return typeof name === "string" && /timeout/i.test(name) ? "timeout" : "network";
-  }
-  const type = errorType(thrown);
+function reasonOf(thrown: Thrown, status: number | null): JudgeErrorReason {
+  if (status === null)
+    return thrown.name !== undefined && /timeout/i.test(thrown.name) ? "timeout" : "network";
+
+  const body = errorBodySchema.safeParse(thrown.body);
+  const type = body.success ? body.data.detail.error_type : undefined;
+
   if (type === "api_usage_error" || type === "max_tokens_exceeded") return type;
+
   return "unknown";
 }
 
 // An aborted signal is not enough on its own: a sibling's abort and a real 429 can land in
 // the same tick, and the 429 still has to be mapped.
-function isAbort(
-  cause: unknown,
-  thrown: { [key: string]: unknown },
-  signal?: AbortSignal,
-): boolean {
+function isAbort(cause: unknown, thrown: Thrown, signal?: AbortSignal): boolean {
   if (signal?.aborted === true && cause === signal.reason) return true;
-  const name = thrown["name"];
-  return name === "AbortError" || name === "APIUserAbortError";
+
+  return thrown.name === "AbortError" || thrown.name === "APIUserAbortError";
 }
 
-/** Duck typing, because core cannot import the SDK's error classes. Never returns. */
+/** Core cannot import the SDK's error classes, so it decodes their fields. Never returns. */
 function mapClientError(cause: unknown, signal?: AbortSignal): never {
-  const thrown = isObjectLike(cause) ? cause : {};
+  const thrown = decodeThrown(cause);
+
   if (isAbort(cause, thrown, signal)) throw cause;
 
-  const rawStatus = thrown["status"];
-  const status = typeof rawStatus === "number" ? rawStatus : null;
-  const rawMessage = thrown["message"];
-  const message = typeof rawMessage === "string" && rawMessage !== "" ? rawMessage : String(cause);
+  const status = thrown.status ?? null;
+
+  const message =
+    thrown.message !== undefined && thrown.message !== "" ? thrown.message : String(cause);
 
   if (status === 429 || status === 529) {
-    const retryAfterMs = thrown["retryAfterMs"];
-    throw new JudgeExhaustedError(message, typeof retryAfterMs === "number" ? retryAfterMs : null, {
-      cause,
-    });
+    throw new JudgeExhaustedError(message, thrown.retryAfterMs ?? null, { cause });
   }
+
   throw new JudgeError(message, reasonOf(thrown, status), status, { cause });
 }
 
@@ -189,12 +192,14 @@ function invalidAnswers(message: string): JudgeError {
 function argmax(probabilities: { readonly [key: string]: number }): string {
   let best = "";
   let top = Number.NEGATIVE_INFINITY;
+
   for (const [key, probability] of Object.entries(probabilities)) {
     if (probability > top) {
       top = probability;
       best = key;
     }
   }
+
   return best;
 }
 
@@ -202,21 +207,23 @@ function rebuild(
   name: string,
   keys: readonly string[],
   source: { readonly [key: string]: number },
-): { [key: string]: number } {
+) {
   const probabilities: { [key: string]: number } = {};
+
   for (const key of keys) {
     const probability = source[key];
-    if (typeof probability !== "number") {
+
+    if (probability === undefined) {
       throw invalidAnswers(`question ${name} has no probability for ${key}`);
     }
+
     probabilities[key] = probability;
   }
+
   return probabilities;
 }
 
-interface Mapped {
-  answers: { [name: string]: AnswerValue };
-  questions: { [name: string]: Evidence };
+interface Mapped extends Pick<Decision, "answers" | "questions"> {
   confidence: number;
 }
 
@@ -224,33 +231,40 @@ function mismatch(name: string, question: Question, answer: AnswerResponse): Jud
   return invalidAnswers(`question ${name} is a ${question.type}, answered as a ${answer.type}`);
 }
 
-function mapAnswer(
-  name: string,
-  question: Question,
-  answer: AnswerResponse,
-): { answer: AnswerValue; evidence: Evidence; confidence: number } {
+interface MappedAnswer {
+  answer: AnswerValue;
+  evidence: Evidence;
+  confidence: number;
+}
+
+function mapAnswer(name: string, question: Question, answer: AnswerResponse): MappedAnswer {
   if (answer.type === "choice") {
     if (question.type !== "choice") throw mismatch(name, question, answer);
     const probabilities = rebuild(name, Object.keys(question.criteria), answer.probabilities);
+
     return {
       answer: argmax(probabilities),
       evidence: { confidence: answer.confidence, probabilities },
       confidence: answer.confidence,
     };
   }
+
   if (answer.type === "score") {
     if (question.type !== "score") throw mismatch(name, question, answer);
     const indices = question.criteria.map((_criterion, index) => String(index));
     const probabilities = rebuild(name, indices, answer.probabilities);
+
     return {
       answer: Number(argmax(probabilities)),
       evidence: { score: answer.score, confidence: answer.confidence, probabilities },
       confidence: answer.confidence,
     };
   }
+
   if (question.type !== "noul") throw mismatch(name, question, answer);
   const probability = answer.noul;
   const confidence = Math.round(Math.abs(2 * probability - 1) * 100) / 100;
+
   return { answer: probability >= 0.5, evidence: { probability, confidence }, confidence };
 }
 
@@ -258,23 +272,27 @@ function mapAnswer(
 function mapAnswers(recipe: Recipe, result: SystemOneResult): Mapped {
   const names = Object.keys(recipe.questions);
   const answered = Object.keys(result.answers);
+
   if (answered.length !== names.length || !names.every((name) => name in result.answers)) {
     throw invalidAnswers(
       `the model answered [${answered.join(", ")}], the Recipe asks [${names.join(", ")}]`,
     );
   }
 
-  const answers: { [name: string]: AnswerValue } = {};
-  const questions: { [name: string]: Evidence } = {};
+  const answers: Decision["answers"] = {};
+  const questions: Decision["questions"] = {};
   const confidences: number[] = [];
+
   for (const [name, question] of Object.entries(recipe.questions)) {
     const response = result.answers[name];
+
     if (!response) throw invalidAnswers(`question ${name} went unanswered`);
     const mapped = mapAnswer(name, question, response);
     answers[name] = mapped.answer;
     questions[name] = mapped.evidence;
     confidences.push(mapped.confidence);
   }
+
   return { answers, questions, confidence: Math.min(...confidences) };
 }
 
@@ -292,6 +310,7 @@ export function createJudge(options: CreateJudgeOptions): Judge {
     const { signal } = callOptions;
     const release = await acquire(signal);
     let result: SystemOneResult;
+
     try {
       result = await client.systemOne(
         { state: record.state, questions: recipe.questions, model: recipe.model },
@@ -304,10 +323,10 @@ export function createJudge(options: CreateJudgeOptions): Judge {
     }
 
     const mapped = mapAnswers(recipe, result);
-    // Both maps are keyed by `recipe.questions`, which is `Q` itself; `Object.entries` is
-    // what loses that, so the keys are recovered here rather than proved.
+    // SAFETY: both maps are keyed by `recipe.questions`, which is `Q` itself, and each value
+    // was built for its own question's type. `Object.entries` is what loses that.
     // oxlint-disable-next-line typescript/no-unsafe-type-assertion
-    const { answers, questions } = mapped as unknown as Pick<Decision<Q>, "answers" | "questions">;
+    const { answers, questions } = mapped as Pick<Decision<Q>, "answers" | "questions">;
 
     return {
       format: 1,

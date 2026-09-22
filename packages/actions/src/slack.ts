@@ -16,13 +16,22 @@ const slackIncomingWebhookConfigSchema: z.ZodType<SlackIncomingWebhookConfig> = 
 // can render as itself.
 function describeLevel(index: number, criteria: ScoreCriteria): string {
   const description = criteria[index];
+
   if (description === undefined) return String(index);
-  return `${index} · ${typeof description === "string" ? description : JSON.stringify(description)}`;
+
+  const text =
+    description === null || description instanceof Object
+      ? JSON.stringify(description)
+      : description;
+
+  return `${index} · ${text}`;
 }
 
 function renderAnswer(question: Question, answer: AnswerValue): string {
   if (question.type === "noul") return answer ? "yes" : "no";
+
   if (question.type === "score") return describeLevel(Number(answer), question.criteria);
+
   return String(answer);
 }
 
@@ -32,12 +41,14 @@ function renderText(decision: Decision, recipe: Recipe): string {
   for (const [name, question] of Object.entries(recipe.questions)) {
     const answer = decision.answers[name];
     const evidence = decision.questions[name];
+
     if (answer === undefined || evidence === undefined) continue;
     const percent = Math.round(evidence.confidence * 100);
     lines.push(`${name}: ${renderAnswer(question, answer)} (${percent}%)`);
   }
 
   if (decision.rule !== null) lines.push(`rule ${decision.rule}`);
+
   return lines.join("\n");
 }
 

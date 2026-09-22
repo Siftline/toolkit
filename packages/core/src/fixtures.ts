@@ -48,13 +48,9 @@ export function parseFixture(line: string): Fixture {
 
 /** The only writer. One compact line, no trailing newline, absent optionals omitted. */
 export function serializeFixture(fixture: Fixture): string {
-  const line: { [key: string]: unknown } = {};
-  if (fixture.id !== undefined) line["id"] = fixture.id;
-  if (fixture.origin !== undefined) line["origin"] = fixture.origin;
-  if (fixture.by !== undefined) line["by"] = fixture.by;
-  line["state"] = fixture.state;
-  line["expect"] = fixture.expect;
-  return JSON.stringify(line);
+  const { id, origin, by, state, expect } = fixture;
+
+  return JSON.stringify({ id, origin, by, state, expect });
 }
 
 export function parseFixtures(text: string): Fixture[] {
@@ -84,8 +80,10 @@ export class FixtureValidationError extends SiftlineError {
 /** The first problem, and how many stand behind it. */
 function summarize(problems: FixtureProblem[]): string {
   const first = problems[0];
+
   if (!first) return "the Fixtures do not fit the Recipe";
   const head = `${first.fixture}: ${first.problem}`;
+
   return problems.length === 1 ? head : `${head} (and ${problems.length - 1} more)`;
 }
 
@@ -96,6 +94,7 @@ export function validateFixtures(fixtures: Fixture[], recipe: Recipe): FixturePr
 
   for (const [offset, fixture] of fixtures.entries()) {
     const named = fixture.id ?? String(offset + 1);
+
     const report = (problem: string): void => {
       problems.push({ fixture: named, problem });
     };
@@ -107,12 +106,14 @@ export function validateFixtures(fixtures: Fixture[], recipe: Recipe): FixturePr
 
     for (const [question, expected] of Object.entries(fixture.expect)) {
       const asked = recipe.questions[question];
+
       if (!asked) {
         report(`unknown question "${question}"`);
         continue;
       }
 
       const problem = answerValueProblem(asked, expected);
+
       if (problem !== null) report(`${problem} for question "${question}"`);
     }
   }
@@ -132,17 +133,22 @@ export function defineFixtures<Q extends Questions>(
 export function defineFixtures(recipe: Recipe, fixtures: Fixture[]): Fixture[] {
   for (const fixture of fixtures) fixtureSchema.parse(fixture);
   const problems = validateFixtures(fixtures, recipe);
+
   if (problems.length > 0) throw new FixtureValidationError(problems);
+
   return fixtures.map((fixture) => ({ ...fixture, expect: inRecipeOrder(fixture.expect, recipe) }));
 }
 
 // Validation has already refused every unknown Question, so no expectation is dropped here.
 function inRecipeOrder(expect: Partial<Answers>, recipe: Recipe): Partial<Answers> {
   const ordered: { [question: string]: AnswerValue } = {};
+
   for (const question of Object.keys(recipe.questions)) {
     const expected = expect[question];
+
     if (expected !== undefined) ordered[question] = expected;
   }
+
   return ordered;
 }
 
@@ -160,6 +166,7 @@ export function compareAnswers(expect: Partial<Answers>, answers: Answers): Mism
   for (const [question, expected] of Object.entries(expect)) {
     if (expected === undefined) continue;
     const actual = answers[question];
+
     if (actual !== expected) mismatches.push({ question, expected, actual });
   }
 
@@ -196,22 +203,27 @@ export interface TestReport {
  */
 export function scoreResults(results: FixtureResult[], recipe: Recipe): TestReport {
   const questions: { [question: string]: QuestionAccuracy } = {};
+
   for (const question of Object.keys(recipe.questions)) {
     questions[question] = { asserted: 0, matched: 0, accuracy: null };
   }
 
   for (const result of results) {
     const missed = new Set(result.mismatches.map((mismatch) => mismatch.question));
+
     for (const [question, expected] of Object.entries(result.expect)) {
       if (expected === undefined) continue;
       const tally = questions[question];
+
       if (!tally) continue;
       tally.asserted += 1;
+
       if (!missed.has(question)) tally.matched += 1;
     }
   }
 
   const scored: number[] = [];
+
   for (const tally of Object.values(questions)) {
     if (tally.asserted === 0) continue;
     tally.accuracy = tally.matched / tally.asserted;
@@ -244,10 +256,12 @@ export async function testRecipe(
   options: TestRecipeOptions = {},
 ): Promise<TestReport> {
   const problems = validateFixtures(fixtures, recipe);
+
   if (problems.length > 0) throw new FixtureValidationError(problems);
 
   const { onResult } = options;
   const controller = new AbortController();
+
   const signal = options.signal
     ? AbortSignal.any([options.signal, controller.signal])
     : controller.signal;
@@ -257,6 +271,7 @@ export async function testRecipe(
       const index = offset + 1;
       const id = fixture.id ?? `fixture:${index}`;
       let decision: Decision;
+
       try {
         decision = await judge({ id, state: fixture.state }, recipe, { signal });
       } catch (cause) {
@@ -272,7 +287,9 @@ export async function testRecipe(
         mismatches: compareAnswers(fixture.expect, decision.answers),
         review: decision.review,
       };
+
       onResult?.(result);
+
       return result;
     }),
   );

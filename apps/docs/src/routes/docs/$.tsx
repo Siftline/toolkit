@@ -26,6 +26,7 @@ export const Route = createFileRoute("/docs/$")({
     const slugs = params._splat?.split("/") ?? [];
     const data = await loader({ data: slugs });
     await docs.getPage(data.path)?.preload();
+
     return data;
   },
 });
@@ -37,6 +38,7 @@ const loader = createServerFn({
   .middleware([staticFunctionMiddleware])
   .handler(async ({ data: slugs }) => {
     const page = source.getPage(slugs);
+
     if (!page) throw notFound();
 
     return {
@@ -48,6 +50,7 @@ const loader = createServerFn({
 
 function Content({ path, markdownUrl }: { path: string; markdownUrl: string }) {
   const page = docs.getPage(path);
+
   if (!page) throw new Error(`unknown page: ${path}`);
 
   const { toc } = use(page.load());

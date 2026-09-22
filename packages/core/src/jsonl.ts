@@ -8,13 +8,16 @@ export function parseJsonLines<T>(
   fail: (line: number, cause: unknown) => Error,
 ): T[] {
   const values: T[] = [];
+
   for (const [offset, line] of text.split("\n").entries()) {
     if (line.trim() === "") continue;
+
     try {
       values.push(parseLine(line));
     } catch (cause) {
       throw fail(offset + 1, cause);
     }
   }
+
   return values;
 }

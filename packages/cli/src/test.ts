@@ -10,9 +10,11 @@ export async function runTest(args: readonly string[], deps: RunDeps): Promise<n
   const { positionals, options } = parseTestArgs(args);
 
   const [recipePath, fixturesPath] = positionals;
+
   if (recipePath === undefined || fixturesPath === undefined) {
     throw new UsageError("test needs a recipe and a fixtures file");
   }
+
   if (positionals.length > 2) {
     throw new UsageError(`test takes two positionals, not ${positionals.length}`);
   }
@@ -33,7 +35,9 @@ export async function runTest(args: readonly string[], deps: RunDeps): Promise<n
     signal: deps.signal,
     onResult: (result) => {
       drift.note(result.decision.model);
+
       if (options.quiet) return;
+
       for (const line of progressLines(result, order)) writeLine(deps.stderr, line);
     },
   });
@@ -45,6 +49,7 @@ export async function runTest(args: readonly string[], deps: RunDeps): Promise<n
   }
 
   const floor = options.minAccuracy;
+
   if (floor === null) return 0;
 
   if (report.accuracy === null) {
@@ -52,6 +57,7 @@ export async function runTest(args: readonly string[], deps: RunDeps): Promise<n
       deps.stderr,
       `siftline: no Question was asserted, so there is no accuracy to meet --min-accuracy ${floor}`,
     );
+
     return 1;
   }
 
@@ -60,6 +66,7 @@ export async function runTest(args: readonly string[], deps: RunDeps): Promise<n
       deps.stderr,
       `siftline: accuracy ${report.accuracy.toFixed(2)} is below --min-accuracy ${floor}`,
     );
+
     return 1;
   }
 

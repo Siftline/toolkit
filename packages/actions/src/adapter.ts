@@ -27,11 +27,19 @@ export function idempotencyKeyFor(decision: Decision): string {
   if (decision.action === null) {
     throw new ActionBuildError(`Decision ${decision.id} selected no Action`);
   }
+
   return `${decision.id}:${decision.action}`;
 }
 
+// A type alias, not an interface: only an alias is assignable to `ActionRequest["headers"]`.
+type BaseHeaders = {
+  "Content-Type": string;
+  "Idempotency-Key": string;
+  "User-Agent": string;
+};
+
 /** The three headers every adapter sends. An adapter adds its own on top. */
-export function baseHeaders(idempotencyKey: string): { [name: string]: string } {
+export function baseHeaders(idempotencyKey: string): BaseHeaders {
   return {
     "Content-Type": "application/json",
     "Idempotency-Key": idempotencyKey,
@@ -49,7 +57,9 @@ export async function hmacSha256Hex(secret: string, body: string): Promise<strin
     false,
     ["sign"],
   );
+
   const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
+
   return Array.from(new Uint8Array(signature), (byte) => byte.toString(16).padStart(2, "0")).join(
     "",
   );

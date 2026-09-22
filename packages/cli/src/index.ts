@@ -8,7 +8,9 @@ import { runTest } from "./test";
 import { USAGE, VERSION } from "./usage";
 
 export type { InputStream, OutputStream, RunDeps } from "./deps";
+
 export { API_KEY_ENV } from "./options";
+
 export { USAGE, VERSION } from "./usage";
 
 /**
@@ -19,15 +21,20 @@ export async function run(argv: readonly string[], deps: RunDeps): Promise<numbe
   try {
     if (argv.includes("--help")) {
       writeLine(deps.stdout, USAGE);
+
       return 0;
     }
+
     if (argv.includes("--version")) {
       writeLine(deps.stdout, VERSION);
+
       return 0;
     }
 
     const [command, ...rest] = argv;
+
     if (command === undefined) throw new UsageError("no command given");
+
     if (command !== "test" && command !== "label") {
       throw new UsageError(`unknown command: ${command}`);
     }
@@ -35,33 +42,38 @@ export async function run(argv: readonly string[], deps: RunDeps): Promise<numbe
     requireApiKey(deps.env);
 
     return command === "label" ? await runLabel(rest, deps) : await runTest(rest, deps);
-  } catch (error) {
-    return exitFor(error, deps);
+  } catch (cause) {
+    return exitFor(cause, deps);
   }
 }
 
 /** Every failure's exit code and its one stderr line. */
-function exitFor(error: unknown, deps: RunDeps): number {
+function exitFor(cause: unknown, deps: RunDeps): number {
   if (deps.signal?.aborted) {
     writeLine(deps.stderr, "siftline: interrupted");
+
     return 130;
   }
 
-  if (error instanceof UsageError) {
-    writeLine(deps.stderr, `siftline: ${error.message}\n\n${USAGE}`);
+  if (cause instanceof UsageError) {
+    writeLine(deps.stderr, `siftline: ${cause.message}\n\n${USAGE}`);
+
     return 2;
   }
 
-  if (error instanceof InputError) {
-    writeLine(deps.stderr, `siftline: ${error.message}`);
+  if (cause instanceof InputError) {
+    writeLine(deps.stderr, `siftline: ${cause.message}`);
+
     return 2;
   }
 
-  if (error instanceof SiftlineError) {
-    writeLine(deps.stderr, `siftline: ${error.message}`);
-    return error.code === "fixture_invalid" ? 2 : 1;
+  if (cause instanceof SiftlineError) {
+    writeLine(deps.stderr, `siftline: ${cause.message}`);
+
+    return cause.code === "fixture_invalid" ? 2 : 1;
   }
 
-  writeLine(deps.stderr, `siftline: ${error instanceof Error ? error.message : String(error)}`);
+  writeLine(deps.stderr, `siftline: ${cause instanceof Error ? cause.message : String(cause)}`);
+
   return 1;
 }

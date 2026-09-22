@@ -5,6 +5,7 @@ import { TypeSafeClient } from "@typesafe-ai/sdk";
 import { API_KEY_ENV, run } from "./index";
 
 const controller = new AbortController();
+
 process.on("SIGINT", () => {
   controller.abort();
 });
@@ -16,6 +17,7 @@ process.exitCode = await run(process.argv.slice(2), {
   client: {
     systemOne: (request, options) => {
       client ??= new TypeSafeClient({ apiKey: process.env[API_KEY_ENV] });
+
       return client.systemOne(request, options);
     },
   },

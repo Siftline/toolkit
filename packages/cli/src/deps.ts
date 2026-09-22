@@ -2,7 +2,7 @@ import type { SystemOneClient } from "@siftline/core";
 
 /** `process.stdout` and `process.stderr` satisfy this, and so does a string buffer. */
 export interface OutputStream {
-  write: (chunk: string) => unknown;
+  write: (chunk: string) => void;
   readonly isTTY?: boolean;
 }
 

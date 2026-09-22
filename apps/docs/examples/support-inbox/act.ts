@@ -11,6 +11,7 @@ export async function sendWebhook(decision: Decision, recipe: Recipe, fetchImpl:
 
   // One attempt, no retries. `retryable` on the error says whether a second try is worth it.
   const response = await perform(request, fetchImpl);
+
   return { request, response };
 }
 

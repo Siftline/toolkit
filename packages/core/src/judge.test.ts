@@ -29,6 +29,7 @@ function read(path: string): string {
 }
 
 const recipeNames = ["support-inbox", "feedback-widget", "doc-pair-check"] as const;
+
 type RecipeName = (typeof recipeNames)[number];
 
 const recipes: Record<RecipeName, Recipe> = {
@@ -43,7 +44,9 @@ const corpus: Record<string, ReplayLine[]> = Object.fromEntries(
 
 function probe(id: string): ReplayLine {
   const found = corpus["probes"]?.find((line) => line.id === id);
+
   if (!found) throw new Error(`no probe ${id}`);
+
   return found;
 }
 
@@ -74,7 +77,7 @@ function resultWith(answers: { [name: string]: AnswerResponse }): SystemOneResul
 
 interface Expectation {
   answers: { [name: string]: string | boolean | number };
-  questions: { [name: string]: { [key: string]: unknown } };
+  questions: { [name: string]: Evidence };
   confidence: number;
   review: boolean;
 }
@@ -281,8 +284,11 @@ function probabilityKeys(block: Evidence | undefined): string[] {
 /** The key order a Recipe dictates, which `serializeDecision` then writes out verbatim. */
 function probabilityOrder(recipe: Recipe, name: string): string[] {
   const question = recipe.questions[name];
+
   if (question?.type === "choice") return Object.keys(question.criteria);
+
   if (question?.type === "score") return question.criteria.map((_c, index) => String(index));
+
   return [];
 }
 
@@ -300,9 +306,11 @@ describe("judging the recorded corpus", () => {
           retry: "patient",
           now: clock,
         });
+
         const decision = await judge({ id: recordId, state: line.request.state }, recipe, {
           id: recordId,
         });
+
         const pinned = expectations[name][recordId];
 
         expect(pinned).toBeDefined();
@@ -313,8 +321,10 @@ describe("judging the recorded corpus", () => {
 
         expect(Object.keys(decision.answers)).toEqual(Object.keys(recipe.questions));
         expect(Object.keys(decision.questions)).toEqual(Object.keys(recipe.questions));
+
         for (const question of Object.keys(recipe.questions)) {
           const order = probabilityOrder(recipe, question);
+
           if (order.length === 0) continue;
           expect(probabilityKeys(decision.questions[question])).toEqual(order);
         }
@@ -325,8 +335,10 @@ describe("judging the recorded corpus", () => {
   it("rebuilds Choice probabilities in Recipe order, not the wire's", async () => {
     const lines = corpus["support-inbox"] ?? [];
     const line = lines[0];
+
     if (!line || !("response" in line)) throw new Error("si-01 is not a recorded answer");
     const wire = line.response.answers["category"];
+
     if (wire?.type !== "choice") throw new Error("si-01 has no Choice answer");
     expect(Object.keys(wire.probabilities)).toEqual(["question", "other", "complaint"]);
 
@@ -350,6 +362,7 @@ describe("mapping answers", () => {
       retry: "prompt",
       now: clock,
     });
+
     return judge({ id: "rec", state: "hello" }, recipe, { id: "dec" });
   }
 
@@ -370,6 +383,7 @@ describe("mapping answers", () => {
 
   it("takes the argmax of a Score, never the rounded expected value", async () => {
     const recipe = recipes["feedback-widget"];
+
     const decision = await judgeOnce(
       {
         model: "jev-1.13.0",
@@ -404,6 +418,7 @@ describe("mapping answers", () => {
 
   it("breaks a Score tie on the lowest index", async () => {
     const recipe = recipes["feedback-widget"];
+
     const decision = await judgeOnce(
       {
         model: "jev-1.13.0",
@@ -466,6 +481,7 @@ describe("mapping answers", () => {
         },
       },
     });
+
     await expect(missing).rejects.toBeInstanceOf(JudgeError);
     await expect(missing).rejects.toMatchObject({ reason: "invalid_answers", retryable: false });
   });
@@ -477,6 +493,7 @@ describe("mapping answers", () => {
 
   it("rejects a Score missing an index", async () => {
     const recipe = recipes["feedback-widget"];
+
     const gap = judgeOnce(
       {
         model: "jev-1.13.0",
@@ -499,6 +516,7 @@ describe("mapping answers", () => {
       },
       recipe,
     );
+
     await expect(gap).rejects.toBeInstanceOf(JudgeError);
     await expect(gap).rejects.toMatchObject({ reason: "invalid_answers", status: null });
   });
@@ -506,27 +524,38 @@ describe("mapping answers", () => {
 
 // ─── Errors ─────────────────────────────────────────────────────────────────────────────
 
-function thrown(fields: { [key: string]: unknown }): Error {
+/** The fields the SDK's errors carry, as the Judge reads them. */
+interface ThrownFields {
+  name: string;
+  status?: number;
+  retryAfterMs?: number;
+  body?: { detail: { error_type?: string } };
+}
+
+function thrown(fields: ThrownFields): Error {
   return Object.assign(new Error("the client gave up"), fields);
 }
 
-function judgeThrowing(error: unknown, recipe: Recipe = supportInbox): Promise<unknown> {
+function judgeThrowing(error: Error, recipe: Recipe = supportInbox): Promise<Decision> {
   const judge = createJudge({
     client: createScriptedClient([{ error }]),
     retry: "prompt",
     now: clock,
   });
+
   return judge({ id: "rec", state: "hello" }, recipe);
 }
 
 describe("mapping what the client throws", () => {
   it("maps the recorded unknown-model probe to api_usage_error", async () => {
     const line = probe("probe/unknown-model");
+
     const judge = createJudge({
       client: createReplayClient(corpus["probes"] ?? []),
       retry: "prompt",
       now: clock,
     });
+
     const failure = judge(
       { id: "rec", state: line.request.state },
       {
@@ -546,11 +575,13 @@ describe("mapping what the client throws", () => {
 
   it("maps the recorded over-budget probe to max_tokens_exceeded", async () => {
     const line = probe("probe/over-budget");
+
     const judge = createJudge({
       client: createReplayClient(corpus["probes"] ?? []),
       retry: "prompt",
       now: clock,
     });
+
     const failure = judge({ id: "rec", state: line.request.state }, supportInbox);
 
     await expect(failure).rejects.toMatchObject({
@@ -571,6 +602,7 @@ describe("mapping what the client throws", () => {
     const failure = judgeThrowing(
       thrown({ name: "RateLimitError", status: 429, retryAfterMs: 1200 }),
     );
+
     await expect(failure).rejects.toBeInstanceOf(JudgeExhaustedError);
     await expect(failure).rejects.toMatchObject({
       code: "jev_exhausted",
@@ -621,15 +653,16 @@ describe("mapping what the client throws", () => {
 interface GatedClient extends SystemOneClient {
   readonly started: string[];
   finish: (key: string) => void;
-  fail: (key: string, error: unknown) => void;
+  fail: (key: string, error: Error) => void;
 }
 
 /** Holds every call open until the test settles it, so concurrency is observed, not counted. */
 function createGatedClient(): GatedClient {
   const started: string[] = [];
+
   const settlers = new Map<
     string,
-    { resolve: (result: SystemOneResult) => void; reject: (error: unknown) => void }
+    { resolve: (result: SystemOneResult) => void; reject: (error: Error) => void }
   >();
 
   return {
@@ -638,7 +671,8 @@ function createGatedClient(): GatedClient {
     fail: (key, error) => settlers.get(key)?.reject(error),
     systemOne: (request: SystemOneRequest): Promise<SystemOneResult> =>
       new Promise<SystemOneResult>((resolve, reject) => {
-        const key = typeof request.state === "string" ? request.state : "";
+        const { state } = request;
+        const key = state === null || state instanceof Object ? "" : state;
         started.push(key);
         settlers.set(key, { resolve, reject });
       }),
@@ -768,6 +802,7 @@ interface CapturingClient extends SystemOneClient {
 
 function createCapturingClient(): CapturingClient {
   const options: SystemOneCallOptions[] = [];
+
   return {
     options,
     systemOne: async (
@@ -775,6 +810,7 @@ function createCapturingClient(): CapturingClient {
       callOptions?: SystemOneCallOptions,
     ): Promise<SystemOneResult> => {
       options.push(callOptions ?? {});
+
       return answered;
     },
   };
@@ -822,11 +858,13 @@ describe("the Decision the Judge builds", () => {
     // schema rejects the alias, so the Recipe is built as an object rather than parsed.
     const line = probe("probe/alias-latest");
     const aliased: Recipe = { ...supportInbox, model: "jev-latest" };
+
     const judge = createJudge({
       client: createReplayClient(corpus["probes"] ?? []),
       retry: "prompt",
       now: clock,
     });
+
     const decision = await judge({ id: "rec", state: line.request.state }, aliased);
 
     expect(decision.model).toBe("jev-1.13.0");
@@ -850,6 +888,7 @@ describe("the Decision the Judge builds", () => {
       retry: "prompt",
       now: clock,
     });
+
     const decision = await judge({ id: "a", state: "a" }, supportInbox);
 
     expect(decision.id).toMatch(/^[0-9a-f-]{36}$/);
@@ -862,6 +901,7 @@ describe("the Decision the Judge builds", () => {
   it("serializes to the same bytes twice under a fixed id and clock", async () => {
     const lines = corpus["feedback-widget"] ?? [];
     const line = lines[3];
+
     if (!line) throw new Error("fw-04 is missing");
     const recipe = recipes["feedback-widget"];
 
@@ -870,6 +910,7 @@ describe("the Decision the Judge builds", () => {
       retry: "patient",
       now: clock,
     });
+
     const record = { id: "fw-04", state: line.request.state };
     const first = await judge(record, recipe, { id: "d1" });
     const second = await judge(record, recipe, { id: "d1" });

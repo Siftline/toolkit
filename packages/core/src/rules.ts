@@ -81,17 +81,26 @@ export interface RuleProblem {
   problem: string;
 }
 
+const levelAnswer = z.number();
+
 // Never throws: an answer that is missing, of the wrong runtime type or not a known value
 // makes the condition false so the next Rule gets its turn.
 function matches(answers: Answers, condition: ParsedCondition): boolean {
   const actual = answers[condition.question];
+
   if (actual === undefined) return false;
+
   if (condition.comparator === "is") return actual === condition.value;
-  if (condition.comparator === "isOneOf") {
-    return typeof actual === "string" && condition.value.includes(actual);
-  }
-  if (typeof actual !== "number") return false;
-  return condition.comparator === "atLeast" ? actual >= condition.value : actual <= condition.value;
+
+  if (condition.comparator === "isOneOf") return condition.value.some((label) => label === actual);
+
+  const level = levelAnswer.safeParse(actual);
+
+  if (!level.success) return false;
+
+  return condition.comparator === "atLeast"
+    ? level.data >= condition.value
+    : level.data <= condition.value;
 }
 
 /** Pure, first match wins, no review gate. Cloud runs it again on corrected answers. */
@@ -99,6 +108,7 @@ export function evaluateRules(answers: Answers, rules: Rule[]): Routing {
   for (const rule of rules) {
     if (matches(answers, rule.condition)) return { rule: rule.id, action: rule.action };
   }
+
   return { rule: null, action: null };
 }
 
@@ -113,6 +123,7 @@ export function routeDecision<Q extends Questions>(
 ): Decision<Q>;
 export function routeDecision(decision: Decision, rules: Rule[]): Decision {
   if (decision.review) return { ...decision, rule: null, action: null };
+
   return { ...decision, ...evaluateRules(decision.answers, rules) };
 }
 
@@ -137,12 +148,13 @@ export function validateRules(rules: Rule[], recipe: Recipe): RuleProblem[] {
 
     const { question, comparator, value } = rule.condition;
     const asked = recipe.questions[question];
+
     if (!asked) {
       report(`unknown question "${question}"`);
       continue;
     }
 
-    if (!(comparatorsFor[asked.type] as readonly string[]).includes(comparator)) {
+    if (!comparatorsFor[asked.type].some((allowed) => allowed === comparator)) {
       report(`comparator "${comparator}" is not valid for a ${asked.type} question`);
       continue;
     }
@@ -150,6 +162,7 @@ export function validateRules(rules: Rule[], recipe: Recipe): RuleProblem[] {
     // `isOneOf` is the one comparator that carries several values; each is checked alone.
     for (const candidate of Array.isArray(value) ? value : [value]) {
       const problem = answerValueProblem(asked, candidate);
+
       if (problem !== null) report(problem);
     }
   }
