@@ -10,15 +10,15 @@ bun changeset
 ```
 
 Pick the published packages the change affects (`@siftline/core`, `@siftline/cli`,
-`@siftline/actions` — the private ones are ignored), pick major/minor/patch, and write the
+`@siftline/actions`; the private ones are ignored), pick major/minor/patch, and write the
 line a consumer would want to read in the changelog. Commit the generated file with your
 change.
 
 ## The escape hatch
 
 CI runs `bun changeset status --since=origin/main` and fails a pull request that touches a
-published package without a changeset. When a change genuinely needs no release — a test,
-a comment, an internal refactor — record that deliberately:
+published package without a changeset. When a change needs no release (a test,
+a comment, an internal refactor), record that deliberately:
 
 ```sh
 bun changeset --empty
@@ -31,7 +31,7 @@ of the decision in the diff. Skipping the step is not an option; saying "no rele
 
 On `main`, `release.yml` runs `changesets/action`. It opens (or updates) a **Version
 Packages** pull request that consumes every changeset here, bumps versions and writes the
-changelogs. Merging that pull request publishes to npm through trusted publishing — no
+changelogs. Merging that pull request publishes to npm through trusted publishing: no
 token, provenance attached. See the maintainer section of the root
 [README](../README.md#releases-maintainers).
 

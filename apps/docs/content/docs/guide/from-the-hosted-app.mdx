@@ -10,11 +10,11 @@ is the same.
 
 ## What carries over
 
-- **The Recipe.** The app exports a Template as Recipe JSON, byte for byte what
+- **The Recipe:** the app exports a Template as Recipe JSON, byte for byte what
   `siftline test` and `siftline label` read. Save it as `recipe.json`.
-- **The Fixtures.** Examples export as a JSONL file of Fixtures, the format on
+- **The Fixtures:** Examples export as a JSONL file of Fixtures, the format on
   [Measure it with Fixtures](/docs/guide/measure-with-fixtures).
-- **Decisions.** A webhook Action in the app posts the same Decision line the toolkit's
+- **Decisions:** a webhook Action in the app posts the same Decision line the toolkit's
   webhook adapter builds, so one receiver handles both.
 
 {/* TODO(cloud export): once the Template screen exports, replace this callout with the steps. */}
@@ -26,11 +26,11 @@ is the same.
 
 ## What does not
 
-- **Review.** The toolkit has no queue. `siftline label` writes Unsure Decisions with
+- **Review:** the toolkit has no queue. `siftline label` writes Unsure Decisions with
   `review: true` and no Action, and where they go is yours to decide.
-- **Corrections.** Answering in Review produces a Fixture in the app. On your machine, add a
+- **Corrections:** answering in Review produces a Fixture in the app. On your machine, add a
   line to `fixtures.jsonl`.
-- **Sending.** The app performs Actions for you. The toolkit's CLI routes but does not send;
+- **Sending:** the app performs Actions for you. The toolkit's CLI routes but does not send;
   [`@siftline/actions`](/docs/guide/send-an-action) is the package for that.
 
 ## A typical loop

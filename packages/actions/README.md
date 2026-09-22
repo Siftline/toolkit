@@ -24,4 +24,4 @@ ESM only. Node 22.14 or newer.
 
 ## Licence
 
-MIT — see [LICENSE](./LICENSE).
+MIT. See [LICENSE](./LICENSE).
