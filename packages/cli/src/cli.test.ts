@@ -75,5 +75,5 @@ it("reads Records from stdin through the `-` sentinel", () => {
   });
 
   expect(result.status).toBe(2);
-  expect(result.stderr).toContain('stdin line 1 is not a valid Record: unknown key "text"');
+  expect(result.stderr).toContain('stdin line 1 is not a valid Record: Unrecognized key: "text"');
 });

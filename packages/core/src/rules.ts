@@ -1,5 +1,6 @@
 import { z } from "zod";
 
+import { answerValueProblem } from "./decision";
 import type { Answers, Decision, IndexOf } from "./decision";
 import { questionName } from "./recipe";
 import type { Questions, Recipe } from "./recipe";
@@ -121,19 +122,6 @@ const comparatorsFor = {
   score: ["is", "atLeast", "atMost"],
 } as const;
 
-function labelProblems(labels: unknown, criteria: { [label: string]: unknown }): string[] {
-  const given = Array.isArray(labels) ? labels : [labels];
-  const problems: string[] = [];
-  for (const label of given) {
-    if (typeof label !== "string") {
-      problems.push(`value ${JSON.stringify(label)} is not a label`);
-    } else if (!Object.hasOwn(criteria, label)) {
-      problems.push(`unknown label "${label}"`);
-    }
-  }
-  return problems;
-}
-
 /** The portal's stale-Rule warning. Never runs inside `evaluateRules`. */
 export function validateRules(rules: Rule[], recipe: Recipe): RuleProblem[] {
   const problems: RuleProblem[] = [];
@@ -159,19 +147,10 @@ export function validateRules(rules: Rule[], recipe: Recipe): RuleProblem[] {
       continue;
     }
 
-    if (asked.type === "choice") {
-      for (const problem of labelProblems(value, asked.criteria)) report(problem);
-      continue;
-    }
-
-    if (asked.type === "noul") {
-      if (typeof value !== "boolean") report(`value ${JSON.stringify(value)} is not a boolean`);
-      continue;
-    }
-
-    const last = asked.criteria.length - 1;
-    if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > last) {
-      report(`level index ${JSON.stringify(value)} is out of range (0-${last})`);
+    // `isOneOf` is the one comparator that carries several values; each is checked alone.
+    for (const candidate of Array.isArray(value) ? value : [value]) {
+      const problem = answerValueProblem(asked, candidate);
+      if (problem !== null) report(problem);
     }
   }
 

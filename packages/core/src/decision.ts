@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-import { questionName } from "./recipe";
+import { entryType, questionName } from "./recipe";
 import type { EntryType, Question, Questions } from "./recipe";
 
 /** The Engine's whole view of an item. Sender, source and raw payload stay with the caller. */
@@ -9,6 +9,11 @@ export interface Record {
   state: EntryType;
   trimmed?: boolean;
 }
+
+/** Strict: an unknown key is a bad Record, not a field to ignore. */
+export const recordSchema: z.ZodType<Record> = z
+  .object({ id: z.string().min(1), state: entryType, trimmed: z.boolean().optional() })
+  .strict();
 
 // `number extends S["length"]` is what collapses the erased tuple to `number`; without it
 // the index union would be `never`.
@@ -27,8 +32,34 @@ type AnswerFor<Qn> = Qn extends { type: "choice"; criteria: infer C }
       ? IndexOf<S>
       : never;
 
+/** One answer with its literal erased: a label, a boolean or a level index. */
+export type AnswerValue = string | boolean | number;
+
 /** Choice → label, Noul → boolean, Score → level index. Shared with Fixture `expect`. */
 export type Answers<Q extends Questions = Questions> = { [K in keyof Q]: AnswerFor<Q[K]> };
+
+// Exported inside the package only: a Fixture's `expect` holds the same values.
+export const answerValue = z.union([z.string(), z.boolean(), z.number()]);
+
+/**
+ * Why `value` is not an answer to `asked`, or `null` when it is. Rules and Fixtures both
+ * validate against the Recipe with it, so the two report the same words.
+ */
+export function answerValueProblem(asked: Question, value: unknown): string | null {
+  const shown = JSON.stringify(value);
+  if (asked.type === "choice") {
+    if (typeof value !== "string") return `value ${shown} is not a label`;
+    return Object.hasOwn(asked.criteria, value) ? null : `unknown label ${shown}`;
+  }
+  if (asked.type === "noul") {
+    return typeof value === "boolean" ? null : `value ${shown} is not a boolean`;
+  }
+  const last = asked.criteria.length - 1;
+  if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > last) {
+    return `level index ${shown} is out of range (0-${last})`;
+  }
+  return null;
+}
 
 type EvidenceFor<Qn> = Qn extends { type: "choice"; criteria: infer C }
   ? { confidence: number; probabilities: { [L in keyof C]: number } }
@@ -89,7 +120,7 @@ export const decisionSchema = z
     model: z.string().min(1),
     judgedAt: z.iso.datetime(),
     trimmed: z.boolean(),
-    answers: z.record(questionName, z.union([z.string(), z.boolean(), z.number()])),
+    answers: z.record(questionName, answerValue),
     questions: z.record(questionName, evidence),
     confidence: unit,
     review: z.boolean(),

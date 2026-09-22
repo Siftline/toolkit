@@ -92,6 +92,4 @@ export function harness(
   };
 }
 
-async function* emptyStdin(): AsyncGenerator<string> {
-  // `test` never reads stdin; `label` will.
-}
+async function* emptyStdin(): AsyncGenerator<string> {}

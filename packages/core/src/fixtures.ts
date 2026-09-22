@@ -1,14 +1,12 @@
 import { z } from "zod";
 
-import type { Answers, Decision } from "./decision";
+import { answerValue, answerValueProblem } from "./decision";
+import type { Answers, AnswerValue, Decision } from "./decision";
 import { SiftlineError } from "./errors";
+import { parseJsonLines } from "./jsonl";
 import type { Judge } from "./judge";
 import { entryType, questionName } from "./recipe";
 import type { EntryType, Questions, Recipe } from "./recipe";
-
-// ─── The line ───────────────────────────────────────────────────────────────────────────
-
-const answerValue = z.union([z.string(), z.boolean(), z.number()]);
 
 export const fixtureSchema = z
   .object({
@@ -60,24 +58,13 @@ export function serializeFixture(fixture: Fixture): string {
 }
 
 export function parseFixtures(text: string): Fixture[] {
-  const fixtures: Fixture[] = [];
-  const lines = text.split("\n");
-
-  for (const [offset, line] of lines.entries()) {
-    if (line.trim() === "") continue;
-    try {
-      fixtures.push(parseFixture(line));
-    } catch (cause) {
-      throw new FixtureParseError(`fixture line ${offset + 1} is not a valid Fixture`, offset + 1, {
-        cause,
-      });
-    }
-  }
-
-  return fixtures;
+  return parseJsonLines(
+    text,
+    parseFixture,
+    (line, cause) =>
+      new FixtureParseError(`fixture line ${line} is not a valid Fixture`, line, { cause }),
+  );
 }
-
-// ─── Validation ─────────────────────────────────────────────────────────────────────────
 
 /** One Fixture that no longer fits its Recipe, keyed by its id or 1-based index. */
 export interface FixtureProblem {
@@ -89,12 +76,13 @@ export class FixtureValidationError extends SiftlineError {
   readonly problems: FixtureProblem[];
 
   constructor(problems: FixtureProblem[], options?: ErrorOptions) {
-    super(describe(problems), "fixture_invalid", false, options);
+    super(summarize(problems), "fixture_invalid", false, options);
     this.problems = problems;
   }
 }
 
-function describe(problems: FixtureProblem[]): string {
+/** The first problem, and how many stand behind it. */
+function summarize(problems: FixtureProblem[]): string {
   const first = problems[0];
   if (!first) return "the Fixtures do not fit the Recipe";
   const head = `${first.fixture}: ${first.problem}`;
@@ -124,30 +112,8 @@ export function validateFixtures(fixtures: Fixture[], recipe: Recipe): FixturePr
         continue;
       }
 
-      if (asked.type === "choice") {
-        if (typeof expected !== "string" || !Object.hasOwn(asked.criteria, expected)) {
-          report(`unknown label ${JSON.stringify(expected)} for question "${question}"`);
-        }
-        continue;
-      }
-
-      if (asked.type === "noul") {
-        if (typeof expected !== "boolean") {
-          report(`value ${JSON.stringify(expected)} for question "${question}" is not a boolean`);
-        }
-        continue;
-      }
-
-      const last = asked.criteria.length - 1;
-      if (
-        typeof expected !== "number" ||
-        !Number.isInteger(expected) ||
-        expected < 0 ||
-        expected > last
-      ) {
-        const shown = JSON.stringify(expected);
-        report(`level index ${shown} for question "${question}" is out of range (0-${last})`);
-      }
+      const problem = answerValueProblem(asked, expected);
+      if (problem !== null) report(`${problem} for question "${question}"`);
     }
   }
 
@@ -172,7 +138,7 @@ export function defineFixtures(recipe: Recipe, fixtures: Fixture[]): Fixture[] {
 
 // Validation has already refused every unknown Question, so no expectation is dropped here.
 function inRecipeOrder(expect: Partial<Answers>, recipe: Recipe): Partial<Answers> {
-  const ordered: { [question: string]: string | boolean | number } = {};
+  const ordered: { [question: string]: AnswerValue } = {};
   for (const question of Object.keys(recipe.questions)) {
     const expected = expect[question];
     if (expected !== undefined) ordered[question] = expected;
@@ -180,13 +146,11 @@ function inRecipeOrder(expect: Partial<Answers>, recipe: Recipe): Partial<Answer
   return ordered;
 }
 
-// ─── Matching ───────────────────────────────────────────────────────────────────────────
-
 /** `actual` is `undefined` when the Decision has no answer for the Question. */
 export interface Mismatch {
   question: string;
-  expected: string | boolean | number;
-  actual: string | boolean | number | undefined;
+  expected: AnswerValue;
+  actual: AnswerValue | undefined;
 }
 
 /** Pure. Strict equality per type, no tolerance, in `expect` insertion order. */
@@ -201,8 +165,6 @@ export function compareAnswers(expect: Partial<Answers>, answers: Answers): Mism
 
   return mismatches;
 }
-
-// ─── The report ─────────────────────────────────────────────────────────────────────────
 
 export interface FixtureResult {
   index: number;

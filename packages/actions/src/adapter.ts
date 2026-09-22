@@ -2,6 +2,7 @@ import type { Decision, Recipe } from "@siftline/core";
 import type { ZodType } from "zod";
 
 import { ActionBuildError } from "./errors";
+import { VERSION } from "./version";
 
 /** Cloud's `action.kind` strings. */
 export type ActionKind = "webhook" | "slack_incoming_webhook";
@@ -27,6 +28,15 @@ export function idempotencyKeyFor(decision: Decision): string {
     throw new ActionBuildError(`Decision ${decision.id} selected no Action`);
   }
   return `${decision.id}:${decision.action}`;
+}
+
+/** The three headers every adapter sends. An adapter adds its own on top. */
+export function baseHeaders(idempotencyKey: string): { [name: string]: string } {
+  return {
+    "Content-Type": "application/json",
+    "Idempotency-Key": idempotencyKey,
+    "User-Agent": `siftline-actions/${VERSION}`,
+  };
 }
 
 const encoder = new TextEncoder();

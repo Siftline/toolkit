@@ -146,7 +146,7 @@ describe("validateFixtures", () => {
       supportInbox,
     );
     expect(problems).toEqual([
-      { fixture: "1", problem: 'value "yes" for question "wants_human" is not a boolean' },
+      { fixture: "1", problem: 'value "yes" is not a boolean for question "wants_human"' },
     ]);
   });
 
@@ -160,9 +160,9 @@ describe("validateFixtures", () => {
       feedbackWidget,
     );
     expect(problems).toEqual([
-      { fixture: "1", problem: 'level index 4 for question "urgency" is out of range (0-3)' },
-      { fixture: "2", problem: 'level index -1 for question "urgency" is out of range (0-3)' },
-      { fixture: "3", problem: 'level index 1.5 for question "urgency" is out of range (0-3)' },
+      { fixture: "1", problem: 'level index 4 is out of range (0-3) for question "urgency"' },
+      { fixture: "2", problem: 'level index -1 is out of range (0-3) for question "urgency"' },
+      { fixture: "3", problem: 'level index 1.5 is out of range (0-3) for question "urgency"' },
     ]);
   });
 

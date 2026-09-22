@@ -3,8 +3,8 @@ import packageJson from "../package.json" with { type: "json" };
 /** The published version of `@siftline/core`, baked in at build time. */
 export const VERSION: string = packageJson.version;
 
-export { decisionSchema, parseDecision, serializeDecision } from "./decision";
-export type { Answers, Decision, Evidence, Record } from "./decision";
+export { decisionSchema, parseDecision, recordSchema, serializeDecision } from "./decision";
+export type { Answers, AnswerValue, Decision, Evidence, Record } from "./decision";
 export { SiftlineError } from "./errors";
 export type { SiftlineErrorCode } from "./errors";
 export {

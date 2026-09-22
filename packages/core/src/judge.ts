@@ -1,6 +1,7 @@
 import type { AnswerResponse, RetryPolicy, SystemOneClient, SystemOneResult } from "./client";
-import type { Decision, Evidence, Record } from "./decision";
+import type { AnswerValue, Decision, Evidence, Record } from "./decision";
 import { SiftlineError } from "./errors";
+import { isObjectLike } from "./object";
 import type { Question, Questions, Recipe } from "./recipe";
 
 /** The gate's width when the caller sets none (cloud ADR 0005). */
@@ -84,8 +85,6 @@ const RETRY_MODES: { readonly [M in RetryMode]: RetrySettings } = {
   },
 };
 
-// ─── The gate ───────────────────────────────────────────────────────────────────────────
-
 interface Waiter {
   admit: () => void;
 }
@@ -132,17 +131,11 @@ function createGate(limit: number): (signal?: AbortSignal) => Promise<() => void
   };
 }
 
-// ─── Error mapping ──────────────────────────────────────────────────────────────────────
-
-function isRecordLike(value: unknown): value is { [key: string]: unknown } {
-  return typeof value === "object" && value !== null;
-}
-
 function errorType(thrown: { [key: string]: unknown }): string | undefined {
   const body = thrown["body"];
-  if (!isRecordLike(body)) return undefined;
+  if (!isObjectLike(body)) return undefined;
   const detail = body["detail"];
-  if (!isRecordLike(detail)) return undefined;
+  if (!isObjectLike(detail)) return undefined;
   const type = detail["error_type"];
   return typeof type === "string" ? type : undefined;
 }
@@ -171,7 +164,7 @@ function isAbort(
 
 /** Duck typing, because core cannot import the SDK's error classes. Never returns. */
 function mapClientError(cause: unknown, signal?: AbortSignal): never {
-  const thrown = isRecordLike(cause) ? cause : {};
+  const thrown = isObjectLike(cause) ? cause : {};
   if (isAbort(cause, thrown, signal)) throw cause;
 
   const rawStatus = thrown["status"];
@@ -187,8 +180,6 @@ function mapClientError(cause: unknown, signal?: AbortSignal): never {
   }
   throw new JudgeError(message, reasonOf(thrown, status), status, { cause });
 }
-
-// ─── Answer mapping ─────────────────────────────────────────────────────────────────────
 
 function invalidAnswers(message: string): JudgeError {
   return new JudgeError(message, "invalid_answers", null);
@@ -224,7 +215,7 @@ function rebuild(
 }
 
 interface Mapped {
-  answers: { [name: string]: string | boolean | number };
+  answers: { [name: string]: AnswerValue };
   questions: { [name: string]: Evidence };
   confidence: number;
 }
@@ -237,7 +228,7 @@ function mapAnswer(
   name: string,
   question: Question,
   answer: AnswerResponse,
-): { answer: string | boolean | number; evidence: Evidence; confidence: number } {
+): { answer: AnswerValue; evidence: Evidence; confidence: number } {
   if (answer.type === "choice") {
     if (question.type !== "choice") throw mismatch(name, question, answer);
     const probabilities = rebuild(name, Object.keys(question.criteria), answer.probabilities);
@@ -273,7 +264,7 @@ function mapAnswers(recipe: Recipe, result: SystemOneResult): Mapped {
     );
   }
 
-  const answers: { [name: string]: string | boolean | number } = {};
+  const answers: { [name: string]: AnswerValue } = {};
   const questions: { [name: string]: Evidence } = {};
   const confidences: number[] = [];
   for (const [name, question] of Object.entries(recipe.questions)) {
@@ -286,8 +277,6 @@ function mapAnswers(recipe: Recipe, result: SystemOneResult): Mapped {
   }
   return { answers, questions, confidence: Math.min(...confidences) };
 }
-
-// ─── The factory ────────────────────────────────────────────────────────────────────────
 
 export function createJudge(options: CreateJudgeOptions): Judge {
   const { client } = options;

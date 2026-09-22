@@ -3,11 +3,12 @@ import { readFile } from "node:fs/promises";
 import {
   parseFixtures,
   parseRecipe,
+  recordSchema,
   ruleSchema,
   validateFixtures,
   validateRules,
 } from "@siftline/core";
-import type { EntryType, Fixture, Recipe, Record, Rule } from "@siftline/core";
+import type { Fixture, Recipe, Record, Rule } from "@siftline/core";
 
 import type { InputStream } from "./deps";
 import { InputError } from "./deps";
@@ -84,7 +85,7 @@ export async function readRecords(path: string | undefined, stdin: InputStream):
   for (const [offset, line] of text.split("\n").entries()) {
     if (line.trim() === "") continue;
     try {
-      records.push(parseRecord(line));
+      records.push(recordSchema.parse(JSON.parse(line)));
     } catch (cause) {
       throw new InputError(`${source} line ${offset + 1} is not a valid Record: ${reason(cause)}`, {
         cause,
@@ -102,36 +103,6 @@ async function readStdin(stream: InputStream): Promise<string> {
     text += typeof chunk === "string" ? chunk : decoder.decode(chunk, { stream: true });
   }
   return text + decoder.decode();
-}
-
-const RECORD_KEYS = new Set(["id", "state", "trimmed"]);
-
-// Hand-rolled because core publishes no Record schema and the CLI carries no validator of
-// its own. Strict: an unknown key is a bad line, not a field to ignore.
-function parseRecord(line: string): Record {
-  const value: unknown = JSON.parse(line);
-  if (!isObject(value)) throw new Error("a Record is a JSON object");
-
-  for (const key of Object.keys(value)) {
-    if (!RECORD_KEYS.has(key)) throw new Error(`unknown key ${JSON.stringify(key)}`);
-  }
-
-  const { id, state, trimmed } = value;
-  if (typeof id !== "string" || id === "") throw new Error("id is a non-empty string");
-  if (!isEntry(state)) throw new Error("state is prose, a JSON object, a JSON array or null");
-  if (trimmed !== undefined && typeof trimmed !== "boolean")
-    throw new Error("trimmed is a boolean");
-
-  return trimmed === undefined ? { id, state } : { id, state, trimmed };
-}
-
-function isObject(value: unknown): value is { [key: string]: unknown } {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-// The line came through `JSON.parse`, so anything of type `object` is already a `JsonValue`.
-function isEntry(value: unknown): value is EntryType {
-  return value === null || typeof value === "string" || typeof value === "object";
 }
 
 interface Issue {
@@ -163,17 +134,18 @@ function isIssue(value: unknown): value is Issue {
 
 function reason(cause: unknown): string {
   const issues = issuesOf(cause);
-  if (issues) return describe(issues);
+  if (issues) return firstIssue(issues);
 
   if (cause instanceof Error) {
     const nested = issuesOf(cause.cause);
-    return nested ? `${cause.message}: ${describe(nested)}` : cause.message;
+    return nested ? `${cause.message}: ${firstIssue(nested)}` : cause.message;
   }
 
   return String(cause);
 }
 
-function describe(issues: readonly Issue[]): string {
+/** The first issue with its path, and how many stand behind it. */
+function firstIssue(issues: readonly Issue[]): string {
   const first = issues[0];
   if (!first) return "invalid";
   const where = first.path.length === 0 ? "" : `${first.path.join(".")}: `;

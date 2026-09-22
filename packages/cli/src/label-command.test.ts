@@ -397,8 +397,8 @@ describe("option handling", () => {
   });
 
   it.each([
-    ["--json", "label takes no --json"],
-    ["--min-accuracy=0.9", "label takes no --min-accuracy"],
+    ["--json", "Unknown option '--json'"],
+    ["--min-accuracy=0.9", "Unknown option '--min-accuracy'"],
   ])("refuses %s", async (flag, message) => {
     const { deps, stderr } = harness(replay);
 

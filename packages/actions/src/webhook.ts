@@ -2,9 +2,8 @@ import { serializeDecision } from "@siftline/core";
 import type { Decision, Recipe } from "@siftline/core";
 import { z } from "zod";
 
-import { hmacSha256Hex, idempotencyKeyFor } from "./adapter";
+import { baseHeaders, hmacSha256Hex, idempotencyKeyFor } from "./adapter";
 import type { ActionRequest, Adapter } from "./adapter";
-import { VERSION } from "./version";
 
 export interface WebhookConfig {
   url: string;
@@ -28,11 +27,7 @@ async function build(
   const idempotencyKey = idempotencyKeyFor(decision);
   const body = serializeDecision(decision);
 
-  const headers: { [name: string]: string } = {
-    "Content-Type": "application/json",
-    "Idempotency-Key": idempotencyKey,
-    "User-Agent": `siftline-actions/${VERSION}`,
-  };
+  const headers = baseHeaders(idempotencyKey);
   for (const [name, value] of Object.entries(config.headers ?? {})) headers[name] = value;
   if (config.secret !== undefined) {
     headers["X-Siftline-Signature"] = `sha256=${await hmacSha256Hex(config.secret, body)}`;

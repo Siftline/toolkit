@@ -1,9 +1,8 @@
-import type { Decision, Question, Recipe, ScoreCriteria } from "@siftline/core";
+import type { AnswerValue, Decision, Question, Recipe, ScoreCriteria } from "@siftline/core";
 import { z } from "zod";
 
-import { idempotencyKeyFor } from "./adapter";
+import { baseHeaders, idempotencyKeyFor } from "./adapter";
 import type { ActionRequest, Adapter } from "./adapter";
-import { VERSION } from "./version";
 
 export interface SlackIncomingWebhookConfig {
   url: string;
@@ -21,7 +20,7 @@ function describeLevel(index: number, criteria: ScoreCriteria): string {
   return `${index} · ${typeof description === "string" ? description : JSON.stringify(description)}`;
 }
 
-function renderAnswer(question: Question, answer: string | boolean | number): string {
+function renderAnswer(question: Question, answer: AnswerValue): string {
   if (question.type === "noul") return answer ? "yes" : "no";
   if (question.type === "score") return describeLevel(Number(answer), question.criteria);
   return String(answer);
@@ -54,11 +53,7 @@ async function build(
   return {
     method: "POST",
     url: config.url,
-    headers: {
-      "Content-Type": "application/json",
-      "Idempotency-Key": idempotencyKey,
-      "User-Agent": `siftline-actions/${VERSION}`,
-    },
+    headers: baseHeaders(idempotencyKey),
     body: JSON.stringify({ text: renderText(decision, recipe) }),
     idempotencyKey,
   };

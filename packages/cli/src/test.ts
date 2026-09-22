@@ -3,13 +3,11 @@ import { createJudge, testRecipe } from "@siftline/core";
 import type { RunDeps } from "./deps";
 import { UsageError, writeLine } from "./deps";
 import { readFixturesFile, readRecipeFile } from "./input";
-import { parseCommandArgs } from "./options";
-import { driftMessage, progressLines, renderReport } from "./report";
+import { parseTestArgs } from "./options";
+import { progressLines, renderReport, watchDrift } from "./report";
 
 export async function runTest(args: readonly string[], deps: RunDeps): Promise<number> {
-  const { positionals, options } = parseCommandArgs(args);
-
-  if (options.rules !== null) throw new UsageError("test takes no --rules");
+  const { positionals, options } = parseTestArgs(args);
 
   const [recipePath, fixturesPath] = positionals;
   if (recipePath === undefined || fixturesPath === undefined) {
@@ -29,16 +27,12 @@ export async function runTest(args: readonly string[], deps: RunDeps): Promise<n
     maxInFlight: options.maxInFlight,
   });
 
-  // Held in an object because the warning is raised from inside `onResult` and read after it.
-  const drift: { message: string | null } = { message: null };
+  const drift = watchDrift(recipe.model, deps.stderr);
 
   const report = await testRecipe(judge, recipe, fixtures, {
     signal: deps.signal,
     onResult: (result) => {
-      if (drift.message === null && result.decision.model !== recipe.model) {
-        drift.message = driftMessage(recipe.model, result.decision.model);
-        writeLine(deps.stderr, `siftline: ${drift.message}`);
-      }
+      drift.note(result.decision.model);
       if (options.quiet) return;
       for (const line of progressLines(result, order)) writeLine(deps.stderr, line);
     },

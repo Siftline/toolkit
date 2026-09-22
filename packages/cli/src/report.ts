@@ -1,18 +1,39 @@
-import type { FixtureResult, Mismatch, TestReport } from "@siftline/core";
+import type { AnswerValue, FixtureResult, Mismatch, TestReport } from "@siftline/core";
+
+import type { OutputStream } from "./deps";
+import { writeLine } from "./deps";
 
 const NA = "n/a";
 
 /** Wide enough for `0.00` plus the gap before the note beside it. */
 const RATIO_COLUMN = 6;
 
-export function driftMessage(recipeModel: string, decisionModel: string): string {
-  return `model drift: the Recipe asks for ${recipeModel}, the Decisions came back from ${decisionModel}`;
+/** Warns on stderr the first time a Decision names a model other than the Recipe's. */
+export interface DriftWatch {
+  note: (decisionModel: string) => void;
+  readonly message: string | null;
+}
+
+export function watchDrift(recipeModel: string, stderr: OutputStream): DriftWatch {
+  let message: string | null = null;
+  return {
+    note: (decisionModel) => {
+      if (message !== null || decisionModel === recipeModel) return;
+      message = `model drift: the Recipe asks for ${recipeModel}, the Decisions came back from ${decisionModel}`;
+      writeLine(stderr, `siftline: ${message}`);
+    },
+    get message() {
+      return message;
+    },
+  };
 }
 
 /** One line per result, or one per miss. `order` is the Recipe's Question order. */
 export function progressLines(result: FixtureResult, order: readonly string[]): string[] {
   if (result.mismatches.length === 0) return [`ok ${result.id}`];
-  return inOrder(result.mismatches, order).map((miss) => `miss ${result.id} ${describe(miss)}`);
+  return inOrder(result.mismatches, order).map(
+    (miss) => `miss ${result.id} ${describeMismatch(miss)}`,
+  );
 }
 
 export function renderReport(report: TestReport, order: readonly string[]): string {
@@ -38,7 +59,7 @@ export function renderReport(report: TestReport, order: readonly string[]): stri
   ];
 
   const misses = report.fixtures.flatMap((result) =>
-    inOrder(result.mismatches, order).map((miss) => `${result.id}  ${describe(miss)}`),
+    inOrder(result.mismatches, order).map((miss) => `${result.id}  ${describeMismatch(miss)}`),
   );
   if (misses.length > 0) lines.push("", ...misses);
 
@@ -53,11 +74,11 @@ function ratio(value: number | null): string {
   return value === null ? NA : value.toFixed(2);
 }
 
-function describe(miss: Mismatch): string {
+function describeMismatch(miss: Mismatch): string {
   return `${miss.question}: expected ${show(miss.expected)}, got ${show(miss.actual)}`;
 }
 
-function show(value: string | boolean | number | undefined): string {
+function show(value: AnswerValue | undefined): string {
   return value === undefined ? "nothing" : String(value);
 }
 

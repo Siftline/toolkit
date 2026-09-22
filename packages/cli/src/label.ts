@@ -4,15 +4,12 @@ import type { JudgeErrorReason, Recipe, Record, Rule } from "@siftline/core";
 import type { OutputStream, RunDeps } from "./deps";
 import { UsageError, writeLine } from "./deps";
 import { readRecipeFile, readRecords, readRulesFile } from "./input";
-import type { CommandOptions } from "./options";
-import { parseCommandArgs } from "./options";
-import { driftMessage } from "./report";
+import type { LabelOptions } from "./options";
+import { parseLabelArgs } from "./options";
+import { watchDrift } from "./report";
 
 export async function runLabel(args: readonly string[], deps: RunDeps): Promise<number> {
-  const { positionals, options } = parseCommandArgs(args);
-
-  if (options.json) throw new UsageError("label takes no --json");
-  if (options.minAccuracy !== null) throw new UsageError("label takes no --min-accuracy");
+  const { positionals, options } = parseLabelArgs(args);
 
   const [recipePath, recordsPath] = positionals;
   if (recipePath === undefined) throw new UsageError("label needs a recipe");
@@ -32,11 +29,12 @@ async function label(
   recipe: Recipe,
   rules: Rule[] | null,
   deps: RunDeps,
-  options: CommandOptions,
+  options: LabelOptions,
 ): Promise<number> {
   const { maxInFlight } = options;
   const judge = createJudge({ client: deps.client, retry: "patient", maxInFlight });
   const progress = createProgress(deps.stderr, records.length, options.quiet);
+  const drift = watchDrift(recipe.model, deps.stderr);
 
   // A Record that fails is skipped, so the buffer holds `null` in its place and the run
   // keeps writing the ones behind it in input order.
@@ -59,7 +57,6 @@ async function label(
     : controller.signal;
   let fatal: unknown;
 
-  let drifted = false;
   let failed = false;
   let taken = 0;
   let done = 0;
@@ -76,10 +73,7 @@ async function label(
         // Record at a time is what keeps the gate from being widened behind the flag.
         // oxlint-disable-next-line no-await-in-loop
         const decision = await judge(record, recipe, { signal });
-        if (!drifted && decision.model !== recipe.model) {
-          drifted = true;
-          writeLine(deps.stderr, `siftline: ${driftMessage(recipe.model, decision.model)}`);
-        }
+        drift.note(decision.model);
         buffered.set(
           index,
           serializeDecision(rules === null ? decision : routeDecision(decision, rules)),

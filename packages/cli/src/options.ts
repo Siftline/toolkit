@@ -1,4 +1,5 @@
 import { parseArgs } from "node:util";
+import type { ParseArgsOptionsConfig } from "node:util";
 
 import { DEFAULT_MAX_IN_FLIGHT } from "@siftline/core";
 
@@ -7,53 +8,81 @@ import { UsageError } from "./deps";
 
 export const API_KEY_ENV = "TYPESAFE_API_KEY";
 
-/** Every option both commands accept. Each command refuses the ones it has no use for. */
-export interface CommandOptions {
+export interface TestOptions {
   maxInFlight: number;
   minAccuracy: number | null;
   json: boolean;
   quiet: boolean;
+}
+
+export interface LabelOptions {
+  maxInFlight: number;
+  quiet: boolean;
   rules: string | null;
 }
 
-export interface CommandArgs {
-  positionals: string[];
-  options: CommandOptions;
-}
-
-const FLAGS = {
+/** Each command hands `parseArgs` only its own flags, so a foreign one is an unknown option. */
+const TEST_FLAGS = {
   "max-in-flight": { type: "string" },
   "min-accuracy": { type: "string" },
   json: { type: "boolean" },
   quiet: { type: "boolean" },
+} as const;
+
+const LABEL_FLAGS = {
+  "max-in-flight": { type: "string" },
+  quiet: { type: "boolean" },
   rules: { type: "string" },
 } as const;
 
-export function parseCommandArgs(args: readonly string[]): CommandArgs {
-  let values: { [name: string]: string | boolean | undefined };
-  let positionals: string[];
+type Values = ReturnType<typeof parseArgs>["values"];
 
-  try {
-    ({ values, positionals } = parseArgs({
-      args: [...args],
-      options: FLAGS,
-      allowPositionals: true,
-      strict: true,
-    }));
-  } catch (cause) {
-    throw new UsageError(firstSentence(cause), { cause });
-  }
-
+export function parseTestArgs(args: readonly string[]): {
+  positionals: string[];
+  options: TestOptions;
+} {
+  const { values, positionals } = parseWith(args, TEST_FLAGS);
   return {
     positionals,
     options: {
-      maxInFlight: gateWidth(text(values["max-in-flight"])),
-      minAccuracy: ratio(text(values["min-accuracy"])),
+      maxInFlight: gateWidth(textValue(values["max-in-flight"])),
+      minAccuracy: ratio(textValue(values["min-accuracy"])),
       json: values["json"] === true,
       quiet: values["quiet"] === true,
-      rules: text(values["rules"]) ?? null,
     },
   };
+}
+
+export function parseLabelArgs(args: readonly string[]): {
+  positionals: string[];
+  options: LabelOptions;
+} {
+  const { values, positionals } = parseWith(args, LABEL_FLAGS);
+  return {
+    positionals,
+    options: {
+      maxInFlight: gateWidth(textValue(values["max-in-flight"])),
+      quiet: values["quiet"] === true,
+      rules: textValue(values["rules"]) ?? null,
+    },
+  };
+}
+
+function parseWith(
+  args: readonly string[],
+  flags: ParseArgsOptionsConfig,
+): { values: Values; positionals: string[] } {
+  try {
+    const parsed = parseArgs({
+      args: [...args],
+      options: flags,
+      allowPositionals: true,
+      strict: true,
+    });
+    return { values: parsed.values, positionals: parsed.positionals };
+  } catch (cause) {
+    throw new UsageError(firstSentence(cause), { cause });
+  }
 }
 
 /** The key is read here and nowhere else, so it never reaches argv, usage or a log line. */
@@ -64,13 +93,13 @@ export function requireApiKey(env: RunDeps["env"]): void {
   }
 }
 
-function text(value: string | boolean | undefined): string | undefined {
+function textValue(value: unknown): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
 function gateWidth(raw: string | undefined): number {
   if (raw === undefined) return DEFAULT_MAX_IN_FLIGHT;
-  const value = number(raw);
+  const value = parseNumber(raw);
   if (value === undefined || !Number.isInteger(value) || value < 1) {
     throw new UsageError(
       `--max-in-flight takes an integer of 1 or more, not ${JSON.stringify(raw)}`,
@@ -81,14 +110,14 @@ function gateWidth(raw: string | undefined): number {
 
 function ratio(raw: string | undefined): number | null {
   if (raw === undefined) return null;
-  const value = number(raw);
+  const value = parseNumber(raw);
   if (value === undefined || value < 0 || value > 1) {
     throw new UsageError(`--min-accuracy takes a ratio from 0 to 1, not ${JSON.stringify(raw)}`);
   }
   return value;
 }
 
-function number(raw: string): number | undefined {
+function parseNumber(raw: string): number | undefined {
   if (raw.trim() === "") return undefined;
   const value = Number(raw);
   return Number.isFinite(value) ? value : undefined;

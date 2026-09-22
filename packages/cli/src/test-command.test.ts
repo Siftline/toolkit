@@ -258,7 +258,7 @@ describe("option handling", () => {
     await expect(run(["test", RECIPE_PATH, worked(), "--rules", "rules.json"], deps)).resolves.toBe(
       2,
     );
-    expect(stderr()).toContain("siftline: test takes no --rules");
+    expect(stderr()).toContain("siftline: Unknown option '--rules'");
   });
 
   it("refuses an unknown option", async () => {

@@ -6,9 +6,9 @@ import type {
   SystemOneRequest,
   SystemOneResult,
 } from "./client";
+import { parseJsonLines } from "./jsonl";
+import { isObjectLike } from "./object";
 import { entryType, jsonValue, questionSchema } from "./recipe";
-
-// ─── Replay line schema ─────────────────────────────────────────────────────────────────
 
 const probability = z.number().min(0).max(1);
 const probabilities = z.record(z.string().min(1), z.number());
@@ -111,27 +111,19 @@ export type ReplayLine =
 
 /** Parses JSONL, skipping blank lines. A bad line throws naming its 1-based number. */
 export function parseReplayLines(text: string): ReplayLine[] {
-  const lines: ReplayLine[] = [];
-  for (const [index, raw] of text.split("\n").entries()) {
-    if (raw.trim() === "") continue;
-    let json: unknown;
-    try {
-      json = JSON.parse(raw);
-    } catch (cause) {
-      throw new Error(`replay line ${index + 1} is not JSON`, { cause });
-    }
-    const result = replayLineSchema.safeParse(json);
-    if (!result.success) {
-      throw new Error(`replay line ${index + 1} is invalid: ${result.error.message}`, {
-        cause: result.error,
-      });
-    }
-    lines.push(result.data);
-  }
-  return lines;
+  return parseJsonLines(
+    text,
+    (line) => replayLineSchema.parse(JSON.parse(line)),
+    (line, cause) =>
+      cause instanceof SyntaxError
+        ? new Error(`replay line ${line} is not JSON`, { cause })
+        : new Error(`replay line ${line} is invalid: ${messageOf(cause)}`, { cause }),
+  );
 }
 
-// ─── Scripted client ────────────────────────────────────────────────────────────────────
+function messageOf(cause: unknown): string {
+  return cause instanceof Error ? cause.message : String(cause);
+}
 
 export type ScriptStep = { response: SystemOneResult } | { error: unknown };
 
@@ -158,15 +150,9 @@ export function createScriptedClient(script: readonly ScriptStep[]): ScriptedCli
   };
 }
 
-// ─── Replay client ──────────────────────────────────────────────────────────────────────
-
-function isRecord(value: unknown): value is { [key: string]: unknown } {
-  return typeof value === "object" && value !== null;
-}
-
 function deepEqual(a: unknown, b: unknown): boolean {
   if (a === b) return true;
-  if (!isRecord(a) || !isRecord(b)) return false;
+  if (!isObjectLike(a) || !isObjectLike(b)) return false;
   if (Array.isArray(a) !== Array.isArray(b)) return false;
   const keys = Object.keys(a);
   if (keys.length !== Object.keys(b).length) return false;
@@ -201,8 +187,6 @@ export function createReplayClient(lines: readonly ReplayLine[]): SystemOneClien
   };
 }
 
-// ─── Recording client ───────────────────────────────────────────────────────────────────
-
 export interface RecordingOptions {
   /** The `id` written on each line. Defaults to the 1-based call index. */
   id?: (request: SystemOneRequest, index: number) => string;
@@ -219,7 +203,7 @@ function asNumber(value: unknown): number | null {
 
 /** Duck typing, because core cannot name the SDK's error classes. */
 function recordError(cause: unknown): ReplayError {
-  const thrown = isRecord(cause) ? cause : {};
+  const thrown = isObjectLike(cause) ? cause : {};
   return {
     name: asString(thrown["name"]) ?? "Error",
     message: asString(thrown["message"]) ?? String(cause),

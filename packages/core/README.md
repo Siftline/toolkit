@@ -73,7 +73,7 @@ partial answer map: a Question left out of it is left out of that Question's den
 `parseFixture`, `parseFixtures` and `serializeFixture` are the format's door, and
 `defineFixtures(recipe, fixtures)` writes a set in TypeScript, validates it against the
 Recipe and returns each `expect` in Recipe order. `testRecipe(judge, recipe, fixtures)` judges them all through the gate and
-returns a `TestReport`: one result per Fixture with its mismatches and its review flag,
+returns a `TestReport`: one entry per Fixture with its mismatches and its review flag,
 accuracy per Question, and the lowest Question accuracy as the report's own. `scoreResults` is
 the pure half when you already hold the Decisions, and `compareAnswers` the single-Fixture
 comparison.
@@ -89,8 +89,9 @@ a format bumps its number.
 
 The second entry, for tests. `createScriptedClient` answers in call order, `createReplayClient`
 matches a request deep-equal against recorded lines and replays the recorded answer or throws
-the recorded error, and `createRecordingClient` wraps a real client to produce those lines.
-`replayLineSchema` and `parseReplayLines` are their JSONL door. Nothing in this entry reaches
+the recorded error, and `createRecordingClient(inner, sink, options?)` wraps a real client to
+produce those lines; `options.id` and `options.now` pin the line id and clock for a
+byte-stable recording. `replayLineSchema` and `parseReplayLines` are their JSONL door. Nothing in this entry reaches
 the network.
 
 ESM only. Node 22.14 or newer.
