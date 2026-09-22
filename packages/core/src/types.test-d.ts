@@ -296,8 +296,10 @@ const judgedFromDisk = judge(record, fromDisk);
 
 type _JudgedFromDisk = Expect<Equal<typeof judgedFromDisk, Promise<Decision>>>;
 
-// @ts-expect-error — `retry` has no default
-createJudge({ client });
+// `retry` defaults to "prompt", so the client alone makes a Judge.
+const judgeByDefault = createJudge({ client });
+
+type _JudgeByDefault = Expect<Equal<typeof judgeByDefault, typeof judge>>;
 
 // ─── Fixtures ───────────────────────────────────────────────────────────────────────────
 

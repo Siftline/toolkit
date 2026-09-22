@@ -25,14 +25,14 @@ const recipe = defineRecipe({
 });
 
 const client = new TypeSafeClient({ apiKey: process.env.TYPESAFE_API_KEY });
-const judge = createJudge({ client, retry: "patient" });
+const judge = createJudge({ client });
 const decision = await judge({ id: "msg-1", state: "…" }, recipe);
 
 console.log(serializeDecision(decision));
 ```
 
 `decision.answers.category` is `"complaint" | "question" | "other"`, not `string`: the
-Recipe's labels travel through the types.
+Recipe's labels travel through the types. `noul()` builds a yes/no Question.
 
 The guide and the full reference live at
 [docs.siftline.dev](https://docs.siftline.dev/docs/packages/core). `@siftline/core/testing`

@@ -15,6 +15,7 @@ export async function measure(client: SystemOneClient) {
     },
   ]);
 
+  // A batch has no caller waiting, so it retries through a 429 instead of failing fast.
   const judge = createJudge({ client, retry: "patient" });
   const report = await testRecipe(judge, recipe, fixtures);
 
