@@ -21,7 +21,9 @@ import type {
   Fixture,
   FixtureResult,
   Judge,
+  SystemOneCallOptions,
   SystemOneClient,
+  SystemOneRequest,
   SystemOneResult,
 } from "@siftline/core";
 import { createReplayClient, parseReplayLines } from "@siftline/core/testing";
@@ -220,6 +222,7 @@ describe("defineFixtures", () => {
     let thrown: unknown;
 
     try {
+      // SAFETY: the Fixtures are wrong for the Recipe on purpose; the runtime check is under test.
       defineFixtures(supportInbox, [
         { state: "x", expect: { category: "spam" } },
         { state: "y", expect: { wants_human: true } },
@@ -434,7 +437,7 @@ describe("scoreResults", () => {
 function countingClient(inner: SystemOneClient): SystemOneClient & { calls: number } {
   const client = {
     calls: 0,
-    systemOne: async (request: Parameters<SystemOneClient["systemOne"]>[0], options?: object) => {
+    systemOne: async (request: SystemOneRequest, options?: SystemOneCallOptions) => {
       client.calls += 1;
 
       return inner.systemOne(request, options);

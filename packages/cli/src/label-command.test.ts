@@ -1,6 +1,13 @@
 import { run } from "@siftline/cli";
 import { parseDecision } from "@siftline/core";
-import type { Decision, Record, Rule, SystemOneClient, SystemOneRequest } from "@siftline/core";
+import type {
+  Decision,
+  JsonValue,
+  Record,
+  Rule,
+  SystemOneClient,
+  SystemOneRequest,
+} from "@siftline/core";
 import { createReplayClient, createScriptedClient } from "@siftline/core/testing";
 import type { ReplayLine } from "@siftline/core/testing";
 import { describe, expect, it } from "vitest";
@@ -135,7 +142,7 @@ describe("the input", () => {
 });
 
 describe("a bad Record line", () => {
-  const bad: { [what: string]: string } = {
+  const bad = {
     "is not JSON": "{",
     "is not an object": '"just prose"',
     "has no id": '{"state":"hi"}',
@@ -182,7 +189,8 @@ const ESCALATE: Rule[] = [
   },
 ];
 
-function rulesFile(rules: unknown): string {
+/** Rules as written, or a JSON document that is meant to be refused. */
+function rulesFile(rules: readonly Rule[] | JsonValue): string {
   return textFile(JSON.stringify(rules), "rules.json");
 }
 
@@ -258,7 +266,7 @@ describe("--rules", () => {
 
 // ─── Failures ───────────────────────────────────────────────────────────────────────────
 
-function failing(recorded: string, error: unknown): SystemOneClient {
+function failing(recorded: string, error: Error): SystemOneClient {
   const state = JSON.stringify(stateOf(recorded));
 
   return {

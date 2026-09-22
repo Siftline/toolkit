@@ -25,7 +25,7 @@ function responder(body: string | Uint8Array, status = 200): ActionFetch {
   };
 }
 
-function rejecter(error: unknown): ActionFetch {
+function rejecter(error: Error): ActionFetch {
   return (url, init) => {
     calls.push({ url, init });
 

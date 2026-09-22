@@ -48,13 +48,9 @@ export function parseFixture(line: string): Fixture {
 
 /** The only writer. One compact line, no trailing newline, absent optionals omitted. */
 export function serializeFixture(fixture: Fixture): string {
-  const line: { [key: string]: unknown } = {};
-  if (fixture.id !== undefined) line["id"] = fixture.id;
-  if (fixture.origin !== undefined) line["origin"] = fixture.origin;
-  if (fixture.by !== undefined) line["by"] = fixture.by;
-  line["state"] = fixture.state;
-  line["expect"] = fixture.expect;
-  return JSON.stringify(line);
+  const { id, origin, by, state, expect } = fixture;
+
+  return JSON.stringify({ id, origin, by, state, expect });
 }
 
 export function parseFixtures(text: string): Fixture[] {

@@ -31,8 +31,15 @@ export function idempotencyKeyFor(decision: Decision): string {
   return `${decision.id}:${decision.action}`;
 }
 
+// A type alias, not an interface: only an alias is assignable to `ActionRequest["headers"]`.
+type BaseHeaders = {
+  "Content-Type": string;
+  "Idempotency-Key": string;
+  "User-Agent": string;
+};
+
 /** The three headers every adapter sends. An adapter adds its own on top. */
-export function baseHeaders(idempotencyKey: string): { [name: string]: string } {
+export function baseHeaders(idempotencyKey: string): BaseHeaders {
   return {
     "Content-Type": "application/json",
     "Idempotency-Key": idempotencyKey,

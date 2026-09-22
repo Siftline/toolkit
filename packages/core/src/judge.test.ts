@@ -77,7 +77,7 @@ function resultWith(answers: { [name: string]: AnswerResponse }): SystemOneResul
 
 interface Expectation {
   answers: { [name: string]: string | boolean | number };
-  questions: { [name: string]: { [key: string]: unknown } };
+  questions: { [name: string]: Evidence };
   confidence: number;
   review: boolean;
 }
@@ -524,11 +524,19 @@ describe("mapping answers", () => {
 
 // ─── Errors ─────────────────────────────────────────────────────────────────────────────
 
-function thrown(fields: { [key: string]: unknown }): Error {
+/** The fields the SDK's errors carry, as the Judge reads them. */
+interface ThrownFields {
+  name: string;
+  status?: number;
+  retryAfterMs?: number;
+  body?: { detail: { error_type?: string } };
+}
+
+function thrown(fields: ThrownFields): Error {
   return Object.assign(new Error("the client gave up"), fields);
 }
 
-function judgeThrowing(error: unknown, recipe: Recipe = supportInbox): Promise<unknown> {
+function judgeThrowing(error: Error, recipe: Recipe = supportInbox): Promise<Decision> {
   const judge = createJudge({
     client: createScriptedClient([{ error }]),
     retry: "prompt",
@@ -645,7 +653,7 @@ describe("mapping what the client throws", () => {
 interface GatedClient extends SystemOneClient {
   readonly started: string[];
   finish: (key: string) => void;
-  fail: (key: string, error: unknown) => void;
+  fail: (key: string, error: Error) => void;
 }
 
 /** Holds every call open until the test settles it, so concurrency is observed, not counted. */
@@ -654,7 +662,7 @@ function createGatedClient(): GatedClient {
 
   const settlers = new Map<
     string,
-    { resolve: (result: SystemOneResult) => void; reject: (error: unknown) => void }
+    { resolve: (result: SystemOneResult) => void; reject: (error: Error) => void }
   >();
 
   return {
@@ -663,7 +671,8 @@ function createGatedClient(): GatedClient {
     fail: (key, error) => settlers.get(key)?.reject(error),
     systemOne: (request: SystemOneRequest): Promise<SystemOneResult> =>
       new Promise<SystemOneResult>((resolve, reject) => {
-        const key = typeof request.state === "string" ? request.state : "";
+        const { state } = request;
+        const key = state === null || state instanceof Object ? "" : state;
         started.push(key);
         settlers.set(key, { resolve, reject });
       }),

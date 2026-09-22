@@ -113,14 +113,12 @@ async function label(
   return failed ? 1 : 0;
 }
 
-const REASONS: {
-  readonly [R in Exclude<JudgeErrorReason, "invalid_answers" | "unknown">]: string;
-} = {
+const REASONS = {
   max_tokens_exceeded: "state over the token budget",
   api_usage_error: "the API refused the request",
   network: "the call never reached the API",
   timeout: "the call timed out",
-};
+} satisfies { readonly [R in Exclude<JudgeErrorReason, "invalid_answers" | "unknown">]: string };
 
 function sentence(error: JudgeError): string {
   if (error.reason === "unknown") return error.message;

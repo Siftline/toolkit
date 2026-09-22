@@ -10,6 +10,7 @@ import {
   score,
   serializeRecipe,
 } from "@siftline/core";
+import type { JsonValue } from "@siftline/core";
 import { describe, expect, it } from "vitest";
 import { ZodError } from "zod";
 
@@ -22,14 +23,16 @@ function readReference(name: string): string {
 }
 
 /** A minimal valid document, so each strictness case varies exactly one thing. */
-function valid(): Record<string, unknown> {
+function valid() {
   return {
     format: 1,
     name: "support-inbox",
     version: 1,
     model: "jev-1.13.0",
     reviewThreshold: 0.7,
-    questions: { category: choice("Which?", { a: "A", b: "B" }) },
+    questions: {
+      category: { type: "choice", instructions: "Which?", criteria: { a: "A", b: "B" } },
+    },
   };
 }
 
@@ -70,7 +73,7 @@ describe("strictness", () => {
   });
 
   it("never defaults a missing reviewThreshold", () => {
-    const recipe = valid();
+    const recipe: { [key: string]: JsonValue } = valid();
     delete recipe.reviewThreshold;
     expect(() => recipeSchema.parse(recipe)).toThrow(ZodError);
   });

@@ -35,53 +35,42 @@ const LABEL_FLAGS = {
   rules: { type: "string" },
 } as const;
 
-type Values = ReturnType<typeof parseArgs>["values"];
-
-export function parseTestArgs(args: readonly string[]): {
+/** What a command's parser hands back: its positionals and its typed options. */
+export interface ParsedArgs<O> {
   positionals: string[];
-  options: TestOptions;
-} {
+  options: O;
+}
+
+export function parseTestArgs(args: readonly string[]): ParsedArgs<TestOptions> {
   const { values, positionals } = parseWith(args, TEST_FLAGS);
 
   return {
     positionals,
     options: {
-      maxInFlight: gateWidth(textValue(values["max-in-flight"])),
-      minAccuracy: ratio(textValue(values["min-accuracy"])),
-      json: values["json"] === true,
-      quiet: values["quiet"] === true,
+      maxInFlight: gateWidth(values["max-in-flight"]),
+      minAccuracy: ratio(values["min-accuracy"]),
+      json: values.json === true,
+      quiet: values.quiet === true,
     },
   };
 }
 
-export function parseLabelArgs(args: readonly string[]): {
-  positionals: string[];
-  options: LabelOptions;
-} {
+export function parseLabelArgs(args: readonly string[]): ParsedArgs<LabelOptions> {
   const { values, positionals } = parseWith(args, LABEL_FLAGS);
 
   return {
     positionals,
     options: {
-      maxInFlight: gateWidth(textValue(values["max-in-flight"])),
-      quiet: values["quiet"] === true,
-      rules: textValue(values["rules"]) ?? null,
+      maxInFlight: gateWidth(values["max-in-flight"]),
+      quiet: values.quiet === true,
+      rules: values.rules ?? null,
     },
   };
 }
 
-function parseWith(
-  args: readonly string[],
-  flags: ParseArgsOptionsConfig,
-): { values: Values; positionals: string[] } {
+function parseWith<const F extends ParseArgsOptionsConfig>(args: readonly string[], flags: F) {
   try {
-    const parsed = parseArgs({
-      args: [...args],
-      options: flags,
-      allowPositionals: true,
-      strict: true,
-    });
-    return { values: parsed.values, positionals: parsed.positionals };
+    return parseArgs({ args: [...args], options: flags, allowPositionals: true, strict: true });
   } catch (cause) {
     throw new UsageError(firstSentence(cause), { cause });
   }
@@ -94,10 +83,6 @@ export function requireApiKey(env: RunDeps["env"]): void {
   if (key === undefined || key.trim() === "") {
     throw new UsageError(`${API_KEY_ENV} is not set`);
   }
-}
-
-function textValue(value: unknown): string | undefined {
-  return typeof value === "string" ? value : undefined;
 }
 
 function gateWidth(raw: string | undefined): number {

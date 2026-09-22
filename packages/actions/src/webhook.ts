@@ -27,7 +27,8 @@ async function build(
   const idempotencyKey = idempotencyKeyFor(decision);
   const body = serializeDecision(decision);
 
-  const headers = baseHeaders(idempotencyKey);
+  const headers: ActionRequest["headers"] = baseHeaders(idempotencyKey);
+
   for (const [name, value] of Object.entries(config.headers ?? {})) headers[name] = value;
 
   if (config.secret !== undefined) {

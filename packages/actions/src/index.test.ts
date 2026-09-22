@@ -17,7 +17,7 @@ it("reports the package version", () => {
 });
 
 it("exposes the adapters and the performer", () => {
-  expect(typeof perform).toBe("function");
+  expect(perform).toBeTypeOf("function");
   expect(webhook.kind).toBe("webhook");
   expect(slackIncomingWebhook.kind).toBe("slack_incoming_webhook");
   expect(Object.values(adapters)).toHaveLength(2);

@@ -5,7 +5,7 @@ import type { ActionFetch } from "@siftline/actions";
 import { run } from "@siftline/cli";
 import type { RunDeps } from "@siftline/cli";
 import { parseRecipe, serializeDecision } from "@siftline/core";
-import type { SystemOneClient, SystemOneResult } from "@siftline/core";
+import type { JsonValue, SystemOneClient, SystemOneResult } from "@siftline/core";
 import { createReplayClient, parseReplayLines } from "@siftline/core/testing";
 import { describe, expect, it, vi } from "vitest";
 
@@ -30,60 +30,72 @@ const recorded = createReplayClient(
   ),
 );
 
-const scripted: { [subject: string]: SystemOneResult["answers"] } = {
-  "Charged twice": {
-    category: {
-      type: "choice",
-      choice: "complaint",
-      confidence: 1,
-      probabilities: { complaint: 1, question: 0, other: 0 },
+// Keyed by the Record's `subject`, which a Record can carry as any JSON value or not at all.
+const scripted = new Map<JsonValue | undefined, SystemOneResult["answers"]>([
+  [
+    "Charged twice",
+    {
+      category: {
+        type: "choice",
+        choice: "complaint",
+        confidence: 1,
+        probabilities: { complaint: 1, question: 0, other: 0 },
+      },
+      wants_human: { type: "noul", noul: 0.99 },
+      urgency: {
+        type: "score",
+        score: 1.9,
+        confidence: 0.9,
+        probabilities: { 0: 0.01, 1: 0.09, 2: 0.9 },
+      },
     },
-    wants_human: { type: "noul", noul: 0.99 },
-    urgency: {
-      type: "score",
-      score: 1.9,
-      confidence: 0.9,
-      probabilities: { 0: 0.01, 1: 0.09, 2: 0.9 },
+  ],
+  [
+    "Export question",
+    {
+      category: {
+        type: "choice",
+        choice: "question",
+        confidence: 1,
+        probabilities: { complaint: 0, question: 1, other: 0 },
+      },
+      wants_human: { type: "noul", noul: 0.02 },
+      urgency: {
+        type: "score",
+        score: 0.2,
+        confidence: 0.85,
+        probabilities: { 0: 0.85, 1: 0.1, 2: 0.05 },
+      },
     },
-  },
-  "Export question": {
-    category: {
-      type: "choice",
-      choice: "question",
-      confidence: 1,
-      probabilities: { complaint: 0, question: 1, other: 0 },
+  ],
+  [
+    "Re: invoice",
+    {
+      category: {
+        type: "choice",
+        choice: "question",
+        confidence: 0.58,
+        probabilities: { complaint: 0.27, question: 0.72, other: 0.01 },
+      },
+      wants_human: { type: "noul", noul: 0.25 },
+      urgency: {
+        type: "score",
+        score: 1.1,
+        confidence: 0.8,
+        probabilities: { 0: 0.1, 1: 0.8, 2: 0.1 },
+      },
     },
-    wants_human: { type: "noul", noul: 0.02 },
-    urgency: {
-      type: "score",
-      score: 0.2,
-      confidence: 0.85,
-      probabilities: { 0: 0.85, 1: 0.1, 2: 0.05 },
-    },
-  },
-  "Re: invoice": {
-    category: {
-      type: "choice",
-      choice: "question",
-      confidence: 0.58,
-      probabilities: { complaint: 0.27, question: 0.72, other: 0.01 },
-    },
-    wants_human: { type: "noul", noul: 0.25 },
-    urgency: {
-      type: "score",
-      score: 1.1,
-      confidence: 0.8,
-      probabilities: { 0: 0.1, 1: 0.8, 2: 0.1 },
-    },
-  },
-};
+  ],
+]);
 
 const bySubject: SystemOneClient = {
   systemOne: async (request) => {
     const state = request.state;
-    const subject =
-      state !== null && typeof state === "object" && "subject" in state ? state.subject : undefined;
-    const answers = typeof subject === "string" ? scripted[subject] : undefined;
+
+    const subject = state instanceof Object && !Array.isArray(state) ? state["subject"] : undefined;
+
+    const answers = scripted.get(subject);
+
     if (!answers) throw new Error(`no scripted answer for ${JSON.stringify(state)}`);
 
     return { model: "jev-1.13.0", answers, usage: { input_tokens: 400, output_tokens: 60 } };

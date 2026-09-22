@@ -41,7 +41,7 @@ describe.skipIf(!apiKey)("live TypeSafe access", () => {
 
     expect(Object.keys(decision.answers)).toEqual(["category", "wants_human"]);
     expect(["complaint", "question", "other"]).toContain(decision.answers["category"]);
-    expect(typeof decision.answers["wants_human"]).toBe("boolean");
+    expect(decision.answers["wants_human"]).toBeTypeOf("boolean");
     expect(Object.keys(decision.questions)).toEqual(["category", "wants_human"]);
 
     expect(decision.confidence).toBeGreaterThanOrEqual(0);

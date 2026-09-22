@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 
 import { decisionSchema, parseDecision, serializeDecision } from "@siftline/core";
-import type { Decision } from "@siftline/core";
+import type { Decision, JsonValue } from "@siftline/core";
 import { describe, expect, it } from "vitest";
 import { ZodError } from "zod";
 
@@ -17,7 +17,7 @@ function reference(): Decision {
   return parseDecision(referenceLine);
 }
 
-function raw(): { [key: string]: unknown } {
+function raw(): { [key: string]: JsonValue } {
   return JSON.parse(referenceLine);
 }
 

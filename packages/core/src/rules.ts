@@ -81,6 +81,8 @@ export interface RuleProblem {
   problem: string;
 }
 
+const levelAnswer = z.number();
+
 // Never throws: an answer that is missing, of the wrong runtime type or not a known value
 // makes the condition false so the next Rule gets its turn.
 function matches(answers: Answers, condition: ParsedCondition): boolean {
@@ -89,11 +91,16 @@ function matches(answers: Answers, condition: ParsedCondition): boolean {
   if (actual === undefined) return false;
 
   if (condition.comparator === "is") return actual === condition.value;
-  if (condition.comparator === "isOneOf") {
-    return typeof actual === "string" && condition.value.includes(actual);
-  }
-  if (typeof actual !== "number") return false;
-  return condition.comparator === "atLeast" ? actual >= condition.value : actual <= condition.value;
+
+  if (condition.comparator === "isOneOf") return condition.value.some((label) => label === actual);
+
+  const level = levelAnswer.safeParse(actual);
+
+  if (!level.success) return false;
+
+  return condition.comparator === "atLeast"
+    ? level.data >= condition.value
+    : level.data <= condition.value;
 }
 
 /** Pure, first match wins, no review gate. Cloud runs it again on corrected answers. */
@@ -147,7 +154,7 @@ export function validateRules(rules: Rule[], recipe: Recipe): RuleProblem[] {
       continue;
     }
 
-    if (!(comparatorsFor[asked.type] as readonly string[]).includes(comparator)) {
+    if (!comparatorsFor[asked.type].some((allowed) => allowed === comparator)) {
       report(`comparator "${comparator}" is not valid for a ${asked.type} question`);
       continue;
     }

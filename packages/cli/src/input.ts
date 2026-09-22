@@ -9,6 +9,7 @@ import {
   validateRules,
 } from "@siftline/core";
 import type { Fixture, Recipe, Record, Rule } from "@siftline/core";
+import { z } from "zod";
 
 import type { InputStream } from "./deps";
 import { InputError } from "./deps";
@@ -106,37 +107,34 @@ async function readStdin(stream: InputStream): Promise<string> {
   let text = "";
 
   for await (const chunk of stream) {
-    text += typeof chunk === "string" ? chunk : decoder.decode(chunk, { stream: true });
+    text += chunk instanceof Uint8Array ? decoder.decode(chunk, { stream: true }) : chunk;
   }
 
   return text + decoder.decode();
 }
 
-interface Issue {
-  path: readonly PropertyKey[];
-  message: string;
-}
+const issueSchema = z.object({
+  path: z.array(z.union([z.string(), z.number(), z.symbol()])),
+  message: z.string(),
+});
 
-/** Zod's issues by duck typing: the CLI states no opinion on the validator core uses. */
-function issuesOf(value: unknown): Issue[] | undefined {
-  if (typeof value !== "object" || value === null || !("issues" in value)) return undefined;
-  const raw: unknown = value.issues;
-  if (!Array.isArray(raw)) return undefined;
+type Issue = z.infer<typeof issueSchema>;
 
-  const issues: Issue[] = [];
-  for (const candidate of raw) if (isIssue(candidate)) issues.push(candidate);
+const issuesHolder = z.object({ issues: z.array(z.unknown()) });
+
+/** Zod's issues by shape, not by class, so a second copy of Zod still reads. */
+function issuesOf(cause: unknown): Issue[] | undefined {
+  const holder = issuesHolder.safeParse(cause);
+
+  if (!holder.success) return undefined;
+
+  const issues = holder.data.issues.flatMap((candidate) => {
+    const issue = issueSchema.safeParse(candidate);
+
+    return issue.success ? [issue.data] : [];
+  });
+
   return issues.length === 0 ? undefined : issues;
-}
-
-function isIssue(value: unknown): value is Issue {
-  return (
-    typeof value === "object" &&
-    value !== null &&
-    "message" in value &&
-    typeof value.message === "string" &&
-    "path" in value &&
-    Array.isArray(value.path)
-  );
 }
 
 function reason(cause: unknown): string {

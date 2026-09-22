@@ -41,27 +41,33 @@ export type Answers<Q extends Questions = Questions> = { [K in keyof Q]: AnswerF
 // Exported inside the package only: a Fixture's `expect` holds the same values.
 export const answerValue = z.union([z.string(), z.boolean(), z.number()]);
 
+const label = z.string();
+
+const level = z.number().int().min(0);
+
 /**
  * Why `value` is not an answer to `asked`, or `null` when it is. Rules and Fixtures both
  * validate against the Recipe with it, so the two report the same words.
  */
-export function answerValueProblem(asked: Question, value: unknown): string | null {
+export function answerValueProblem(asked: Question, value: AnswerValue | undefined): string | null {
   const shown = JSON.stringify(value);
 
   if (asked.type === "choice") {
-    if (typeof value !== "string") return `value ${shown} is not a label`;
-    return Object.hasOwn(asked.criteria, value) ? null : `unknown label ${shown}`;
+    const parsed = label.safeParse(value);
+
+    if (!parsed.success) return `value ${shown} is not a label`;
+
+    return Object.hasOwn(asked.criteria, parsed.data) ? null : `unknown label ${shown}`;
   }
 
   if (asked.type === "noul") {
-    return typeof value === "boolean" ? null : `value ${shown} is not a boolean`;
+    return value === true || value === false ? null : `value ${shown} is not a boolean`;
   }
 
   const last = asked.criteria.length - 1;
-  if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > last) {
-    return `level index ${shown} is out of range (0-${last})`;
-  }
-  return null;
+  const parsed = level.max(last).safeParse(value);
+
+  return parsed.success ? null : `level index ${shown} is out of range (0-${last})`;
 }
 
 type EvidenceFor<Qn> = Qn extends { type: "choice"; criteria: infer C }

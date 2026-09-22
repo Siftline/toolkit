@@ -18,7 +18,13 @@ function describeLevel(index: number, criteria: ScoreCriteria): string {
   const description = criteria[index];
 
   if (description === undefined) return String(index);
-  return `${index} · ${typeof description === "string" ? description : JSON.stringify(description)}`;
+
+  const text =
+    description === null || description instanceof Object
+      ? JSON.stringify(description)
+      : description;
+
+  return `${index} · ${text}`;
 }
 
 function renderAnswer(question: Question, answer: AnswerValue): string {
