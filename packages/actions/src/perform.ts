@@ -17,6 +17,13 @@ export interface ActionFetchInit {
 /** Narrower than the global `fetch`, which is assignable to it, so a stub needs no cast. */
 export type ActionFetch = (url: string, init: ActionFetchInit) => Promise<Response>;
 
+export interface PerformOptions {
+  /** Defaults to the global `fetch`, read at call time. Inject one for tests or a Worker binding. */
+  fetch?: ActionFetch;
+  /** Passed to `fetch` as is. The only way to bound or cancel the attempt. */
+  signal?: AbortSignal;
+}
+
 const BODY_LIMIT = 4096;
 
 const decoder = new TextDecoder();
@@ -38,9 +45,10 @@ function retryableStatus(status: number): boolean {
 /** Sends the request once. No retries, no timeout of its own: both belong to the caller. */
 export async function perform(
   request: ActionRequest,
-  fetchImpl: ActionFetch,
-  options: { signal?: AbortSignal } = {},
+  options: PerformOptions = {},
 ): Promise<ActionResponse> {
+  const fetchImpl = options.fetch ?? globalThis.fetch;
+
   let response: Response;
 
   try {

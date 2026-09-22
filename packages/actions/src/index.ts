@@ -6,7 +6,7 @@ export { ActionBuildError, ActionFailedError } from "./errors";
 
 export { perform } from "./perform";
 
-export type { ActionFetch, ActionFetchInit, ActionResponse } from "./perform";
+export type { ActionFetch, ActionFetchInit, ActionResponse, PerformOptions } from "./perform";
 
 export { slackIncomingWebhook } from "./slack";
 

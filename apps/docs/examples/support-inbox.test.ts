@@ -7,7 +7,7 @@ import type { RunDeps } from "@siftline/cli";
 import { parseRecipe, serializeDecision } from "@siftline/core";
 import type { JsonValue, SystemOneClient, SystemOneResult } from "@siftline/core";
 import { createReplayClient, parseReplayLines } from "@siftline/core/testing";
-import { describe, expect, it, vi } from "vitest";
+import { describe, expect, it, onTestFinished, vi } from "vitest";
 
 import { buildSlack, sendWebhook } from "./support-inbox/act";
 import { recipe } from "./support-inbox/recipe";
@@ -180,12 +180,14 @@ describe("the guide's running example", () => {
 
     const fetchImpl = vi.fn<ActionFetch>(async () => new Response("ok", { status: 200 }));
 
-    const { request, response } = await sendWebhook(
-      { ...routed, action: "webhook" },
-      recipe,
-      fetchImpl,
-    );
+    vi.stubGlobal("fetch", fetchImpl);
+    onTestFinished(() => {
+      vi.unstubAllGlobals();
+    });
 
+    const { request, response } = await sendWebhook({ ...routed, action: "webhook" }, recipe);
+
+    expect(fetchImpl).toHaveBeenCalledOnce();
     expect(response).toEqual({ status: 200, body: "ok", truncated: false });
     await expect(requestJson(request)).toMatchFileSnapshot(output("webhook-request.json"));
   });

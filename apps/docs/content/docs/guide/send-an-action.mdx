@@ -12,7 +12,8 @@ npm install @siftline/actions
 
 Building the request and sending it are two calls. `build` is pure: the same Decision,
 config and Recipe always produce the same bytes, so a preview is just `build` without
-`perform`. `perform` sends once with a `fetch` you pass in.
+`perform`. `perform` sends once through the global `fetch`. Pass `{ fetch }` to send through
+another one, such as a test stub or a Worker's.
 
 <include lang="ts" meta='title="act.ts"'>
   ../../../examples/support-inbox/act.ts
@@ -45,6 +46,6 @@ Slack has no idempotency of its own, so a redelivery past your own guard posts t
 `build` throws `ActionBuildError` when the Decision selected no Action, which is what an
 Unsure Decision looks like. `perform` throws `ActionFailedError` on a non-2xx status or a
 `fetch` that rejects, with the `status` and a `retryable` flag that is true for 408, 429, 5xx
-and network failures. It retries nothing and sets no timeout: pass a `signal` for that.
+and network failures. It retries nothing and sets no timeout: pass `{ signal }` for that.
 
 Next: [everything above from TypeScript](/docs/guide/from-code).

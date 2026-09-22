@@ -10,10 +10,11 @@ npm install @siftline/actions
 import { perform, webhook } from "@siftline/actions";
 
 const request = await webhook.build(decision, { url, secret }, recipe);
-const { status, body, truncated } = await perform(request, fetch);
+const { status, body, truncated } = await perform(request);
 ```
 
-`build` is pure and `perform` sends once, so a preview is `build` without `perform`. The
+`build` is pure and `perform` sends once through the global `fetch` (or the one you pass as
+`{ fetch }`), so a preview is `build` without `perform`. The
 webhook body is the Decision line, signed with HMAC-SHA256 when a `secret` is set;
 `slackIncomingWebhook` posts one message.
 
