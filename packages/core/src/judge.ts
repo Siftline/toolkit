@@ -10,11 +10,7 @@ import type { Thrown } from "./thrown";
 /** The gate's width when the caller sets none (cloud ADR 0005). */
 export const DEFAULT_MAX_IN_FLIGHT = 8;
 
-/**
- * Picks the retry policy and the per-attempt timeout. The client does the retrying.
- * `"prompt"`, the default, makes 1 retry at 10 s per attempt, for request handlers.
- * `"patient"` makes 5 retries at 30 s per attempt, for batch runs.
- */
+/** The retry policy and per-attempt timeout, `"prompt"` or `"patient"`: see each member. */
 export type RetryMode =
   /**
    * The sync door, and the default: 1 retry, backoff capped at 2 s, a `Retry-After` up to 5 s,
