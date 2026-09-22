@@ -14,7 +14,11 @@
     },
     "lint": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/.oxlintrc.json"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/.oxlintrc.json",
+        "$TURBO_ROOT$/tools/oxlint/anti-slop/**"
+      ]
     },
     "typecheck": {
       "dependsOn": ["^build"]
