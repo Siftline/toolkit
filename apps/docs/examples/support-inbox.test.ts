@@ -9,7 +9,7 @@ import type { JsonValue, SystemOneClient, SystemOneResult } from "@siftline/core
 import { createReplayClient, parseReplayLines } from "@siftline/core/testing";
 import { describe, expect, it, onTestFinished, vi } from "vitest";
 
-import { buildSlack, sendWebhook } from "./support-inbox/act";
+import { preview, send } from "./support-inbox/act";
 import { recipe } from "./support-inbox/recipe";
 import { route } from "./support-inbox/route";
 import { judgeScripted } from "./support-inbox/scripted";
@@ -167,7 +167,7 @@ describe("the guide's running example", () => {
     );
   });
 
-  it("judges, routes and builds both Actions from code", async () => {
+  it("judges, routes, previews and sends from code", async () => {
     const decision = await judgeScripted();
     await expect(serializeDecision(decision)).toMatchFileSnapshot(output("decision.jsonl"));
 
@@ -175,7 +175,7 @@ describe("the guide's running example", () => {
     await expect(serializeDecision(routed)).toMatchFileSnapshot(output("routed-decision.jsonl"));
     expect(routed.action).toBe("slack_incoming_webhook");
 
-    const slack = await buildSlack(routed, recipe);
+    const slack = await preview(routed, recipe);
     await expect(requestJson(slack)).toMatchFileSnapshot(output("slack-request.json"));
 
     const fetchImpl = vi.fn<ActionFetch>(async () => new Response("ok", { status: 200 }));
@@ -185,11 +185,16 @@ describe("the guide's running example", () => {
       vi.unstubAllGlobals();
     });
 
-    const { request, response } = await sendWebhook({ ...routed, action: "webhook" }, recipe);
+    expect(await send({ ...routed, review: true }, recipe)).toBeNull();
+
+    const sent = await send({ ...routed, action: "linear-tickets" }, recipe);
+
+    if (sent === null) throw new Error("dispatch sent nothing");
 
     expect(fetchImpl).toHaveBeenCalledOnce();
-    expect(response).toEqual({ status: 200, body: "ok", truncated: false });
-    await expect(requestJson(request)).toMatchFileSnapshot(output("webhook-request.json"));
+    expect(sent.action).toBe("linear-tickets");
+    expect(sent.response).toEqual({ status: 200, body: "ok", truncated: false });
+    await expect(requestJson(sent.request)).toMatchFileSnapshot(output("webhook-request.json"));
   });
 
   it("measures from code", async () => {

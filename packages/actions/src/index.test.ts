@@ -2,6 +2,8 @@ import {
   ActionBuildError,
   ActionFailedError,
   adapters,
+  defineActions,
+  dispatch,
   perform,
   slackIncomingWebhook,
   VERSION,
@@ -16,8 +18,10 @@ it("reports the package version", () => {
   expect(VERSION).toMatch(/^\d+\.\d+\.\d+/);
 });
 
-it("exposes the adapters and the performer", () => {
+it("exposes the adapters, the performer and the dispatcher", () => {
   expect(perform).toBeTypeOf("function");
+  expect(defineActions).toBeTypeOf("function");
+  expect(dispatch).toBeTypeOf("function");
   expect(webhook.kind).toBe("webhook");
   expect(slackIncomingWebhook.kind).toBe("slack_incoming_webhook");
   expect(Object.values(adapters)).toHaveLength(2);
