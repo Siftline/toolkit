@@ -1,36 +1,67 @@
 ---
 title: Getting started
-description: Install the Siftline toolkit and find your way around it.
+description: Sort incoming text into your categories, then act on it.
 icon: Rocket
 ---
 
-Siftline turns messy inbound text into decisions you can act on. The toolkit is three
-published packages, all ESM-only and all requiring Node 22.14 or newer.
+Siftline asks a model a fixed set of questions about each piece of text and gives you the
+answers as plain values: a label, a yes/no, a level. You write the questions once, measure how
+well they are answered on examples you label, then run them on real text and route each answer
+to a webhook, a Slack channel, or nowhere. There is no generated prose anywhere in the loop.
+
+The toolkit is three npm packages, all ESM-only, all on Node 22.14 or newer.
 
 <Cards>
-  <Card title="@siftline/core" href="/docs/packages" />
-  <Card title="@siftline/cli" href="/docs/packages" />
-  <Card title="@siftline/actions" href="/docs/packages" />
+  <Card
+    title="@siftline/cli"
+    href="/docs/packages/cli"
+    description="siftline test and siftline label: run a Recipe from the terminal."
+  />
+  <Card
+    title="@siftline/core"
+    href="/docs/packages/core"
+    description="The Engine: Recipes, the Judge, Rules, Fixtures and the Decision format."
+  />
+  <Card
+    title="@siftline/actions"
+    href="/docs/packages/actions"
+    description="Adapters that carry a Decision to a webhook or to Slack."
+  />
 </Cards>
 
 ## Install
 
-```bash
-npm install @siftline/core
-```
-
-The CLI is usually a dev dependency, and the Action adapters are only needed where you wire
-Siftline into a workflow:
+The guide starts with the CLI, which needs no code:
 
 ```bash
 npm install --save-dev @siftline/cli
-npm install @siftline/actions
 ```
+
+Set your TypeSafe API key in the environment. The CLI reads it from there and nowhere else:
+
+```bash
+export TYPESAFE_API_KEY=...
+npx siftline --version
+```
+
+Add `@siftline/core` when you want to do the same from TypeScript, and `@siftline/actions`
+when a Decision has to go somewhere:
+
+```bash
+npm install @siftline/core @siftline/actions @typesafe-ai/sdk
+```
+
+`@typesafe-ai/sdk` is the client the Engine talks through. The CLI bundles it; a library user
+constructs it, as [The same from code](/docs/guide/from-code) shows.
 
 ## Where to go next
 
-The [packages page](/docs/packages) describes what each one is for. The API reference is
-generated from `@siftline/core`'s source, so it always matches the published types.
+- [Concepts](/docs/concepts) defines the ten words the rest of the site uses.
+- [The guide](/docs/guide/write-a-recipe) builds one support inbox end to end, in the order you
+  would actually work: write the questions, measure them, run them, route, send.
+- [Packages](/docs/packages/core) lists what each package exports and how it fails.
+- The [API reference](/docs/api) is generated from the source and always matches the published
+  types.
 
 <Callout title="0.1.0">
   The first release with the Engine in it. Until 1.0 a breaking change is a minor bump, so pin exact

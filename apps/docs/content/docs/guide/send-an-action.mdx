@@ -1,0 +1,50 @@
+---
+title: Send an Action
+description: Turn a routed Decision into an HTTP request, then send it.
+---
+
+Sending is the one step the CLI does not do. A Decision names an Action by kind, and
+`@siftline/actions` turns it into a request:
+
+```bash
+npm install @siftline/actions
+```
+
+Building the request and sending it are two calls. `build` is pure: the same Decision,
+config and Recipe always produce the same bytes, so a preview is just `build` without
+`perform`. `perform` sends once with a `fetch` you pass in.
+
+<include lang="ts" meta='title="act.ts"'>
+  ../../../examples/support-inbox/act.ts
+</include>
+
+## The webhook
+
+The body is the Decision line itself, with no envelope, so the receiver runs `parseDecision`
+on it. With a `secret` the request carries an HMAC-SHA256 of the body. Every request carries an
+`Idempotency-Key` of `<decision id>:<action kind>`, which is the key to deduplicate on if the
+same Decision is ever sent twice:
+
+<include lang="json" meta='title="the built webhook request"'>
+  ../../../examples/support-inbox/output/webhook-request.json
+</include>
+
+## Slack
+
+The Slack adapter posts one message to an incoming webhook. It needs the Recipe because a
+Score's level description lives there, not in the Decision:
+
+<include lang="json" meta='title="the built Slack request"'>
+  ../../../examples/support-inbox/output/slack-request.json
+</include>
+
+Slack has no idempotency of its own, so a redelivery past your own guard posts twice.
+
+## Failures
+
+`build` throws `ActionBuildError` when the Decision selected no Action, which is what an
+Unsure Decision looks like. `perform` throws `ActionFailedError` on a non-2xx status or a
+`fetch` that rejects, with the `status` and a `retryable` flag that is true for 408, 429, 5xx
+and network failures. It retries nothing and sets no timeout: pass a `signal` for that.
+
+Next: [everything above from TypeScript](/docs/guide/from-code).

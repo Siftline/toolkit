@@ -20,8 +20,20 @@ The Siftline documentation site: [Fumadocs](https://fumadocs.dev) on
 | `deploy`    | `wrangler deploy`.                                                  |
 
 `api` is a Turborepo task rather than something you usually run by hand: `build` depends on
-it, and it declares `packages/core/src/**` as an input, so changed Engine source regenerates
-the API pages before the site is built.
+it, and it declares the `core` and `actions` sources as inputs, so changed package source
+regenerates the API pages before the site is built. The three entry points are the re-export
+shims in `api-entries/`, one per published entry, and `typedoc-frontmatter.mjs` turns typedoc's
+relative `.mdx` links into site URLs and writes the `meta.json` files that title the sidebar.
+
+## Verified examples
+
+Every TypeScript and JSON snippet on the site lives under `examples/` and is pulled into a
+page with `<include>`, never pasted. `typecheck` covers the directory, and
+`examples/support-inbox.test.ts` drives the CLI's `run` and the core examples against the
+recorded corpus and a scripted client, writing what each produces to
+`examples/support-inbox/output/`. Those files are the printed output the guide shows, so a
+page cannot claim an output the code no longer produces. After a deliberate change, refresh
+them with `bunx vitest run examples -u` and read the diff.
 
 ## Three dependency lines worth knowing about
 

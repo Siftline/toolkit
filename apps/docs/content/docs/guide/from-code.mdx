@@ -1,0 +1,86 @@
+---
+title: The same from code
+description: Recipes, the Judge, Fixtures and Rules from TypeScript, with the labels in the types.
+---
+
+Everything the CLI does is a call into `@siftline/core`. Writing the Recipe in TypeScript
+buys one thing the JSON cannot: the labels and level indices become literal types, so a
+misspelt label in a Rule or a Fixture is a compile error.
+
+```bash
+npm install @siftline/core @typesafe-ai/sdk
+```
+
+## The Recipe
+
+`choice`, `noul` and `score` build the three Question kinds and `defineRecipe` keeps their
+literals. The result is the same document as the JSON on the previous pages:
+`serializeRecipe(recipe)` writes it, `parseRecipe(text)` reads it back, and the docs assert
+that this file and `recipe.json` are equal.
+
+<include lang="ts" meta='title="recipe.ts"'>
+  ../../../examples/support-inbox/recipe.ts
+</include>
+
+## The client
+
+The Engine talks to the model through a client you pass in. The CLI builds this one; a
+library user builds it the same way:
+
+<include lang="ts" meta='title="client.ts"'>
+  ../../../examples/support-inbox/client.ts
+</include>
+
+The Judge asks for a `SystemOneClient`, an interface core declares itself, so nothing in core
+imports the SDK. Any object with a matching `systemOne` method works, which is how tests judge
+without the network; see [`@siftline/core/testing`](/docs/packages/core-testing).
+
+## Judge one Record
+
+`createJudge` takes the client, a retry mode and an optional in-flight cap. The function it
+returns judges one Record against one Recipe and resolves to a Decision:
+
+<include lang="ts" meta='title="judge.ts"'>
+  ../../../examples/support-inbox/judge.ts
+</include>
+
+`retry` is `"prompt"` or `"patient"`, which pick the retry policy and the per-attempt
+timeout. `maxInFlight` gates concurrent calls FIFO and defaults to 8. Pass `now` and a call
+`id` to pin the clock and the Decision id, which is what makes a Decision byte-stable in a
+test.
+
+## Route it
+
+`routeDecision` is pure. Typed against the Recipe's questions, the Rules array rejects a
+label the Recipe lacks at compile time; `validateRules(rules, recipe)` does the same check at
+runtime for Rules that arrive as JSON.
+
+<include lang="ts" meta='title="route.ts"'>
+  ../../../examples/support-inbox/route.ts
+</include>
+
+The Decision the scripted example on the testing page produces, routed through these Rules,
+matches `escalate` because the sender asked for a person:
+
+<include lang="json" meta='title="a routed Decision"'>
+  ../../../examples/support-inbox/output/decision.jsonl
+</include>
+
+## Measure it
+
+`defineFixtures` validates a set against the Recipe and `testRecipe` runs them all through
+the Judge, which meters concurrency. The report is what `siftline test` prints, as data:
+
+<include lang="ts" meta='title="test.ts"'>
+  ../../../examples/support-inbox/test.ts
+</include>
+
+`scoreResults` is the pure half when you already hold the Decisions, and `compareAnswers`
+compares one Fixture's `expect` with one Decision's `answers`.
+
+## Errors
+
+Every error the toolkit throws extends `SiftlineError`, which carries a `code` and a
+`retryable` flag. `JudgeExhaustedError` is the give-up after a 429 or a 529 and carries
+`retryAfterMs`. Everything else from the Judge is a `JudgeError` with a `reason` and the
+HTTP `status`. Map `code` to a status of your own and pass `retryable` through.

@@ -1,0 +1,97 @@
+---
+title: Concepts
+description: The words the toolkit uses, in the order you meet them.
+icon: BookOpen
+---
+
+Ten words cover the whole toolkit. Each one is a type or a file format in `@siftline/core`, so
+the docs, the code and the CLI output all use the same name. The guide introduces each one where
+it first matters; this page is where to come back to.
+
+## Record
+
+One piece of text to sort, with an id. Its `state` is a string, a JSON object or a JSON array,
+so an email can be `{ subject, sender, text }` rather than a flattened string. The Engine sees
+nothing else about it: sender, source and raw payload stay with you.
+
+```json
+{ "id": "msg-1", "state": { "subject": "Charged twice", "text": "Refund me now." } }
+```
+
+## Recipe
+
+The questions asked of every Record, the model that answers them, and the review threshold
+below which an answer is not trusted. A Recipe is a JSON document with a name and a version.
+Editing the questions makes a new version, and every Decision names the version that produced
+it, so you can always tell which questions a result answered.
+
+## Question
+
+One bounded thing a Recipe asks. There are three kinds, and the Engine never asks for free
+text:
+
+| Kind   | Asks for                                    | Answer              | Built with |
+| ------ | ------------------------------------------- | ------------------- | ---------- |
+| Choice | One label from a set you name and describe  | `"complaint"`       | `choice()` |
+| Noul   | A yes/no                                    | `true`              | `noul()`   |
+| Score  | One level from an ordered list you describe | `2` (a level index) | `score()`  |
+
+Noul is the model provider's word for a yes/no question. It only appears as the function name
+and in the Recipe's `"type": "noul"`; everywhere else these docs say yes/no.
+
+## Decision
+
+Everything the Engine returns for one Record: the Answers, the model's evidence for each one,
+a single confidence, whether the Record is Unsure, and the Rule and Action selected for it. A
+Decision is one JSON line, written by `serializeDecision` and read by `parseDecision`, and
+that line is exactly what a webhook receives.
+
+## Answers
+
+The plain values inside a Decision, one per Question: a label, a boolean, or a level index.
+The same shape a person writes in a Fixture to say what the right answer was. No confidence,
+no probabilities, just the values, which is why `decision.answers.category` is typed as the
+Recipe's labels and not as `string`.
+
+## Unsure
+
+A Decision whose confidence is below the Recipe's review threshold. The confidence is the
+lowest across the Recipe's Questions, so one shaky answer makes the whole Decision Unsure. An
+Unsure Decision carries `review: true` and selects no Rule and no Action.
+
+## Review
+
+Where an Unsure Record waits for a person to answer instead of the model. The hosted Siftline
+app has a queue for it. The toolkit has no queue: `siftline label` still writes the Decision
+line, with `review: true`, and leaves what happens next to you.
+
+## Rule
+
+One entry in an ordered list that maps Answers to an Action, or to nothing. Each Rule has one
+condition on one Question, and the first Rule that matches wins. "Send Unsure Records to
+Review" is not a Rule; it is built in and runs before any Rule is looked at.
+
+## Action
+
+Where a Decision goes: an outbound webhook carrying the Decision line, a Slack incoming
+webhook carrying a short message, or nothing. A Rule names an Action by kind; the adapter in
+`@siftline/actions` builds the request.
+
+## Fixture
+
+One labelled example: a Record's `state` and the Answers a person says are right. `expect` can
+leave Questions out, and a left-out Question does not count for or against that Fixture.
+`siftline test` runs a Recipe over a file of Fixtures and reports accuracy per Question.
+
+```json
+{
+  "state": { "subject": "Charged twice", "text": "Refund me now." },
+  "expect": { "category": "complaint" }
+}
+```
+
+## Judge
+
+The part of the Engine that sends one Record's Questions to the model in one request and
+turns the raw answers into a Decision. It owns retries and the in-flight cap. It never looks at
+Rules; routing is a separate, pure step.

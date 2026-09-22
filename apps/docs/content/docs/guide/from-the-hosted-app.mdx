@@ -1,0 +1,39 @@
+---
+title: Coming from the hosted app
+description: Run the Recipe you built in Siftline on your own machine or in CI.
+---
+
+The hosted Siftline app and this toolkit run the same Engine. A Template in the app is a
+Recipe; the Examples tab holds Fixtures; the Review queue is where Unsure Records wait for a
+person. The words differ because the app is written for people who do not code, but the data
+is the same.
+
+## What carries over
+
+- **The Recipe.** The app exports a Template as Recipe JSON, byte for byte what
+  `siftline test` and `siftline label` read. Save it as `recipe.json`.
+- **The Fixtures.** Examples export as a JSONL file of Fixtures, the format on
+  [Measure it with Fixtures](/docs/guide/measure-with-fixtures).
+- **Decisions.** A webhook Action in the app posts the same Decision line the toolkit's
+  webhook adapter builds, so one receiver handles both.
+
+<Callout title="Export is being built">
+  The export button on the Template screen is not in the app yet. This page describes the contract
+  it is built to; the files it produces will be exactly what the guide uses.
+</Callout>
+
+## What does not
+
+- **Review.** The toolkit has no queue. `siftline label` writes Unsure Decisions with
+  `review: true` and no Action, and where they go is yours to decide.
+- **Corrections.** Answering in Review produces a Fixture in the app. On your machine, add a
+  line to `fixtures.jsonl`.
+- **Sending.** The app performs Actions for you. The toolkit's CLI routes but does not send;
+  [`@siftline/actions`](/docs/guide/send-an-action) is the library for that.
+
+## A typical loop
+
+Export the Recipe and the Fixtures, commit both, and run `siftline test --min-accuracy` in CI.
+A Recipe change that breaks a Question fails the build before it reaches the inbox. When the
+Recipe is good, `siftline label` runs it over a backlog, and the Decisions land wherever your
+pipeline puts JSONL.

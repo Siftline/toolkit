@@ -1,0 +1,13 @@
+{
+  "method": "POST",
+  "url": "https://hooks.slack.com/services/T000/B000/XXXX",
+  "headers": {
+    "Content-Type": "application/json",
+    "Idempotency-Key": "0192f3c2-7b1e-7c4a-9f0e-000000000001:slack_incoming_webhook",
+    "User-Agent": "siftline-actions/<version>"
+  },
+  "body": {
+    "text": "*support-inbox* · msg-1\ncategory: complaint (97%)\nwants_human: yes (98%)\nurgency: 2 · Today (90%)\nrule escalate"
+  },
+  "idempotencyKey": "0192f3c2-7b1e-7c4a-9f0e-000000000001:slack_incoming_webhook"
+}
