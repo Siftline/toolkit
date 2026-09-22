@@ -24,8 +24,8 @@ Before editing files for a substantial task:
 
 ## Rules
 
-- Runtime dependencies of published libraries use caret ranges; everything else, the
-  `siftline` CLI included, is pinned exactly. Internal dependencies on `@siftline/core`
+- Runtime dependencies of published libraries MUST use caret ranges. Everything else, the
+  `siftline` CLI included, MUST be pinned exactly. Internal dependencies on `@siftline/core`
   use a plain caret range, because Changesets publishes with the npm CLI, which would
   ship a literal `workspace:` protocol. Private packages stay `workspace:*`.
 - `@siftline/ui` and `@siftline/config` are consumed just-in-time from source and carry
