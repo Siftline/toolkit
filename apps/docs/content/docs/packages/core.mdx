@@ -46,8 +46,8 @@ validates a Record.
 
 ## Rules
 
-`ruleSchema` and `ruleConditionSchema` parse a Rules file: a JSON array over six comparators
-and no more. `evaluateRules(answers, rules)` is pure, first match wins, and never throws: an
+`ruleSchema` and `ruleConditionSchema` parse a Rules file: a JSON array over four comparators,
+six pairings with a Question kind, and no more. `evaluateRules(answers, rules)` is pure, first match wins, and never throws: an
 answer that is missing or of the wrong type makes the condition false and the next Rule gets
 its turn. `routeDecision(decision, rules)` returns a copy with `rule` and `action` filled,
 and leaves both `null` on an Unsure Decision. `validateRules(rules, recipe)` reports every

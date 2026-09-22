@@ -1,6 +1,6 @@
 ---
 title: Measure it with Fixtures
-description: Label a handful of real messages, then let siftline test grade the Recipe.
+description: Label a handful of real Records, then let siftline test grade the Recipe.
 ---
 
 A Fixture is one labelled example: a Record's `state` and the Answers a person says are
@@ -25,7 +25,7 @@ npx siftline test recipe.json fixtures.jsonl
   ../../../examples/support-inbox/output/siftline-test.txt
 </include>
 
-That output is real: the docs run this command against recorded model answers every time the
+That report is real: the docs run this command against recorded model answers every time the
 site is built.
 
 Read it bottom up. The last block lists every miss, one per line: the fourth Fixture asked
@@ -55,4 +55,4 @@ A Fixture whose `expect` names a label the Recipe does not have, or a boolean fo
 is refused before the first call is made. The command exits `2` and names the line. Nothing
 is charged for a file that cannot be graded.
 
-Next: [run the Recipe on real messages](/docs/guide/label-records).
+Next: [run the Recipe on real Records](/docs/guide/label-records).

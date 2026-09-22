@@ -3,16 +3,9 @@ title: "@siftline/core/testing"
 description: Three clients that judge without the network.
 ---
 
-```ts
-import {
-  createScriptedClient,
-  createReplayClient,
-  createRecordingClient,
-} from "@siftline/core/testing";
-```
-
 The Judge takes any `SystemOneClient`. This entry ships three that never reach the network,
-so a test of code that judges is fast, free and deterministic.
+so a test of code that judges is fast, free and deterministic: `createScriptedClient`,
+`createReplayClient` and `createRecordingClient`.
 
 ## Scripted
 

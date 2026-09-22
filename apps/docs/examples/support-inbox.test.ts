@@ -15,13 +15,10 @@ import { route } from "./support-inbox/route";
 import { judgeScripted } from "./support-inbox/scripted";
 import { measure } from "./support-inbox/test";
 
-// Every file the guide includes is exercised here, so a page cannot show output the code
-// no longer produces. Snapshots under `support-inbox/output/` are what the pages include.
 const dir = new URL("support-inbox/", import.meta.url);
 const path = (name: string) => fileURLToPath(new URL(name, dir));
 const output = (name: string) => path(`output/${name}`);
 
-// Real `jev-1.13.0` answers for the version 1 Recipe, recorded once and replayed.
 const recorded = createReplayClient(
   parseReplayLines(
     readFileSync(
@@ -31,7 +28,6 @@ const recorded = createReplayClient(
   ),
 );
 
-// Version 2 adds a Score no recording covers, so its answers are scripted by subject.
 const scripted: { [subject: string]: SystemOneResult["answers"] } = {
   "Charged twice": {
     category: {
@@ -125,27 +121,29 @@ describe("the guide's running example", () => {
   });
 
   it("siftline test", async () => {
-    const h = cli(recorded);
-    const code = await run(["test", path("recipe.json"), path("fixtures.jsonl")], h.deps);
+    const terminal = cli(recorded);
+    const code = await run(["test", path("recipe.json"), path("fixtures.jsonl")], terminal.deps);
     expect(code).toBe(0);
-    await expect(h.stdout()).toMatchFileSnapshot(output("siftline-test.txt"));
+    await expect(terminal.stdout()).toMatchFileSnapshot(output("siftline-test.txt"));
   });
 
   it("siftline label", async () => {
-    const h = cli(recorded);
-    const code = await run(["label", path("recipe.json"), path("records.jsonl")], h.deps);
+    const terminal = cli(recorded);
+    const code = await run(["label", path("recipe.json"), path("records.jsonl")], terminal.deps);
     expect(code).toBe(0);
-    await expect(pinned(h.stdout())).toMatchFileSnapshot(output("siftline-label.jsonl"));
+    await expect(pinned(terminal.stdout())).toMatchFileSnapshot(output("siftline-label.jsonl"));
   });
 
   it("siftline label --rules", async () => {
-    const h = cli(bySubject);
+    const terminal = cli(bySubject);
     const code = await run(
       ["label", path("recipe-v2.json"), path("records.jsonl"), "--rules", path("rules.json")],
-      h.deps,
+      terminal.deps,
     );
     expect(code).toBe(0);
-    await expect(pinned(h.stdout())).toMatchFileSnapshot(output("siftline-label-routed.jsonl"));
+    await expect(pinned(terminal.stdout())).toMatchFileSnapshot(
+      output("siftline-label-routed.jsonl"),
+    );
   });
 
   it("judges, routes and builds both Actions from code", async () => {
@@ -153,7 +151,7 @@ describe("the guide's running example", () => {
     await expect(serializeDecision(decision)).toMatchFileSnapshot(output("decision.jsonl"));
 
     const routed = route(decision);
-    expect(routed.rule).toBe("escalate");
+    await expect(serializeDecision(routed)).toMatchFileSnapshot(output("routed-decision.jsonl"));
     expect(routed.action).toBe("slack_incoming_webhook");
 
     const slack = await buildSlack(routed, recipe);

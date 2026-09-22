@@ -20,7 +20,7 @@ siftline label <recipe.json> [records.jsonl | -] [--rules <rules.json>] [--max-i
 
 `test` runs a Recipe over a file of Fixtures and reports one accuracy per Question, the lowest
 as the Recipe's own, the count that would be Unsure, and every miss. The guide shows
-[the output](/docs/guide/measure-with-fixtures).
+[the report](/docs/guide/measure-with-fixtures).
 
 `label` runs a Recipe over Records, from a file or from stdin, and writes one Decision line per
 Record to stdout in input order. With `--rules` every Decision is routed first. The guide shows
@@ -53,4 +53,4 @@ so both commands compose with a pipe.
 `run(argv, deps)` is the library door and the bin is a wrapper around it. `deps` is
 `{ client, stdin, stdout, stderr, env, signal }`, so a test drives the whole CLI with a
 scripted client and string streams and asserts on the exit code and what was written. The
-docs do exactly that to produce the output the guide shows.
+docs do exactly that to produce what the guide shows.

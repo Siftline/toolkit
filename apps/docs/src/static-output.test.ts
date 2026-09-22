@@ -77,7 +77,6 @@ describe("static output", () => {
   });
 
   it("includes the verified example output in the guide", () => {
-    // The exact line the docs' example test writes to `siftline-test.txt`.
     expect(read("docs/guide/measure-with-fixtures/index.html")).toContain(
       "1 of 5 would go to Review",
     );

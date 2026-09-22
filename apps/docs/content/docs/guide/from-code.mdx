@@ -16,7 +16,7 @@ npm install @siftline/core @typesafe-ai/sdk
 `choice`, `noul` and `score` build the three Question kinds and `defineRecipe` keeps their
 literals. The result is the same document as the JSON on the previous pages:
 `serializeRecipe(recipe)` writes it, `parseRecipe(text)` reads it back, and the docs assert
-that this file and `recipe.json` are equal.
+that this file and the version 2 `recipe.json` from the Rules page are equal.
 
 <include lang="ts" meta='title="recipe.ts"'>
   ../../../examples/support-inbox/recipe.ts
@@ -24,8 +24,8 @@ that this file and `recipe.json` are equal.
 
 ## The client
 
-The Engine talks to the model through a client you pass in. The CLI builds this one; a
-library user builds it the same way:
+The Engine talks to the model through a client you pass in. The CLI builds this one; from
+code you build it the same way:
 
 <include lang="ts" meta='title="client.ts"'>
   ../../../examples/support-inbox/client.ts
@@ -62,8 +62,8 @@ runtime for Rules that arrive as JSON.
 The Decision the scripted example on the testing page produces, routed through these Rules,
 matches `escalate` because the sender asked for a person:
 
-<include lang="json" meta='title="a routed Decision"'>
-  ../../../examples/support-inbox/output/decision.jsonl
+<include lang="json" meta='title="the routed Decision"'>
+  ../../../examples/support-inbox/output/routed-decision.jsonl
 </include>
 
 ## Measure it

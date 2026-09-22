@@ -9,7 +9,7 @@ The Siftline documentation site: [Fumadocs](https://fumadocs.dev) on
 
 | Script      | What it does                                                        |
 | ----------- | ------------------------------------------------------------------- |
-| `api`       | typedoc, regenerating `content/docs/api` from core's source.        |
+| `api`       | typedoc, regenerating `content/docs/api` from core and actions.     |
 | `dev`       | Vite dev server on port 3000.                                       |
 | `build`     | `vite build`, then copies `_shell.html` to `index.html`.            |
 | `preview`   | `wrangler dev` over `.output/public`, the way Cloudflare serves it. |
@@ -31,7 +31,7 @@ Every TypeScript and JSON snippet on the site lives under `examples/` and is pul
 page with `<include>`, never pasted. `typecheck` covers the directory, and
 `examples/support-inbox.test.ts` drives the CLI's `run` and the core examples against the
 recorded corpus and a scripted client, writing what each produces to
-`examples/support-inbox/output/`. Those files are the printed output the guide shows, so a
+`examples/support-inbox/output/`. Those files are what the guide shows as printed, so a
 page cannot claim an output the code no longer produces. After a deliberate change, refresh
 them with `bunx vitest run examples -u` and read the diff.
 

@@ -4,7 +4,7 @@ description: The words the toolkit uses, in the order you meet them.
 icon: BookOpen
 ---
 
-Ten words cover the whole toolkit. Each one is a type or a file format in `@siftline/core`, so
+Eleven words cover the whole toolkit. Each one is a type or a file format in `@siftline/core`, so
 the docs, the code and the CLI output all use the same name. The guide introduces each one where
 it first matters; this page is where to come back to.
 
@@ -12,7 +12,8 @@ it first matters; this page is where to come back to.
 
 One piece of text to sort, with an id. Its `state` is a string, a JSON object or a JSON array,
 so an email can be `{ subject, sender, text }` rather than a flattened string. The Engine sees
-nothing else about it: sender, source and raw payload stay with you.
+nothing else about it. In the hosted app a Record also carries the sender, the timestamp and
+the Source it came from; the toolkit's `Record` type is the Engine's view, the id and the state.
 
 ```json
 { "id": "msg-1", "state": { "subject": "Charged twice", "text": "Refund me now." } }
@@ -23,7 +24,7 @@ nothing else about it: sender, source and raw payload stay with you.
 The questions asked of every Record, the model that answers them, and the review threshold
 below which an answer is not trusted. A Recipe is a JSON document with a name and a version.
 Editing the questions makes a new version, and every Decision names the version that produced
-it, so you can always tell which questions a result answered.
+it, so you can always tell which questions a Decision answered.
 
 ## Question
 
@@ -75,7 +76,8 @@ Review" is not a Rule; it is built in and runs before any Rule is looked at.
 
 Where a Decision goes: an outbound webhook carrying the Decision line, a Slack incoming
 webhook carrying a short message, or nothing. A Rule names an Action by kind; the adapter in
-`@siftline/actions` builds the request.
+`@siftline/actions` builds the request. The hosted app can also forward an email; the toolkit
+has no adapter for that.
 
 ## Fixture
 

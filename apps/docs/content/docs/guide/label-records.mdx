@@ -3,7 +3,7 @@ title: Label real Records
 description: Feed siftline label a file of Records and get one Decision line per Record.
 ---
 
-A Record is one message with an id. Its `state` is what the model reads, and it can be a
+A Record is one piece of text with an id. Its `state` is what the model reads, and it can be a
 string, an object or an array, so the subject and sender can stay as fields:
 
 <include lang="json" meta='title="records.jsonl"'>
@@ -36,8 +36,9 @@ stdin when the second argument is `-` or missing, so `label` sits at the end of 
 
 ## Unsure Decisions
 
-Look at `msg-3`. The model leaned towards `question` at 0.58, which is under the Recipe's
-threshold of 0.7, so the Decision carries `review: true`. It is still written, with its
+Look at `msg-3`. The model leaned towards `question` at only 0.58, and was no surer whether
+the sender wanted a person. A Decision's confidence is the lowest across its Questions, 0.5
+here, which is under the Recipe's threshold of 0.7, so the Decision carries `review: true`. It is still written, with its
 answers, because a low-confidence answer is still information. What is different is what
 happens next: an Unsure Decision selects no Rule and no Action, however you configure them.
 

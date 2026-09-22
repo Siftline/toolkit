@@ -17,6 +17,8 @@ is the same.
 - **Decisions.** A webhook Action in the app posts the same Decision line the toolkit's
   webhook adapter builds, so one receiver handles both.
 
+{/* TODO(cloud export): once the Template screen exports, replace this callout with the steps. */}
+
 <Callout title="Export is being built">
   The export button on the Template screen is not in the app yet. This page describes the contract
   it is built to; the files it produces will be exactly what the guide uses.
@@ -29,7 +31,7 @@ is the same.
 - **Corrections.** Answering in Review produces a Fixture in the app. On your machine, add a
   line to `fixtures.jsonl`.
 - **Sending.** The app performs Actions for you. The toolkit's CLI routes but does not send;
-  [`@siftline/actions`](/docs/guide/send-an-action) is the library for that.
+  [`@siftline/actions`](/docs/guide/send-an-action) is the package for that.
 
 ## A typical loop
 

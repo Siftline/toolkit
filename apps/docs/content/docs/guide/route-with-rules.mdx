@@ -18,7 +18,7 @@ selects, or `null` for none. The first Rule whose condition matches wins:
   ../../../examples/support-inbox/rules.json
 </include>
 
-There are six comparators and no more. Which ones apply depends on the Question's kind:
+There are four comparators, six pairings with a kind, and no more:
 
 | Kind   | Comparators               | `value`                        |
 | ------ | ------------------------- | ------------------------------ |
@@ -28,7 +28,7 @@ There are six comparators and no more. Which ones apply depends on the Question'
 
 No negation, no compound conditions, and confidence is not a comparator. A Rule that needs
 two conditions is two Rules, and order does the rest. Reading the file above: anyone who asks
-for a person goes to Slack; otherwise an urgent message and any complaint or question become a
+for a person goes to Slack; otherwise an urgent Record and any complaint or question become a
 webhook; `other` goes nowhere.
 
 Pass the file to `label` and every Decision is routed:
