@@ -1,6 +1,6 @@
 {
   "name": "@siftline/cli",
-  "version": "0.0.2",
+  "version": "0.1.0",
   "description": "The Siftline command line: measure a recipe against its fixtures, then label for real.",
   "keywords": [
     "classification",
@@ -45,7 +45,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@siftline/core": "^0.0.3",
+    "@siftline/core": "^0.1.0",
     "@typesafe-ai/sdk": "0.6.0"
   },
   "devDependencies": {
