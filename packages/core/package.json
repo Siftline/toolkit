@@ -46,7 +46,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "zod": "4.6.5"
+    "zod": "^4.6.5"
   },
   "devDependencies": {
     "@arethetypeswrong/core": "0.18.5",
