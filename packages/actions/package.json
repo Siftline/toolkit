@@ -1,6 +1,6 @@
 {
   "name": "@siftline/actions",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Siftline adapters for the places labels land: issue trackers, inboxes and queues.",
   "keywords": [
     "actions",
@@ -42,7 +42,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@siftline/core": "^0.1.0",
+    "@siftline/core": "^0.1.1",
     "zod": "4.6.5"
   },
   "devDependencies": {
