@@ -8,8 +8,8 @@
 
 import { defineActions, dispatch } from "@siftline/actions";
 import type {
-  ActionDefinitions,
   ActionId,
+  ActionSet,
   Dispatched,
   SlackIncomingWebhookConfig,
   WebhookConfig,
@@ -33,8 +33,6 @@ const actions = defineActions({
   audit: { kind: "webhook", config: { url: "https://example.com/audit", secret: "s" } },
 });
 
-type _Ids = Expect<Equal<keyof typeof actions, "linear-tickets" | "escalations" | "audit">>;
-
 type _Kind = Expect<Equal<(typeof actions)["escalations"]["kind"], "slack_incoming_webhook">>;
 
 type _WebhookConfig = Expect<Equal<(typeof actions)["linear-tickets"]["config"], WebhookConfig>>;
@@ -43,7 +41,7 @@ type _SlackConfig = Expect<
   Equal<(typeof actions)["escalations"]["config"], SlackIncomingWebhookConfig>
 >;
 
-type _Accepted = Expect<typeof actions extends ActionDefinitions ? true : false>;
+type _Accepted = Expect<typeof actions extends ActionSet ? true : false>;
 
 defineActions({
   // @ts-expect-error — `email` is not an Action kind
@@ -71,10 +69,19 @@ declare const recipe: Recipe;
 
 const sent = dispatch(decision, actions, recipe, { signal: new AbortController().signal });
 
-type _Sent = Expect<Equal<Awaited<typeof sent>, Dispatched | null>>;
+type _Sent = Expect<
+  Equal<Awaited<typeof sent>, Dispatched<"linear-tickets" | "escalations" | "audit"> | null>
+>;
+
+type _SentAction = Expect<
+  Equal<NonNullable<Awaited<typeof sent>>["action"], "linear-tickets" | "escalations" | "audit">
+>;
 
 // @ts-expect-error — `dispatch` takes Actions, not a bare config
 void dispatch(decision, { tickets: { url: "https://example.com/" } }, recipe);
+
+// @ts-expect-error — only `defineActions` makes an `ActionSet`; a hand-written one is unchecked
+void dispatch(decision, { tickets: { kind: "webhook", config: { url: "not a url" } } }, recipe);
 
 void sent;
 
@@ -84,7 +91,7 @@ type _ActionIds = Expect<
   Equal<ActionId<typeof actions>, "linear-tickets" | "escalations" | "audit">
 >;
 
-type _AnyId = Expect<Equal<ActionId<ActionDefinitions>, string>>;
+type _AnyId = Expect<Equal<ActionId<ActionSet>, string>>;
 
 const inbox = defineRecipe({
   name: "support-inbox",

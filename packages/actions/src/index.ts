@@ -4,13 +4,7 @@ export type { ActionKind, ActionRequest, Adapter } from "./adapter";
 
 export { defineActions } from "./define";
 
-export type {
-  ActionConfigs,
-  ActionDefinition,
-  ActionDefinitions,
-  ActionId,
-  DefinedActions,
-} from "./define";
+export type { ActionId, ActionSet } from "./define";
 
 export { dispatch } from "./dispatch";
 
