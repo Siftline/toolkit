@@ -3,9 +3,9 @@
   "url": "https://example.com/hooks/siftline",
   "headers": {
     "Content-Type": "application/json",
-    "Idempotency-Key": "0192f3c2-7b1e-7c4a-9f0e-000000000001:webhook",
+    "Idempotency-Key": "0192f3c2-7b1e-7c4a-9f0e-000000000001:linear-tickets",
     "User-Agent": "siftline-actions/<version>",
-    "X-Siftline-Signature": "sha256=5fd849bb3e744e169beb1d82082cd59543f73a40bc0306fdadf39923b76409a7"
+    "X-Siftline-Signature": "sha256=fba32ba088062fbac6f64a69f5cd96f1f77d270a6343b22b19a80deb8160e5ca"
   },
   "body": {
     "format": 1,
@@ -49,11 +49,11 @@
     "confidence": 0.9,
     "review": false,
     "rule": "escalate",
-    "action": "webhook",
+    "action": "linear-tickets",
     "usage": {
       "inputTokens": 412,
       "outputTokens": 60
     }
   },
-  "idempotencyKey": "0192f3c2-7b1e-7c4a-9f0e-000000000001:webhook"
+  "idempotencyKey": "0192f3c2-7b1e-7c4a-9f0e-000000000001:linear-tickets"
 }
