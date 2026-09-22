@@ -1,5 +1,4 @@
 import { ActionBuildError, defineActions } from "@siftline/actions";
-import type { ActionDefinitions } from "@siftline/actions";
 import { describe, expect, it } from "vitest";
 
 // Imported by package name, not by relative path: this asserts the published `exports` map.
@@ -57,7 +56,7 @@ describe("defineActions", () => {
 
   it("throws on an unknown Action kind, never retryable", () => {
     // Parsed JSON is `any`, so it reaches `defineActions` as a JavaScript caller's input would.
-    const actions: ActionDefinitions = JSON.parse(
+    const actions: Parameters<typeof defineActions>[0] = JSON.parse(
       '{ "mail": { "kind": "email", "config": { "to": "a@example.com" } } }',
     );
 
@@ -72,7 +71,7 @@ describe("defineActions", () => {
   });
 
   it("treats an inherited property as an unknown kind", () => {
-    const actions: ActionDefinitions = JSON.parse(
+    const actions: Parameters<typeof defineActions>[0] = JSON.parse(
       '{ "odd": { "kind": "toString", "config": {} } }',
     );
 

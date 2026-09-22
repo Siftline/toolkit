@@ -71,8 +71,9 @@ npx siftline label recipe.json records.jsonl --rules rules.json | node send.ts r
 It parses each line with `parseDecision` and calls `dispatch` once. A Decision that went to
 Review, such as `msg-3`, or whose Rule selected no Action, sends nothing. The Action ids MUST be
 the ones `rules.json` names; an id the Rules select but the script does not define throws.
-Node 24 runs the file as is. [Send an Action](/docs/guide/send-an-action) covers
-`defineActions`, `dispatch` and their errors.
+Node runs the `.ts` file as is from 22.18 on the 22 line, and from 23.6. On 22.14 to 22.17, add
+`--experimental-strip-types`. [Send an Action](/docs/guide/send-an-action) covers `defineActions`,
+`dispatch` and their errors.
 
 A failed send throws and stops the pipe. The lines before it were sent, and each request carries
 an `Idempotency-Key`, so a receiver can drop the repeats when you run it again.

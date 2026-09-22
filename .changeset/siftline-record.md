@@ -1,6 +1,5 @@
 ---
 "@siftline/core": minor
-"@siftline/cli": patch
 ---
 
 Rename the `Record` type to `SiftlineRecord`, so importing it no longer shadows TypeScript's global

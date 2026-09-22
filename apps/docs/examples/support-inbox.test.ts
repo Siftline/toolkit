@@ -1,11 +1,21 @@
+import { spawn } from "node:child_process";
+import { once } from "node:events";
 import { createReadStream, readFileSync } from "node:fs";
-import { createInterface } from "node:readline";
+import { createServer } from "node:http";
+import type { IncomingHttpHeaders } from "node:http";
+import { text } from "node:stream/consumers";
 import { fileURLToPath } from "node:url";
 
 import type { ActionFetch } from "@siftline/actions";
 import { run } from "@siftline/cli";
 import type { RunDeps } from "@siftline/cli";
-import { parseRecipe, ruleSchema, serializeDecision, validateRules } from "@siftline/core";
+import {
+  parseDecision,
+  parseRecipe,
+  ruleSchema,
+  serializeDecision,
+  validateRules,
+} from "@siftline/core";
 import type { JsonValue, SystemOneClient, SystemOneResult } from "@siftline/core";
 import { createReplayClient, parseReplayLines } from "@siftline/core/testing";
 import { describe, expect, it, onTestFinished, vi } from "vitest";
@@ -15,7 +25,6 @@ import { actions } from "./support-inbox/actions";
 import { recipe } from "./support-inbox/recipe";
 import { route, rules } from "./support-inbox/route";
 import { judgeScripted } from "./support-inbox/scripted";
-import { sendLines } from "./support-inbox/send";
 import { measure } from "./support-inbox/test";
 
 const dir = new URL("support-inbox/", import.meta.url);
@@ -141,6 +150,17 @@ function requestJson(request: { headers: { [name: string]: string }; body: strin
   return `${JSON.stringify(readable(request), null, 2)}\n`;
 }
 
+// Headers `fetch` adds on its own; the rest are the ones the Adapter built.
+const addedByFetch = new Set([
+  "accept",
+  "accept-encoding",
+  "accept-language",
+  "connection",
+  "content-length",
+  "host",
+  "sec-fetch-mode",
+]);
+
 describe("the guide's running example", () => {
   it("is the same Recipe in JSON and in TypeScript", () => {
     expect(parseRecipe(readFileSync(path("recipe-v2.json"), "utf8"))).toEqual(recipe);
@@ -201,7 +221,12 @@ describe("the guide's running example", () => {
 
     expect(await send({ ...routed, review: true }, recipe)).toBeNull();
 
-    const sent = await send({ ...routed, action: "linear-tickets" }, recipe);
+    // msg-2 as `siftline label --rules` routed it: rules.json, not this test, picked the Action.
+    const [, line] = readFileSync(output("siftline-label-routed.jsonl"), "utf8").split("\n");
+    const ticket = parseDecision(line ?? "");
+    expect([ticket.rule, ticket.action]).toEqual(["ticket", "linear-tickets"]);
+
+    const sent = await send(ticket, recipe);
 
     if (sent === null) throw new Error("dispatch sent nothing");
 
@@ -211,32 +236,59 @@ describe("the guide's running example", () => {
     await expect(requestJson(sent.request)).toMatchFileSnapshot(output("webhook-request.json"));
   });
 
-  it("sends the routed CLI output by piping it into send.ts", async () => {
-    vi.stubEnv("SLACK_WEBHOOK_URL", actions.escalations.config.url);
-    vi.stubEnv("TICKETS_WEBHOOK_URL", actions["linear-tickets"].config.url);
-    vi.stubEnv("TICKETS_WEBHOOK_SECRET", "shared-secret");
+  it("sends the routed CLI output piped into node send.ts", async () => {
+    const received: { path?: string; headers: IncomingHttpHeaders; body: JsonValue }[] = [];
+
+    const server = createServer(async (request, response) => {
+      const headers = Object.fromEntries(
+        Object.entries(request.headers).filter(([name]) => !addedByFetch.has(name)),
+      );
+
+      headers["user-agent"] = "siftline-actions/<version>";
+      received.push({ path: request.url, headers, body: JSON.parse(await text(request)) });
+      response.end("ok");
+    });
+
+    server.listen(0, "127.0.0.1");
+    await once(server, "listening");
     onTestFinished(() => {
-      vi.unstubAllEnvs();
+      server.close();
     });
 
-    const fetchImpl = vi.fn<ActionFetch>(async () => new Response("ok", { status: 200 }));
+    const address = server.address();
 
-    const stdin = createInterface({
-      input: createReadStream(output("siftline-label-routed.jsonl")),
+    if (!(address instanceof Object)) throw new Error("the stub server has no port");
+
+    const base = `http://127.0.0.1:${address.port}`;
+
+    const child = spawn(process.execPath, [path("send.ts"), path("recipe-v2.json")], {
+      env: {
+        ...process.env,
+        SLACK_WEBHOOK_URL: `${base}/slack`,
+        TICKETS_WEBHOOK_URL: `${base}/tickets`,
+        TICKETS_WEBHOOK_SECRET: "shared-secret",
+      },
     });
 
-    const requests = [];
+    createReadStream(output("siftline-label-routed.jsonl")).pipe(child.stdin);
 
-    for await (const sent of sendLines(stdin, recipe, { fetch: fetchImpl })) {
-      requests.push(readable(sent.request));
-    }
-
-    // msg-1 escalates, msg-2 becomes a ticket, msg-3 went to Review and sends nothing.
-    expect(fetchImpl.mock.calls.map(([url]) => url)).toEqual([
-      actions.escalations.config.url,
-      actions["linear-tickets"].config.url,
+    const [stdout, stderr, [code]] = await Promise.all([
+      text(child.stdout),
+      text(child.stderr),
+      once(child, "close"),
     ]);
-    await expect(`${JSON.stringify(requests, null, 2)}\n`).toMatchFileSnapshot(
+
+    expect(stderr).toBe("");
+    expect(code).toBe(0);
+    // msg-1 escalates, msg-2 becomes a ticket, msg-3 went to Review and sends nothing.
+    expect(stdout).toBe(
+      [
+        "0192f3c2-7b1e-7c4a-9f0e-000000000001:escalations 200",
+        "0192f3c2-7b1e-7c4a-9f0e-000000000002:linear-tickets 200",
+        "",
+      ].join("\n"),
+    );
+    await expect(`${JSON.stringify(received, null, 2)}\n`).toMatchFileSnapshot(
       output("dispatch-requests.json"),
     );
   });

@@ -1,25 +1,22 @@
 [
   {
-    "method": "POST",
-    "url": "https://hooks.slack.com/services/T000/B000/XXXX",
+    "path": "/slack",
     "headers": {
-      "Content-Type": "application/json",
-      "Idempotency-Key": "0192f3c2-7b1e-7c4a-9f0e-000000000001:escalations",
-      "User-Agent": "siftline-actions/<version>"
+      "content-type": "application/json",
+      "idempotency-key": "0192f3c2-7b1e-7c4a-9f0e-000000000001:escalations",
+      "user-agent": "siftline-actions/<version>"
     },
     "body": {
       "text": "*support-inbox* · msg-1\ncategory: complaint (100%)\nwants_human: yes (98%)\nurgency: 2 · Today (90%)\nrule escalate"
-    },
-    "idempotencyKey": "0192f3c2-7b1e-7c4a-9f0e-000000000001:escalations"
+    }
   },
   {
-    "method": "POST",
-    "url": "https://example.com/hooks/siftline",
+    "path": "/tickets",
     "headers": {
-      "Content-Type": "application/json",
-      "Idempotency-Key": "0192f3c2-7b1e-7c4a-9f0e-000000000002:linear-tickets",
-      "User-Agent": "siftline-actions/<version>",
-      "X-Siftline-Signature": "sha256=bbc070b8d15bf920a168bc45dc8b6b04a946cc430c77153de28e9502cd8f57c7"
+      "content-type": "application/json",
+      "idempotency-key": "0192f3c2-7b1e-7c4a-9f0e-000000000002:linear-tickets",
+      "user-agent": "siftline-actions/<version>",
+      "x-siftline-signature": "sha256=bbc070b8d15bf920a168bc45dc8b6b04a946cc430c77153de28e9502cd8f57c7"
     },
     "body": {
       "format": 1,
@@ -68,7 +65,6 @@
         "inputTokens": 400,
         "outputTokens": 60
       }
-    },
-    "idempotencyKey": "0192f3c2-7b1e-7c4a-9f0e-000000000002:linear-tickets"
+    }
   }
 ]

@@ -3,14 +3,14 @@
   "url": "https://example.com/hooks/siftline",
   "headers": {
     "Content-Type": "application/json",
-    "Idempotency-Key": "0192f3c2-7b1e-7c4a-9f0e-000000000001:linear-tickets",
+    "Idempotency-Key": "0192f3c2-7b1e-7c4a-9f0e-000000000002:linear-tickets",
     "User-Agent": "siftline-actions/<version>",
-    "X-Siftline-Signature": "sha256=fba32ba088062fbac6f64a69f5cd96f1f77d270a6343b22b19a80deb8160e5ca"
+    "X-Siftline-Signature": "sha256=bbc070b8d15bf920a168bc45dc8b6b04a946cc430c77153de28e9502cd8f57c7"
   },
   "body": {
     "format": 1,
-    "id": "0192f3c2-7b1e-7c4a-9f0e-000000000001",
-    "recordId": "msg-1",
+    "id": "0192f3c2-7b1e-7c4a-9f0e-000000000002",
+    "recordId": "msg-2",
     "recipe": {
       "name": "support-inbox",
       "version": 2
@@ -19,41 +19,41 @@
     "judgedAt": "2026-09-22T09:00:00.000Z",
     "trimmed": false,
     "answers": {
-      "category": "complaint",
-      "wants_human": true,
-      "urgency": 2
+      "category": "question",
+      "wants_human": false,
+      "urgency": 0
     },
     "questions": {
       "category": {
-        "confidence": 0.97,
+        "confidence": 1,
         "probabilities": {
-          "complaint": 0.97,
-          "question": 0.02,
-          "other": 0.01
+          "complaint": 0,
+          "question": 1,
+          "other": 0
         }
       },
       "wants_human": {
-        "probability": 0.99,
-        "confidence": 0.98
+        "probability": 0.02,
+        "confidence": 0.96
       },
       "urgency": {
-        "score": 1.9,
-        "confidence": 0.9,
+        "score": 0.2,
+        "confidence": 0.85,
         "probabilities": {
-          "0": 0.01,
-          "1": 0.09,
-          "2": 0.9
+          "0": 0.85,
+          "1": 0.1,
+          "2": 0.05
         }
       }
     },
-    "confidence": 0.9,
+    "confidence": 0.85,
     "review": false,
-    "rule": "escalate",
+    "rule": "ticket",
     "action": "linear-tickets",
     "usage": {
-      "inputTokens": 412,
+      "inputTokens": 400,
       "outputTokens": 60
     }
   },
-  "idempotencyKey": "0192f3c2-7b1e-7c4a-9f0e-000000000001:linear-tickets"
+  "idempotencyKey": "0192f3c2-7b1e-7c4a-9f0e-000000000002:linear-tickets"
 }
