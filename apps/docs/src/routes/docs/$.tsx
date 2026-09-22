@@ -14,6 +14,7 @@ import {
 import { Suspense, use } from "react";
 
 import { useMDXComponents } from "@/components/mdx";
+import { SidebarFooter } from "@/components/sidebar-footer";
 import { baseOptions } from "@/lib/layout.shared";
 import { getPageMarkdownUrl } from "@/lib/markdown-url";
 import { contentSourceUrl } from "@/lib/repository";
@@ -71,7 +72,14 @@ function Page() {
   const { pageTree, path, markdownUrl } = useFumadocsLoader(Route.useLoaderData());
 
   return (
-    <DocsLayout {...baseOptions()} tree={pageTree}>
+    <DocsLayout
+      {...baseOptions()}
+      tree={pageTree}
+      // The stock footer row is one pill stretched across the sidebar; ours is compact.
+      githubUrl={undefined}
+      themeSwitch={{ enabled: false }}
+      sidebar={{ footer: <SidebarFooter /> }}
+    >
       <Link to={markdownUrl} hidden />
       <Suspense>
         <Content path={path} markdownUrl={markdownUrl} />
