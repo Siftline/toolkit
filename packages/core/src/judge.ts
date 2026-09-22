@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import type { AnswerResponse, RetryPolicy, SystemOneClient, SystemOneResult } from "./client";
-import type { AnswerValue, Decision, Evidence, Record } from "./decision";
+import type { AnswerValue, Decision, Evidence, SiftlineRecord } from "./decision";
 import { SiftlineError } from "./errors";
 import type { Question, Questions, Recipe } from "./recipe";
 import { decodeThrown } from "./thrown";
@@ -59,7 +59,7 @@ export interface JudgeCallOptions {
 
 export interface Judge {
   <Q extends Questions>(
-    record: Record,
+    record: SiftlineRecord,
     recipe: Recipe<Q>,
     callOptions?: JudgeCallOptions,
   ): Promise<Decision<Q>>;
@@ -303,7 +303,7 @@ export function createJudge(options: CreateJudgeOptions): Judge {
   const acquire = createGate(options.maxInFlight ?? DEFAULT_MAX_IN_FLIGHT);
 
   return async <Q extends Questions>(
-    record: Record,
+    record: SiftlineRecord,
     recipe: Recipe<Q>,
     callOptions: JudgeCallOptions = {},
   ): Promise<Decision<Q>> => {

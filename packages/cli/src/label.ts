@@ -1,5 +1,5 @@
 import { createJudge, JudgeError, routeDecision, serializeDecision } from "@siftline/core";
-import type { JudgeErrorReason, Recipe, Record, Rule } from "@siftline/core";
+import type { JudgeErrorReason, Recipe, Rule, SiftlineRecord } from "@siftline/core";
 
 import type { OutputStream, RunDeps } from "./deps";
 import { UsageError, writeLine } from "./deps";
@@ -27,7 +27,7 @@ export async function runLabel(args: readonly string[], deps: RunDeps): Promise<
 }
 
 async function label(
-  records: readonly Record[],
+  records: readonly SiftlineRecord[],
   recipe: Recipe,
   rules: Rule[] | null,
   deps: RunDeps,

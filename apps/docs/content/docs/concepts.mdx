@@ -13,7 +13,8 @@ it first matters; this page is where to come back to.
 One piece of text to sort, with an id. Its `state` is a string, a JSON object or a JSON array,
 so an email can be `{ subject, sender, text }` rather than a flattened string. The Engine sees
 nothing else about it. In the hosted app a Record also carries the sender, the timestamp and
-the Source it came from; the toolkit's `Record` type is the Engine's view, the id and the state.
+the Source it came from; the toolkit's `SiftlineRecord` type is the Engine's view, the id and
+the state.
 
 ```json
 { "id": "msg-1", "state": { "subject": "Charged twice", "text": "Refund me now." } }

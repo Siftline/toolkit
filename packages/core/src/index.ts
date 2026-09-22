@@ -5,7 +5,7 @@ export const VERSION: string = packageJson.version;
 
 export { decisionSchema, parseDecision, recordSchema, serializeDecision } from "./decision";
 
-export type { Answers, AnswerValue, Decision, Evidence, Record } from "./decision";
+export type { Answers, AnswerValue, Decision, Evidence, SiftlineRecord } from "./decision";
 
 export { SiftlineError } from "./errors";
 

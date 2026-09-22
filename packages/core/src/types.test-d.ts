@@ -30,10 +30,10 @@ import type {
   Question,
   Questions,
   Recipe,
-  Record,
   Rule,
   RuleCondition,
   SiftlineError,
+  SiftlineRecord,
   SystemOneClient,
 } from "@siftline/core";
 import type { TypeSafeClient } from "@typesafe-ai/sdk";
@@ -124,7 +124,12 @@ type _FromDiskQuestion = Expect<Equal<typeof anyQuestion, Question | undefined>>
 
 type _ErasedAnswers = Expect<Equal<Answers, { [x: string]: string | boolean | number }>>;
 
-type _RecordFields = Expect<Equal<keyof Record, "id" | "state" | "trimmed">>;
+type _RecordFields = Expect<Equal<keyof SiftlineRecord, "id" | "state" | "trimmed">>;
+
+// Importing `SiftlineRecord` leaves TypeScript's global `Record<K, V>` unshadowed.
+declare const tally: Record<string, number>;
+
+type _GlobalRecord = Expect<Equal<typeof tally, { [x: string]: number }>>;
 
 declare const decision: Decision<(typeof recipe)["questions"]>;
 
@@ -275,7 +280,7 @@ routeDecision(decision, parsedRules);
 
 declare const client: SystemOneClient;
 
-declare const record: Record;
+declare const record: SiftlineRecord;
 
 const judge = createJudge({ client, retry: "prompt" });
 
