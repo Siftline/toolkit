@@ -40,6 +40,7 @@ import type { TypeSafeClient } from "@typesafe-ai/sdk";
 import type { z } from "zod";
 
 type Expect<T extends true> = T;
+
 type Equal<A, B> =
   (<T>() => T extends A ? 1 : 2) extends <T>() => T extends B ? 1 : 2 ? true : false;
 
@@ -48,6 +49,7 @@ type Equal<A, B> =
 type ParsedRecipe = z.infer<typeof recipeSchema>;
 
 type _ParsedIsQuestions = Expect<ParsedRecipe["questions"] extends Questions ? true : false>;
+
 // @ts-expect-error — the other way round fails on the readonly tuple
 type _QuestionsIsParsed = Expect<Questions extends ParsedRecipe["questions"] ? true : false>;
 
@@ -75,9 +77,11 @@ const recipe = defineRecipe({
 type _TeamLabels = Expect<
   Equal<keyof (typeof recipe)["questions"]["team"]["criteria"], "billing" | "product" | "sales">
 >;
+
 type _UrgencyLength = Expect<
   Equal<(typeof recipe)["questions"]["urgency"]["criteria"]["length"], 4>
 >;
+
 type _AngryIsNoul = Expect<Equal<(typeof recipe)["questions"]["angry"]["type"], "noul">>;
 
 // @ts-expect-error — no such question
@@ -97,39 +101,51 @@ const rawRecipe = defineRecipe({
 type _RawLabels = Expect<
   Equal<keyof (typeof rawRecipe)["questions"]["lang"]["criteria"], "en" | "cs">
 >;
+
 type _RawLevels = Expect<
   Equal<(typeof rawRecipe)["questions"]["urgency"]["criteria"]["length"], 2>
 >;
 
 // A typed Recipe narrows to the erased one, so every `Recipe`-taking function accepts it.
 const erased: Recipe = recipe;
+
 void erased;
 
 // A Recipe read from disk is erased, and `noUncheckedIndexedAccess` shows on its question map.
 const fromDisk = parseRecipe("{}");
+
 type _FromDisk = Expect<Equal<typeof fromDisk, Recipe>>;
+
 const anyQuestion = fromDisk.questions.anything;
+
 type _FromDiskQuestion = Expect<Equal<typeof anyQuestion, Question | undefined>>;
 
 // ─── Decision ───────────────────────────────────────────────────────────────────────────
 
 type _ErasedAnswers = Expect<Equal<Answers, { [x: string]: string | boolean | number }>>;
+
 type _RecordFields = Expect<Equal<keyof Record, "id" | "state" | "trimmed">>;
 
 declare const decision: Decision<(typeof recipe)["questions"]>;
 
 type _Team = Expect<Equal<typeof decision.answers.team, "billing" | "product" | "sales">>;
+
 type _Angry = Expect<Equal<typeof decision.answers.angry, boolean>>;
+
 type _Urgency = Expect<Equal<typeof decision.answers.urgency, 0 | 1 | 2 | 3>>;
+
 type _TeamEvidence = Expect<
   Equal<keyof typeof decision.questions.team.probabilities, "billing" | "product" | "sales">
 >;
+
 type _UrgencyEvidence = Expect<
   Equal<keyof (typeof decision)["questions"]["urgency"], "score" | "confidence" | "probabilities">
 >;
+
 type _UrgencyProbabilities = Expect<
   Equal<keyof (typeof decision)["questions"]["urgency"]["probabilities"], 0 | 1 | 2 | 3>
 >;
+
 type _AngryEvidence = Expect<
   Equal<keyof (typeof decision)["questions"]["angry"], "probability" | "confidence">
 >;
@@ -139,12 +155,16 @@ void decision.answers.teem;
 
 // @ts-expect-error — not one of the labels
 const wrong: "nope" = decision.answers.team;
+
 void wrong;
 
 // A Decision read from disk is erased, and indexing it admits `undefined`.
 const decisionFromDisk = parseDecision("{}");
+
 type _ErasedDecision = Expect<Equal<typeof decisionFromDisk, Decision>>;
+
 const anyAnswer = decisionFromDisk.answers.anything;
+
 type _ErasedAnswer = Expect<Equal<typeof anyAnswer, string | boolean | number | undefined>>;
 
 type _ErrorCodes = Expect<
@@ -155,8 +175,10 @@ type _ErrorCodes = Expect<
 >;
 
 declare const failure: SiftlineError;
+
 // @ts-expect-error — `code` is readonly
 failure.code = "jev_error";
+
 // @ts-expect-error — `retryable` is readonly
 failure.retryable = true;
 
@@ -182,8 +204,11 @@ type ParsedRule = z.infer<typeof ruleSchema>;
 // A narrowed Rule is always a valid parsed Rule, so the erased `evaluateRules` accepts one.
 // The reverse does not hold: a parsed `is` carries all three value types at once.
 type _RuleNarrows = Narrows<Rule<(typeof recipe)["questions"]>, ParsedRule>;
+
 type _RuleNarrows2 = Expect<Rule<(typeof recipe)["questions"]> extends ParsedRule ? true : false>;
+
 type _CondNarrows = Narrows<RuleCondition<(typeof recipe)["questions"]>, ParsedRule["condition"]>;
+
 type _ErasedRuleIsParsed = Expect<Rule extends ParsedRule ? true : false>;
 
 const rules: Rule<(typeof recipe)["questions"]>[] = [
@@ -218,9 +243,11 @@ const badRules: Rule<(typeof recipe)["questions"]>[] = [
   // @ts-expect-error — `atLeast` on a Choice
   { id: "b6", condition: { question: "team", comparator: "atLeast", value: 1 }, action: null },
 ];
+
 void badRules;
 
 const routed = routeDecision(decision, rules);
+
 type _Routed = Expect<Equal<typeof routed, Decision<(typeof recipe)["questions"]>>>;
 
 // `NoInfer`: an unannotated array literal at the call site is checked against the Decision's Q.
@@ -235,25 +262,33 @@ const parsedRules: Rule[] = ruleSchema
   .parse([
     { id: "p", condition: { question: "team", comparator: "is", value: "billing" }, action: null },
   ]);
+
 routeDecision(decisionFromDisk, parsedRules);
+
 void evaluateRules(decisionFromDisk.answers, parsedRules);
+
 void evaluateRules(decision.answers, parsedRules);
+
 // @ts-expect-error — an erased Rule is not a Rule<Q>: `value` is too wide
 routeDecision(decision, parsedRules);
 // ─── Judge ──────────────────────────────────────────────────────────────────────────────
 
 declare const client: SystemOneClient;
+
 declare const record: Record;
 
 const judge = createJudge({ client, retry: "prompt" });
 
 // The Recipe's literals survive the whole round trip, so the portal reads a typed Decision.
 const judged = judge(record, recipe);
+
 type _Judged = Expect<Equal<typeof judged, Promise<Decision<(typeof recipe)["questions"]>>>>;
+
 type _JudgedUrgency = Expect<Equal<Awaited<typeof judged>["answers"]["urgency"], 0 | 1 | 2 | 3>>;
 
 // A Recipe read from disk judges to the erased Decision.
 const judgedFromDisk = judge(record, fromDisk);
+
 type _JudgedFromDisk = Expect<Equal<typeof judgedFromDisk, Promise<Decision>>>;
 
 // @ts-expect-error — `retry` has no default
@@ -286,8 +321,11 @@ type _FixtureExpect = Expect<
 
 // A typed Fixture array narrows to the erased one, which is what the runner takes.
 const erasedFixtures: Fixture[] = fixtures;
+
 void testRecipe(judge, recipe, fixtures);
+
 void testRecipe(judge, fromDisk, erasedFixtures);
 
 const parsedFixtures = parseFixtures("");
+
 type _ParsedFixtures = Expect<Equal<typeof parsedFixtures, Fixture[]>>;

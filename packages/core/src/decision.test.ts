@@ -43,6 +43,7 @@ describe("the reference Decision line", () => {
 describe("serializeDecision", () => {
   it("writes the spec's key order whatever order the object carries", () => {
     const decision = reference();
+
     const scrambled = {
       usage: decision.usage,
       questions: decision.questions,
@@ -59,15 +60,18 @@ describe("serializeDecision", () => {
       id: decision.id,
       format: decision.format,
     } satisfies Decision;
+
     expect(serializeDecision(scrambled)).toBe(referenceLine);
   });
 
   it("follows Recipe order in answers and questions", () => {
     const decision = reference();
+
     const reordered: Decision = {
       ...decision,
       answers: { wants_human: true, category: "complaint" },
     };
+
     expect(serializeDecision(reordered)).toContain(
       '"answers":{"wants_human":true,"category":"complaint"}',
     );
@@ -88,6 +92,7 @@ describe("serializeDecision", () => {
         },
       },
     };
+
     expect(serializeDecision(decision)).toContain(
       '"questions":{"urgency":{"score":1.53,"confidence":0.54,"probabilities":{"0":0.01,"1":0.45,"2":0.54,"3":0}}}',
     );
@@ -99,6 +104,7 @@ describe("serializeDecision", () => {
       confidence: 0.6399999999999999,
       questions: { wants_human: { probability: 0.8200000000000001, confidence: 0.64 } },
     };
+
     expect(serializeDecision(decision)).toContain('"probability":0.8200000000000001');
     expect(serializeDecision(decision)).toContain('"confidence":0.6399999999999999');
   });
@@ -127,6 +133,7 @@ describe("parseDecision", () => {
     const questions = {
       category: { confidence: 0.91, probabilities: { a: 0.5, b: 0.5 }, legend: ["a", "b"] },
     };
+
     expect(() => decisionSchema.parse({ ...raw(), questions })).toThrow(ZodError);
   });
 
@@ -152,6 +159,7 @@ describe("parseDecision", () => {
         probabilities: { 0: 0.01, 1: 0.45, 2: 0.54, 3: 0 },
       },
     };
+
     const decision = decisionSchema.parse({ ...raw(), answers: { urgency: 2 }, questions });
     expect(decision.questions.urgency).toEqual(questions.urgency);
   });

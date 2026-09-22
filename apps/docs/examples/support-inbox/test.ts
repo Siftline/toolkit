@@ -19,6 +19,7 @@ export async function measure(client: SystemOneClient) {
   const report = await testRecipe(judge, recipe, fixtures);
 
   console.log(`lowest accuracy ${report.accuracy}`);
+
   for (const result of report.fixtures) {
     for (const miss of result.mismatches) {
       console.log(`${result.id} ${miss.question}: expected ${miss.expected}, got ${miss.actual}`);

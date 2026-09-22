@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { feedbackWidget, routedDecision } from "./fixtures";
 
 const calls: { url: string; init: ActionFetchInit }[] = [];
+
 let request: ActionRequest;
 
 beforeEach(async () => {
@@ -19,6 +20,7 @@ beforeEach(async () => {
 function responder(body: string | Uint8Array, status = 200): ActionFetch {
   return (url, init) => {
     calls.push({ url, init });
+
     return Promise.resolve(new Response(body, { status }));
   };
 }
@@ -26,6 +28,7 @@ function responder(body: string | Uint8Array, status = 200): ActionFetch {
 function rejecter(error: unknown): ActionFetch {
   return (url, init) => {
     calls.push({ url, init });
+
     return Promise.reject(error);
   };
 }

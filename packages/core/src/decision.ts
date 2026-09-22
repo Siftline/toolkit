@@ -47,13 +47,16 @@ export const answerValue = z.union([z.string(), z.boolean(), z.number()]);
  */
 export function answerValueProblem(asked: Question, value: unknown): string | null {
   const shown = JSON.stringify(value);
+
   if (asked.type === "choice") {
     if (typeof value !== "string") return `value ${shown} is not a label`;
     return Object.hasOwn(asked.criteria, value) ? null : `unknown label ${shown}`;
   }
+
   if (asked.type === "noul") {
     return typeof value === "boolean" ? null : `value ${shown} is not a boolean`;
   }
+
   const last = asked.criteria.length - 1;
   if (typeof value !== "number" || !Number.isInteger(value) || value < 0 || value > last) {
     return `level index ${shown} is out of range (0-${last})`;
@@ -90,6 +93,7 @@ export interface Decision<Q extends Questions = Questions> {
 }
 
 const unit = z.number().min(0).max(1);
+
 const levelIndex = z.string().regex(/^\d+$/);
 
 const choiceEvidence = z
@@ -140,6 +144,7 @@ function orderEvidence(block: Evidence): Evidence {
   if ("probability" in block) {
     return { probability: block.probability, confidence: block.confidence };
   }
+
   if ("score" in block) {
     return {
       score: block.score,
@@ -147,12 +152,14 @@ function orderEvidence(block: Evidence): Evidence {
       probabilities: block.probabilities,
     };
   }
+
   return { confidence: block.confidence, probabilities: block.probabilities };
 }
 
 /** The only writer. One compact line, no trailing newline, and nothing is rounded. */
 export function serializeDecision(decision: Decision): string {
   const questions: { [name: string]: Evidence } = {};
+
   for (const [name, block] of Object.entries(decision.questions)) {
     questions[name] = orderEvidence(block);
   }

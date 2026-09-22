@@ -12,7 +12,9 @@ export async function runLabel(args: readonly string[], deps: RunDeps): Promise<
   const { positionals, options } = parseLabelArgs(args);
 
   const [recipePath, recordsPath] = positionals;
+
   if (recipePath === undefined) throw new UsageError("label needs a recipe");
+
   if (positionals.length > 2) {
     throw new UsageError(`label takes at most two positionals, not ${positionals.length}`);
   }
@@ -40,11 +42,13 @@ async function label(
   // keeps writing the ones behind it in input order.
   const buffered = new Map<number, string | null>();
   let written = 0;
+
   const flush = (): void => {
     while (buffered.has(written)) {
       const line = buffered.get(written) ?? null;
       buffered.delete(written);
       written += 1;
+
       if (line !== null) writeLine(deps.stdout, line);
     }
   };
@@ -52,9 +56,11 @@ async function label(
   // Anything but a per-Record `JudgeError` ends the run; the rest of the calls are aborted
   // rather than left to finish into a report nobody will read.
   const controller = new AbortController();
+
   const signal = deps.signal
     ? AbortSignal.any([deps.signal, controller.signal])
     : controller.signal;
+
   let fatal: unknown;
 
   let failed = false;
@@ -65,6 +71,7 @@ async function label(
     while (fatal === undefined) {
       const index = taken;
       const record = records[index];
+
       if (record === undefined) return;
       taken += 1;
 
@@ -82,8 +89,10 @@ async function label(
         if (!(error instanceof JudgeError)) {
           fatal ??= error;
           controller.abort(error);
+
           return;
         }
+
         failed = true;
         writeLine(deps.stderr, `${record.id}: ${sentence(error)}`);
         buffered.set(index, null);
@@ -100,6 +109,7 @@ async function label(
   progress.finish();
 
   if (fatal !== undefined) throw fatal;
+
   return failed ? 1 : 0;
 }
 
@@ -114,9 +124,11 @@ const REASONS: {
 
 function sentence(error: JudgeError): string {
   if (error.reason === "unknown") return error.message;
+
   if (error.reason === "invalid_answers") {
     return `the answers did not fit the Recipe: ${error.message}`;
   }
+
   return REASONS[error.reason];
 }
 

@@ -18,13 +18,16 @@ export interface ActionFetchInit {
 export type ActionFetch = (url: string, init: ActionFetchInit) => Promise<Response>;
 
 const BODY_LIMIT = 4096;
+
 const decoder = new TextDecoder();
 
 // A UTF-8 continuation byte is `10xxxxxx`; walking back over them lands on a code-point
 // start, so the decoder never sees half a character. No marker is appended.
 function truncate(bytes: Uint8Array): ActionResponse["body"] {
   let end = BODY_LIMIT;
+
   while (end > 0 && ((bytes[end] ?? 0) & 0xc0) === 0x80) end -= 1;
+
   return decoder.decode(bytes.subarray(0, end));
 }
 
@@ -39,6 +42,7 @@ export async function perform(
   options: { signal?: AbortSignal } = {},
 ): Promise<ActionResponse> {
   let response: Response;
+
   try {
     response = await fetchImpl(request.url, {
       method: request.method,

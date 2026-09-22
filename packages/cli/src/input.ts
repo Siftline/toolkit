@@ -23,6 +23,7 @@ export async function readTextFile(path: string, what: string): Promise<string> 
 
 export async function readRecipeFile(path: string): Promise<Recipe> {
   const text = await readTextFile(path, "recipe");
+
   try {
     return parseRecipe(text);
   } catch (cause) {
@@ -60,6 +61,7 @@ async function readChecked<T>(
   const text = await readTextFile(path, what);
 
   let items: T[];
+
   try {
     items = parse(text);
   } catch (cause) {
@@ -68,6 +70,7 @@ async function readChecked<T>(
 
   const problems = stale(items);
   const first = problems[0];
+
   if (first) {
     throw new InputError(`${path} does not fit the Recipe: ${first}${andMore(problems.length)}`);
   }
@@ -82,8 +85,10 @@ export async function readRecords(path: string | undefined, stdin: InputStream):
   const text = fromStdin ? await readStdin(stdin) : await readTextFile(path, "records");
 
   const records: Record[] = [];
+
   for (const [offset, line] of text.split("\n").entries()) {
     if (line.trim() === "") continue;
+
     try {
       records.push(recordSchema.parse(JSON.parse(line)));
     } catch (cause) {
@@ -99,9 +104,11 @@ export async function readRecords(path: string | undefined, stdin: InputStream):
 async function readStdin(stream: InputStream): Promise<string> {
   const decoder = new TextDecoder();
   let text = "";
+
   for await (const chunk of stream) {
     text += typeof chunk === "string" ? chunk : decoder.decode(chunk, { stream: true });
   }
+
   return text + decoder.decode();
 }
 
@@ -134,10 +141,12 @@ function isIssue(value: unknown): value is Issue {
 
 function reason(cause: unknown): string {
   const issues = issuesOf(cause);
+
   if (issues) return firstIssue(issues);
 
   if (cause instanceof Error) {
     const nested = issuesOf(cause.cause);
+
     return nested ? `${cause.message}: ${firstIssue(nested)}` : cause.message;
   }
 
@@ -147,8 +156,10 @@ function reason(cause: unknown): string {
 /** The first issue with its path, and how many stand behind it. */
 function firstIssue(issues: readonly Issue[]): string {
   const first = issues[0];
+
   if (!first) return "invalid";
   const where = first.path.length === 0 ? "" : `${first.path.join(".")}: `;
+
   return `${where}${first.message}${andMore(issues.length)}`;
 }
 

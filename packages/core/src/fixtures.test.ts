@@ -35,14 +35,18 @@ function read(path: string): string {
 }
 
 const supportInbox = parseRecipe(read("recipes/support-inbox.json"));
+
 const feedbackWidget = parseRecipe(read("recipes/feedback-widget.json"));
+
 const referenceDecision = parseDecision(read("decisions/support-inbox.jsonl"));
 
 const recordings = parseReplayLines(read("replay/support-inbox.jsonl"));
 
 function stateOf(recordId: string): EntryType {
   const line = recordings.find((recorded) => recorded.id === `support-inbox/${recordId}`);
+
   if (!line) throw new Error(`no recording ${recordId}`);
+
   return line.request.state;
 }
 
@@ -93,6 +97,7 @@ describe("the Fixture line", () => {
 
   it("names the 1-based bad line", () => {
     let thrown: unknown;
+
     try {
       parseFixtures(`${full}\n\n{"state":"ok"}`);
     } catch (cause) {
@@ -116,6 +121,7 @@ describe("validateFixtures", () => {
       { id: "a", state: "x", expect: { category: "complaint", wants_human: true } },
       { state: "y", expect: { wants_human: false } },
     ];
+
     expect(validateFixtures(clean, supportInbox)).toEqual([]);
   });
 
@@ -127,6 +133,7 @@ describe("validateFixtures", () => {
       ],
       supportInbox,
     );
+
     expect(problems).toEqual([
       { fixture: "1", problem: 'unknown question "teem"' },
       { fixture: "f2", problem: 'unknown question "teem"' },
@@ -145,6 +152,7 @@ describe("validateFixtures", () => {
       [{ state: "x", expect: { wants_human: "yes" } }],
       supportInbox,
     );
+
     expect(problems).toEqual([
       { fixture: "1", problem: 'value "yes" is not a boolean for question "wants_human"' },
     ]);
@@ -159,6 +167,7 @@ describe("validateFixtures", () => {
       ],
       feedbackWidget,
     );
+
     expect(problems).toEqual([
       { fixture: "1", problem: 'level index 4 is out of range (0-3) for question "urgency"' },
       { fixture: "2", problem: 'level index -1 is out of range (0-3) for question "urgency"' },
@@ -175,6 +184,7 @@ describe("validateFixtures", () => {
       ],
       supportInbox,
     );
+
     expect(problems).toEqual([
       { fixture: "f1", problem: 'duplicate id "f1"' },
       { fixture: "f1", problem: 'duplicate id "f1"' },
@@ -187,6 +197,7 @@ describe("defineFixtures", () => {
     const written = defineFixtures(supportInbox, [
       { state: "x", expect: { category: "complaint" } },
     ]);
+
     expect(written).toEqual([{ state: "x", expect: { category: "complaint" } }]);
   });
 
@@ -196,6 +207,7 @@ describe("defineFixtures", () => {
     ]);
 
     const [first] = written;
+
     if (!first) throw new Error("defineFixtures dropped the Fixture");
 
     expect(Object.keys(first.expect)).toEqual(["category", "wants_human"]);
@@ -206,6 +218,7 @@ describe("defineFixtures", () => {
 
   it("throws a FixtureValidationError carrying every problem", () => {
     let thrown: unknown;
+
     try {
       defineFixtures(supportInbox, [
         { state: "x", expect: { category: "spam" } },
@@ -337,6 +350,7 @@ describe("testRecipe over the replay corpus", () => {
     const named = defineFixtures(supportInbox, [
       { id: "anna", state: stateOf("si-01"), expect: { category: "complaint" } },
     ]);
+
     const report = await testRecipe(replayJudge(), supportInbox, named);
 
     expect(report.fixtures[0]?.id).toBe("anna");
@@ -350,6 +364,7 @@ describe("the denominators", () => {
       { state: stateOf("si-01"), expect: { category: "complaint", wants_human: true } },
       { state: stateOf("si-02"), expect: { wants_human: false } },
     ]);
+
     const report = await testRecipe(replayJudge(), supportInbox, partial);
 
     expect(report.questions).toEqual({
@@ -421,9 +436,11 @@ function countingClient(inner: SystemOneClient): SystemOneClient & { calls: numb
     calls: 0,
     systemOne: async (request: Parameters<SystemOneClient["systemOne"]>[0], options?: object) => {
       client.calls += 1;
+
       return inner.systemOne(request, options);
     },
   };
+
   return client;
 }
 
@@ -434,6 +451,7 @@ describe("testRecipe refuses bad Fixtures before judging", () => {
         throw new Error("the Judge must not be called");
       },
     });
+
     const judge = createJudge({ client, retry: "patient", now: clock });
 
     await expect(
@@ -449,20 +467,25 @@ describe("testRecipe refuses bad Fixtures before judging", () => {
 describe("testRecipe reports and aborts", () => {
   it("fires onResult in completion order, not input order", async () => {
     const replay = createReplayClient(recordings);
+
     const delays = new Map<unknown, number>([
       [stateOf("si-01"), 40],
       [stateOf("si-02"), 5],
       [stateOf("si-03"), 20],
     ]);
+
     const client: SystemOneClient = {
       systemOne: async (request, options) => {
         await new Promise((resolve) => setTimeout(resolve, delays.get(request.state) ?? 0));
+
         return replay.systemOne(request, options);
       },
     };
+
     const judge = createJudge({ client, retry: "patient", now: clock });
 
     const completed: string[] = [];
+
     const report = await testRecipe(
       judge,
       supportInbox,
@@ -489,9 +512,11 @@ describe("testRecipe reports and aborts", () => {
       status: 400,
       body: { detail: { error_type: "max_tokens_exceeded" } },
     });
+
     const client = countingClient({
       systemOne: () => Promise.reject(failure),
     });
+
     const judge = createJudge({ client, retry: "patient", now: clock, maxInFlight: 1 });
 
     const running = testRecipe(judge, supportInbox, workedFixtures);
@@ -514,12 +539,14 @@ describe("testRecipe reports and aborts", () => {
           });
         }),
     });
+
     const judge = createJudge({ client, retry: "patient", now: clock, maxInFlight: 1 });
     const controller = new AbortController();
 
     const running = testRecipe(judge, supportInbox, workedFixtures, {
       signal: controller.signal,
     });
+
     await Promise.resolve();
     controller.abort(new Error("stop"));
 

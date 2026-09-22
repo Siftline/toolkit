@@ -7,6 +7,7 @@ const getDocsUrl = createGetUrl(docsRoute);
 
 export function getPageMarkdownUrl(page: { slugs: string[]; locale?: string }) {
   const segments = [...page.slugs];
+
   if (segments.length === 0) {
     segments.push("index.md");
   } else {
@@ -18,9 +19,12 @@ export function getPageMarkdownUrl(page: { slugs: string[]; locale?: string }) {
 
 export function decodeMarkdownUrl(segments: string[]) {
   const last = segments.at(-1);
+
   if (last === undefined) return [];
 
   const out = [...segments.slice(0, -1), last.replace(/\.md$/, "")];
+
   if (out.length === 1 && out[0] === "index") out.pop();
+
   return out;
 }

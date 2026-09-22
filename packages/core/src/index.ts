@@ -4,9 +4,13 @@ import packageJson from "../package.json" with { type: "json" };
 export const VERSION: string = packageJson.version;
 
 export { decisionSchema, parseDecision, recordSchema, serializeDecision } from "./decision";
+
 export type { Answers, AnswerValue, Decision, Evidence, Record } from "./decision";
+
 export { SiftlineError } from "./errors";
+
 export type { SiftlineErrorCode } from "./errors";
+
 export {
   choice,
   defineRecipe,
@@ -17,6 +21,7 @@ export {
   score,
   serializeRecipe,
 } from "./recipe";
+
 export type {
   ChoiceCriteria,
   ChoiceQuestion,
@@ -39,8 +44,11 @@ export {
   ruleSchema,
   validateRules,
 } from "./rules";
+
 export type { Routing, Rule, RuleCondition, RuleProblem } from "./rules";
+
 export { createJudge, DEFAULT_MAX_IN_FLIGHT, JudgeError, JudgeExhaustedError } from "./judge";
+
 export type {
   CreateJudgeOptions,
   Judge,
@@ -62,6 +70,7 @@ export {
   testRecipe,
   validateFixtures,
 } from "./fixtures";
+
 export type {
   Fixture,
   FixtureProblem,

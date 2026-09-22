@@ -9,6 +9,7 @@ import { RECIPE_PATH } from "./harness";
 
 // Resolved through the `bin` field, not a hard-coded path: asserts what npm puts on PATH.
 const packageRoot = new URL("../", import.meta.url);
+
 const binPath = fileURLToPath(new URL(packageJson.bin.siftline, packageRoot));
 
 function runBin(...args: string[]) {

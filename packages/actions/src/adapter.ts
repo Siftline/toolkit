@@ -27,6 +27,7 @@ export function idempotencyKeyFor(decision: Decision): string {
   if (decision.action === null) {
     throw new ActionBuildError(`Decision ${decision.id} selected no Action`);
   }
+
   return `${decision.id}:${decision.action}`;
 }
 
@@ -49,7 +50,9 @@ export async function hmacSha256Hex(secret: string, body: string): Promise<strin
     false,
     ["sign"],
   );
+
   const signature = await crypto.subtle.sign("HMAC", key, encoder.encode(body));
+
   return Array.from(new Uint8Array(signature), (byte) => byte.toString(16).padStart(2, "0")).join(
     "",
   );

@@ -15,6 +15,7 @@ import { describe, expect, it } from "vitest";
 // Imported by package name, not by relative path: this asserts the published `exports` map.
 
 const recipeNames = ["support-inbox", "feedback-widget", "doc-pair-check"] as const;
+
 const corpusNames = [...recipeNames, "probes"] as const;
 
 function read(path: string): string {
@@ -27,11 +28,14 @@ const corpus: Record<string, ReplayLine[]> = Object.fromEntries(
 
 function line(name: string, index = 0): ReplayLine {
   const found = corpus[name]?.[index];
+
   if (!found) throw new Error(`no recorded line ${name}:${index}`);
+
   return found;
 }
 
 const pairs = recipeNames.flatMap((name) => corpus[name] ?? []);
+
 const probes = corpus["probes"] ?? [];
 
 function result(model = "jev-1.13.0"): SystemOneResult {
@@ -50,6 +54,7 @@ const request: SystemOneRequest = {
 
 function clock(): () => Date {
   let tick = 0;
+
   return () => new Date(Date.UTC(2026, 8, 21) + tick++ * 100);
 }
 
@@ -70,6 +75,7 @@ describe("the recorded corpus", () => {
 
   it.each(recipeNames)("asks %s's questions verbatim", (name) => {
     const recipe = parseRecipe(read(`recipes/${name}.json`));
+
     for (const entry of corpus[name] ?? []) {
       expect(entry.request.questions).toEqual(recipe.questions);
       expect(entry.request.model).toBe(recipe.model);
@@ -114,6 +120,7 @@ describe("replayLineSchema", () => {
       ...line("support-inbox"),
       error: { name: "E", message: "", status: 400, retryAfterMs: null },
     };
+
     expect(replayLineSchema.safeParse(both).success).toBe(false);
   });
 
@@ -154,13 +161,16 @@ describe("createScriptedClient", () => {
 describe("createReplayClient", () => {
   it("answers the deep-equal request whatever the key order", async () => {
     const recorded = line("support-inbox");
+
     if (!("response" in recorded)) throw new Error("expected a response line");
     const client = createReplayClient(corpus["support-inbox"] ?? []);
+
     const reordered: SystemOneRequest = {
       model: recorded.request.model,
       questions: recorded.request.questions,
       state: recorded.request.state,
     };
+
     await expect(client.systemOne(reordered)).resolves.toEqual(recorded.response);
   });
 
@@ -171,6 +181,7 @@ describe("createReplayClient", () => {
 
   it("rethrows an error line as the recorded error", async () => {
     const probe = line("probes");
+
     if (!("error" in probe)) throw new Error("expected an error line");
     const client = createReplayClient(probes);
     const thrown: unknown = await client.systemOne(probe.request).catch((cause: unknown) => cause);
@@ -197,6 +208,7 @@ describe("createReplayClient", () => {
 describe("createRecordingClient", () => {
   it("writes one replayable line per answered call", async () => {
     const lines: ReplayLine[] = [];
+
     const client = createRecordingClient(
       createScriptedClient([{ response: result() }]),
       (recorded) => lines.push(recorded),
@@ -217,6 +229,7 @@ describe("createRecordingClient", () => {
 
   it("records the error and rethrows it", async () => {
     const lines: ReplayLine[] = [];
+
     const boom = Object.assign(new Error("429 slow down"), {
       name: "RateLimitError",
       status: 429,
@@ -224,6 +237,7 @@ describe("createRecordingClient", () => {
       requestId: "req_01",
       body: { detail: { error_type: "rate_limit" } },
     });
+
     const client = createRecordingClient(
       createScriptedClient([{ error: boom }]),
       (recorded) => lines.push(recorded),
@@ -245,6 +259,7 @@ describe("createRecordingClient", () => {
 
   it("records a status-less failure with nulls", async () => {
     const lines: ReplayLine[] = [];
+
     const client = createRecordingClient(
       createScriptedClient([{ error: new TypeError("fetch failed") }]),
       (recorded) => lines.push(recorded),

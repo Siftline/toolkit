@@ -42,6 +42,7 @@ export function parseTestArgs(args: readonly string[]): {
   options: TestOptions;
 } {
   const { values, positionals } = parseWith(args, TEST_FLAGS);
+
   return {
     positionals,
     options: {
@@ -58,6 +59,7 @@ export function parseLabelArgs(args: readonly string[]): {
   options: LabelOptions;
 } {
   const { values, positionals } = parseWith(args, LABEL_FLAGS);
+
   return {
     positionals,
     options: {
@@ -88,6 +90,7 @@ function parseWith(
 /** The key is read here and nowhere else, so it never reaches argv, usage or a log line. */
 export function requireApiKey(env: RunDeps["env"]): void {
   const key = env[API_KEY_ENV];
+
   if (key === undefined || key.trim() === "") {
     throw new UsageError(`${API_KEY_ENV} is not set`);
   }
@@ -100,26 +103,31 @@ function textValue(value: unknown): string | undefined {
 function gateWidth(raw: string | undefined): number {
   if (raw === undefined) return DEFAULT_MAX_IN_FLIGHT;
   const value = parseNumber(raw);
+
   if (value === undefined || !Number.isInteger(value) || value < 1) {
     throw new UsageError(
       `--max-in-flight takes an integer of 1 or more, not ${JSON.stringify(raw)}`,
     );
   }
+
   return value;
 }
 
 function ratio(raw: string | undefined): number | null {
   if (raw === undefined) return null;
   const value = parseNumber(raw);
+
   if (value === undefined || value < 0 || value > 1) {
     throw new UsageError(`--min-accuracy takes a ratio from 0 to 1, not ${JSON.stringify(raw)}`);
   }
+
   return value;
 }
 
 function parseNumber(raw: string): number | undefined {
   if (raw.trim() === "") return undefined;
   const value = Number(raw);
+
   return Number.isFinite(value) ? value : undefined;
 }
 
@@ -127,5 +135,6 @@ function parseNumber(raw: string): number | undefined {
 // is the part a usage block does not already say.
 function firstSentence(cause: unknown): string {
   const message = cause instanceof Error ? cause.message : String(cause);
+
   return message.split(". ")[0] ?? message;
 }

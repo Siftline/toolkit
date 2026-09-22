@@ -44,6 +44,7 @@ describe("the human report", () => {
 
   it("reads n/a for a Question nothing asserted", async () => {
     const { deps, stdout } = harness(replay);
+
     const path = fixturesFile([
       { state: stateOf("si-01"), expect: { category: "complaint" } },
       { state: stateOf("si-02"), expect: { category: "question" } },

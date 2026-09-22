@@ -99,34 +99,44 @@ function createGate(limit: number): (signal?: AbortSignal) => Promise<() => void
 
   function release(): void {
     const next = queue.shift();
+
     if (next) next.admit();
     else inFlight -= 1;
   }
 
   return async (signal?: AbortSignal): Promise<() => void> => {
     signal?.throwIfAborted();
+
     if (inFlight < limit) {
       inFlight += 1;
+
       return release;
     }
+
     await new Promise<void>((resolve, reject) => {
       let onAbort: (() => void) | undefined;
+
       const waiter: Waiter = {
         admit: () => {
           if (onAbort) signal?.removeEventListener("abort", onAbort);
           resolve();
         },
       };
+
       if (signal) {
         onAbort = (): void => {
           const index = queue.indexOf(waiter);
+
           if (index >= 0) queue.splice(index, 1);
           reject(signal.reason);
         };
+
         signal.addEventListener("abort", onAbort, { once: true });
       }
+
       queue.push(waiter);
     });
+
     return release;
   };
 }
@@ -147,6 +157,7 @@ function reasonOf(thrown: { [key: string]: unknown }, status: number | null): Ju
   }
   const type = errorType(thrown);
   if (type === "api_usage_error" || type === "max_tokens_exceeded") return type;
+
   return "unknown";
 }
 
@@ -178,6 +189,7 @@ function mapClientError(cause: unknown, signal?: AbortSignal): never {
       cause,
     });
   }
+
   throw new JudgeError(message, reasonOf(thrown, status), status, { cause });
 }
 
@@ -189,12 +201,14 @@ function invalidAnswers(message: string): JudgeError {
 function argmax(probabilities: { readonly [key: string]: number }): string {
   let best = "";
   let top = Number.NEGATIVE_INFINITY;
+
   for (const [key, probability] of Object.entries(probabilities)) {
     if (probability > top) {
       top = probability;
       best = key;
     }
   }
+
   return best;
 }
 
@@ -204,13 +218,16 @@ function rebuild(
   source: { readonly [key: string]: number },
 ): { [key: string]: number } {
   const probabilities: { [key: string]: number } = {};
+
   for (const key of keys) {
     const probability = source[key];
     if (typeof probability !== "number") {
       throw invalidAnswers(`question ${name} has no probability for ${key}`);
     }
+
     probabilities[key] = probability;
   }
+
   return probabilities;
 }
 
@@ -232,25 +249,30 @@ function mapAnswer(
   if (answer.type === "choice") {
     if (question.type !== "choice") throw mismatch(name, question, answer);
     const probabilities = rebuild(name, Object.keys(question.criteria), answer.probabilities);
+
     return {
       answer: argmax(probabilities),
       evidence: { confidence: answer.confidence, probabilities },
       confidence: answer.confidence,
     };
   }
+
   if (answer.type === "score") {
     if (question.type !== "score") throw mismatch(name, question, answer);
     const indices = question.criteria.map((_criterion, index) => String(index));
     const probabilities = rebuild(name, indices, answer.probabilities);
+
     return {
       answer: Number(argmax(probabilities)),
       evidence: { score: answer.score, confidence: answer.confidence, probabilities },
       confidence: answer.confidence,
     };
   }
+
   if (question.type !== "noul") throw mismatch(name, question, answer);
   const probability = answer.noul;
   const confidence = Math.round(Math.abs(2 * probability - 1) * 100) / 100;
+
   return { answer: probability >= 0.5, evidence: { probability, confidence }, confidence };
 }
 
@@ -258,6 +280,7 @@ function mapAnswer(
 function mapAnswers(recipe: Recipe, result: SystemOneResult): Mapped {
   const names = Object.keys(recipe.questions);
   const answered = Object.keys(result.answers);
+
   if (answered.length !== names.length || !names.every((name) => name in result.answers)) {
     throw invalidAnswers(
       `the model answered [${answered.join(", ")}], the Recipe asks [${names.join(", ")}]`,
@@ -267,14 +290,17 @@ function mapAnswers(recipe: Recipe, result: SystemOneResult): Mapped {
   const answers: { [name: string]: AnswerValue } = {};
   const questions: { [name: string]: Evidence } = {};
   const confidences: number[] = [];
+
   for (const [name, question] of Object.entries(recipe.questions)) {
     const response = result.answers[name];
+
     if (!response) throw invalidAnswers(`question ${name} went unanswered`);
     const mapped = mapAnswer(name, question, response);
     answers[name] = mapped.answer;
     questions[name] = mapped.evidence;
     confidences.push(mapped.confidence);
   }
+
   return { answers, questions, confidence: Math.min(...confidences) };
 }
 
@@ -292,6 +318,7 @@ export function createJudge(options: CreateJudgeOptions): Judge {
     const { signal } = callOptions;
     const release = await acquire(signal);
     let result: SystemOneResult;
+
     try {
       result = await client.systemOne(
         { state: record.state, questions: recipe.questions, model: recipe.model },

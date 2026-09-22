@@ -16,6 +16,7 @@ export interface DriftWatch {
 
 export function watchDrift(recipeModel: string, stderr: OutputStream): DriftWatch {
   let message: string | null = null;
+
   return {
     note: (decisionModel) => {
       if (message !== null || decisionModel === recipeModel) return;
@@ -31,6 +32,7 @@ export function watchDrift(recipeModel: string, stderr: OutputStream): DriftWatc
 /** One line per result, or one per miss. `order` is the Recipe's Question order. */
 export function progressLines(result: FixtureResult, order: readonly string[]): string[] {
   if (result.mismatches.length === 0) return [`ok ${result.id}`];
+
   return inOrder(result.mismatches, order).map(
     (miss) => `miss ${result.id} ${describeMismatch(miss)}`,
   );
@@ -45,6 +47,7 @@ export function renderReport(report: TestReport, order: readonly string[]): stri
 
   const labels =
     Math.max(...rows.map((row) => row.question.length), "accuracy".length, "unsure".length) + 3;
+
   const counts = Math.max(...rows.map((row) => row.counts.length), NA.length) + 3;
 
   const lines = [
@@ -61,6 +64,7 @@ export function renderReport(report: TestReport, order: readonly string[]): stri
   const misses = report.fixtures.flatMap((result) =>
     inOrder(result.mismatches, order).map((miss) => `${result.id}  ${describeMismatch(miss)}`),
   );
+
   if (misses.length > 0) lines.push("", ...misses);
 
   return lines.join("\n");

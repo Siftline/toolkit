@@ -158,6 +158,7 @@ describe("evaluateRules never throws", () => {
       },
       fallback,
     ];
+
     expect(evaluateRules({ angry: true }, rules)).toEqual({ rule: "last", action: "act_last" });
   });
 
@@ -170,6 +171,7 @@ describe("evaluateRules never throws", () => {
       },
       fallback,
     ];
+
     expect(evaluateRules({ team: "billing", angry: true }, rules)).toEqual({
       rule: "last",
       action: "act_last",
@@ -190,6 +192,7 @@ describe("evaluateRules never throws", () => {
       },
       fallback,
     ];
+
     expect(evaluateRules({ team: "billing", angry: true }, rules)).toEqual({
       rule: "last",
       action: "act_last",
@@ -210,6 +213,7 @@ describe("validateRules", () => {
         action: null,
       },
     ];
+
     expect(validateRules(rules, recipe)).toEqual([
       { rule: "r1", problem: 'unknown question "teem"' },
     ]);
@@ -224,6 +228,7 @@ describe("validateRules", () => {
     const rules: Rule[] = ruleSchema
       .array()
       .parse([{ id: "r1", condition: { question, comparator, value }, action: null }]);
+
     expect(validateRules(rules, recipe)).toEqual([
       { rule: "r1", problem: `comparator "${comparator}" is not valid for a ${type} question` },
     ]);
@@ -237,6 +242,7 @@ describe("validateRules", () => {
         action: null,
       },
     ];
+
     expect(validateRules(rules, recipe)).toEqual([
       { rule: "r1", problem: 'unknown label "support"' },
     ]);
@@ -254,6 +260,7 @@ describe("validateRules", () => {
         action: null,
       },
     ];
+
     expect(validateRules(rules, recipe)).toEqual([
       { rule: "r1", problem: 'unknown label "support"' },
       { rule: "r1", problem: 'unknown label "ops"' },
@@ -266,6 +273,7 @@ describe("validateRules", () => {
       .parse([
         { id: "r1", condition: { question: "team", comparator: "is", value: true }, action: null },
       ]);
+
     expect(validateRules(rules, recipe)).toEqual([
       { rule: "r1", problem: "value true is not a label" },
     ]);
@@ -277,6 +285,7 @@ describe("validateRules", () => {
       .parse([
         { id: "r1", condition: { question: "angry", comparator: "is", value: 1 }, action: null },
       ]);
+
     expect(validateRules(rules, recipe)).toEqual([
       { rule: "r1", problem: "value 1 is not a boolean" },
     ]);
@@ -290,6 +299,7 @@ describe("validateRules", () => {
         action: null,
       },
     ];
+
     expect(validateRules(rules, recipe)).toEqual([
       { rule: "r1", problem: "level index 4 is out of range (0-3)" },
     ]);
@@ -300,6 +310,7 @@ describe("validateRules", () => {
       { id: "r1", condition: { question: "angry", comparator: "is", value: true }, action: null },
       { id: "r1", condition: { question: "angry", comparator: "is", value: false }, action: null },
     ];
+
     expect(validateRules(rules, recipe)).toEqual([{ rule: "r1", problem: 'duplicate id "r1"' }]);
   });
 
@@ -311,6 +322,7 @@ describe("validateRules", () => {
         action: "a",
       },
     ];
+
     expect(validateRules(rules, recipe)).toHaveLength(1);
     expect(evaluateRules(referenceAnswers, rules)).toEqual({ rule: null, action: null });
   });

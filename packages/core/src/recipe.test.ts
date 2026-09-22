@@ -79,6 +79,7 @@ describe("strictness", () => {
     const questions = {
       category: { type: "choice", instructions: "Which?", criteria: { a: "A" } },
     };
+
     expect(() => recipeSchema.parse({ ...valid(), questions })).toThrow(ZodError);
   });
 
@@ -131,6 +132,7 @@ describe("defineRecipe", () => {
       model: "jev-1.13.0",
       questions: { lang: choice("Language?", { en: "English", cs: "Czech" }) },
     });
+
     expect(recipe.reviewThreshold).toBe(0.7);
     expect(recipe.format).toBe(1);
   });
@@ -155,6 +157,7 @@ describe("defineRecipe", () => {
         wants_human: noul("Does the sender ask to speak to a person?"),
       },
     });
+
     expect(serializeRecipe(recipe)).toBe(readReference("support-inbox"));
   });
 

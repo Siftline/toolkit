@@ -8,7 +8,9 @@ import { runTest } from "./test";
 import { USAGE, VERSION } from "./usage";
 
 export type { InputStream, OutputStream, RunDeps } from "./deps";
+
 export { API_KEY_ENV } from "./options";
+
 export { USAGE, VERSION } from "./usage";
 
 /**
@@ -19,15 +21,20 @@ export async function run(argv: readonly string[], deps: RunDeps): Promise<numbe
   try {
     if (argv.includes("--help")) {
       writeLine(deps.stdout, USAGE);
+
       return 0;
     }
+
     if (argv.includes("--version")) {
       writeLine(deps.stdout, VERSION);
+
       return 0;
     }
 
     const [command, ...rest] = argv;
+
     if (command === undefined) throw new UsageError("no command given");
+
     if (command !== "test" && command !== "label") {
       throw new UsageError(`unknown command: ${command}`);
     }
@@ -44,6 +51,7 @@ export async function run(argv: readonly string[], deps: RunDeps): Promise<numbe
 function exitFor(error: unknown, deps: RunDeps): number {
   if (deps.signal?.aborted) {
     writeLine(deps.stderr, "siftline: interrupted");
+
     return 130;
   }
 

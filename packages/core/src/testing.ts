@@ -11,6 +11,7 @@ import { isObjectLike } from "./object";
 import { entryType, jsonValue, questionSchema } from "./recipe";
 
 const probability = z.number().min(0).max(1);
+
 const probabilities = z.record(z.string().min(1), z.number());
 
 const answerSchema = z.discriminatedUnion("type", [
@@ -138,13 +139,17 @@ export interface ScriptedClient extends SystemOneClient {
  */
 export function createScriptedClient(script: readonly ScriptStep[]): ScriptedClient {
   const calls: SystemOneRequest[] = [];
+
   return {
     calls,
     systemOne: async (request: SystemOneRequest): Promise<SystemOneResult> => {
       const step = script[calls.length];
       calls.push(request);
+
       if (!step) throw new Error(`scripted client exhausted after ${script.length} calls`);
+
       if ("error" in step) throw step.error;
+
       return step.response;
     },
   };
@@ -163,6 +168,7 @@ function deepEqual(a: unknown, b: unknown): boolean {
 function replayError(recorded: ReplayError): Error {
   const error = new Error(recorded.message);
   error.name = recorded.name;
+
   return Object.assign(error, {
     status: recorded.status,
     retryAfterMs: recorded.retryAfterMs,
@@ -181,7 +187,9 @@ export function createReplayClient(lines: readonly ReplayLine[]): SystemOneClien
           `no replay line matches the request for model ${request.model} and questions ${Object.keys(request.questions).join(", ")}`,
         );
       }
+
       if ("error" in line) throw replayError(line.error);
+
       return line.response;
     },
   };
@@ -223,21 +231,25 @@ export function createRecordingClient(
   const now = options.now ?? ((): Date => new Date());
   const nextId = options.id ?? ((_request: SystemOneRequest, index: number): string => `${index}`);
   let calls = 0;
+
   return {
     systemOne: async (
       request: SystemOneRequest,
       callOptions?: SystemOneCallOptions,
     ): Promise<SystemOneResult> => {
       const startedAt = now();
+
       const head = {
         format: 1 as const,
         id: nextId(request, ++calls),
         recordedAt: startedAt.toISOString(),
         request,
       };
+
       try {
         const response = await inner.systemOne(request, callOptions);
         sink({ ...head, durationMs: now().getTime() - startedAt.getTime(), response });
+
         return response;
       } catch (cause) {
         sink({

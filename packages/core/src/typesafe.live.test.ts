@@ -16,7 +16,9 @@ describe.skipIf(!apiKey)("live TypeSafe access", () => {
     const recipe = parseRecipe(
       readFileSync(new URL("../fixtures/recipes/support-inbox.json", import.meta.url), "utf8"),
     );
+
     const judge = createJudge({ client: new TypeSafeClient({ apiKey }), retry: "patient" });
+
     const decision = await judge(
       {
         id: "live-01",

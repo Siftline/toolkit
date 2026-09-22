@@ -36,6 +36,7 @@ const toYaml = (frontmatter) =>
 function toSiteUrl(pageUrl, target) {
   const resolved = posix.normalize(posix.join(posix.dirname(pageUrl), target));
   const withoutExtension = resolved.replace(/\.mdx$/, "").replace(/(^|\/)index$/, "");
+
   return withoutExtension === "" ? SITE_BASE : `${SITE_BASE}/${withoutExtension}`;
 }
 
@@ -79,11 +80,13 @@ export function load(app) {
 
     for (const [module, title] of Object.entries(MODULE_TITLES)) {
       const moduleDir = join(out, module);
+
       if (!statSync(moduleDir, { throwIfNoEntry: false })?.isDirectory()) continue;
       writeMeta(moduleDir, { title, pages: ["index", "..."] });
 
       for (const kind of readdirSync(moduleDir)) {
         const kindDir = join(moduleDir, kind);
+
         if (!statSync(kindDir).isDirectory()) continue;
         writeMeta(kindDir, { title: KIND_TITLES[kind] ?? kind });
       }

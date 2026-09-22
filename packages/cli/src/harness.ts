@@ -27,14 +27,18 @@ const probes: ReplayLine[] = parseReplayLines(
 /** A recorded SDK failure, rebuilt the way the replay client rebuilds one. */
 export function recordedError(id: string): Error {
   const line = probes.find((recorded) => recorded.id === id);
+
   if (!line || !("error" in line)) throw new Error(`no recorded error ${id}`);
   const { name, message, status, retryAfterMs, body } = line.error;
+
   return Object.assign(new Error(message), { name, status, retryAfterMs, body });
 }
 
 export function stateOf(recordId: string): EntryType {
   const line = recordings.find((recorded) => recorded.id === `support-inbox/${recordId}`);
+
   if (!line) throw new Error(`no recording ${recordId}`);
+
   return line.request.state;
 }
 
@@ -54,6 +58,7 @@ export function fixturesFile(fixtures: readonly Fixture[]): string {
 export function textFile(contents: string, name: string): string {
   const path = join(mkdtempSync(join(tmpdir(), "siftline-cli-")), name);
   writeFileSync(path, contents, "utf8");
+
   return path;
 }
 
