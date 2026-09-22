@@ -3,15 +3,19 @@ import { z } from "zod";
 import { entryType, questionName } from "./recipe";
 import type { EntryType, Question, Questions } from "./recipe";
 
-/** The Engine's whole view of an item. Sender, source and raw payload stay with the caller. */
-export interface Record {
+/**
+ * A Record, in the glossary's sense: one normalised input to the Engine, an id and the state to
+ * judge. Sender, Source and raw payload stay with the caller. Named so it does not shadow
+ * TypeScript's global `Record<K, V>`.
+ */
+export interface SiftlineRecord {
   id: string;
   state: EntryType;
   trimmed?: boolean;
 }
 
 /** Strict: an unknown key is a bad Record, not a field to ignore. */
-export const recordSchema: z.ZodType<Record> = z
+export const recordSchema: z.ZodType<SiftlineRecord> = z
   .object({ id: z.string().min(1), state: entryType, trimmed: z.boolean().optional() })
   .strict();
 

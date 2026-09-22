@@ -8,7 +8,7 @@ import {
   validateFixtures,
   validateRules,
 } from "@siftline/core";
-import type { Fixture, Recipe, Record, Rule } from "@siftline/core";
+import type { Fixture, Recipe, Rule, SiftlineRecord } from "@siftline/core";
 import { z } from "zod";
 
 import type { InputStream } from "./deps";
@@ -80,12 +80,15 @@ async function readChecked<T>(
 }
 
 /** `-` and an absent path both mean stdin. Every line is parsed before the caller judges any. */
-export async function readRecords(path: string | undefined, stdin: InputStream): Promise<Record[]> {
+export async function readRecords(
+  path: string | undefined,
+  stdin: InputStream,
+): Promise<SiftlineRecord[]> {
   const fromStdin = path === undefined || path === "-";
   const source = fromStdin ? "stdin" : path;
   const text = fromStdin ? await readStdin(stdin) : await readTextFile(path, "records");
 
-  const records: Record[] = [];
+  const records: SiftlineRecord[] = [];
 
   for (const [offset, line] of text.split("\n").entries()) {
     if (line.trim() === "") continue;
