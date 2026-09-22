@@ -35,6 +35,8 @@ the threshold: a document on disk carries it or fails to parse.
   importing an SDK, so nothing here opens a socket of its own. `new TypeSafeClient({ apiKey })`
   from `@typesafe-ai/sdk` is the real one.
 - `retry` is `"prompt"` or `"patient"` and picks the retry policy and the per-attempt timeout.
+  It defaults to `"prompt"`, which fails fast for a request handler; batch work passes
+  `"patient"`.
 - `maxInFlight` gates calls FIFO and defaults to `DEFAULT_MAX_IN_FLIGHT`, which is 8.
 - `now` and the call's `id` pin the clock and the Decision id for a byte-stable result.
 

@@ -4,7 +4,7 @@ import type { SystemOneClient } from "@siftline/core";
 import { recipe } from "./recipe";
 
 export async function judgeOne(client: SystemOneClient) {
-  const judge = createJudge({ client, retry: "patient" });
+  const judge = createJudge({ client });
 
   const decision = await judge(
     {

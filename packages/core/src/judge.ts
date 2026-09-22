@@ -10,8 +10,22 @@ import type { Thrown } from "./thrown";
 /** The gate's width when the caller sets none (cloud ADR 0005). */
 export const DEFAULT_MAX_IN_FLIGHT = 8;
 
-/** `prompt` is the sync door, `patient` the batch one. The client does the retrying. */
-export type RetryMode = "prompt" | "patient";
+/**
+ * Picks the retry policy and the per-attempt timeout. The client does the retrying.
+ * `"prompt"`, the default, makes 1 retry at 10 s per attempt, for request handlers.
+ * `"patient"` makes 5 retries at 30 s per attempt, for batch runs.
+ */
+export type RetryMode =
+  /**
+   * The sync door, and the default: 1 retry, backoff capped at 2 s, a `Retry-After` up to 5 s,
+   * 10 s per attempt. For request handlers, where a caller is waiting.
+   */
+  | "prompt"
+  /**
+   * The batch door: 5 retries, backoff capped at 30 s, a `Retry-After` up to 60 s, 30 s per
+   * attempt. For the CLI, queue consumers and any run that must survive a 429.
+   */
+  | "patient";
 
 export type JudgeErrorReason =
   | "max_tokens_exceeded"
@@ -67,7 +81,11 @@ export interface Judge {
 
 export interface CreateJudgeOptions {
   client: SystemOneClient;
-  retry: RetryMode;
+  /**
+   * Defaults to `"prompt"`, so an exhausted rate limit throws `JudgeExhaustedError` within
+   * seconds. Pass `"patient"` for batch work.
+   */
+  retry?: RetryMode;
   maxInFlight?: number;
   now?: () => Date;
 }
@@ -298,7 +316,7 @@ function mapAnswers(recipe: Recipe, result: SystemOneResult): Mapped {
 
 export function createJudge(options: CreateJudgeOptions): Judge {
   const { client } = options;
-  const { retry, timeout } = RETRY_MODES[options.retry];
+  const { retry, timeout } = RETRY_MODES[options.retry ?? "prompt"];
   const now = options.now ?? ((): Date => new Date());
   const acquire = createGate(options.maxInFlight ?? DEFAULT_MAX_IN_FLIGHT);
 

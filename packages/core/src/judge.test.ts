@@ -829,6 +829,16 @@ describe("the call the Judge makes", () => {
     ]);
   });
 
+  it("passes the prompt policy when `retry` is omitted", async () => {
+    const client = createCapturingClient();
+    const judge = createJudge({ client, now: clock });
+    await judge({ id: "a", state: "a" }, supportInbox);
+
+    expect(client.options).toEqual([
+      { retry: { maxRetries: 1, backoffMaxMs: 2000, maxRetryAfterMs: 5000 }, timeout: 10000 },
+    ]);
+  });
+
   it("passes the patient policy on every call", async () => {
     const client = createCapturingClient();
     const judge = createJudge({ client, retry: "patient", now: clock });
