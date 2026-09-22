@@ -1,5 +1,13 @@
 # @siftline/actions
 
+## 0.1.1
+
+### Patch Changes
+
+- [#11](https://github.com/Siftline/toolkit/pull/11) [`478f62b`](https://github.com/Siftline/toolkit/commit/478f62be97853a1a3ba3bb4614f1a1096e65aeb2) Thanks [@l0st0](https://github.com/l0st0)! - Decode thrown SDK errors and CLI validation issues with Zod schemas instead of `typeof` checks. `createReplayClient` now matches a request by its JSON form, so a member set to `undefined` no longer blocks a match. `@siftline/cli` depends on `zod` directly.
+- Updated dependencies [[`478f62b`](https://github.com/Siftline/toolkit/commit/478f62be97853a1a3ba3bb4614f1a1096e65aeb2)]:
+  - @siftline/core@0.1.1
+
 ## 0.1.0
 
 ### Minor Changes
