@@ -1,5 +1,13 @@
 # @siftline/cli
 
+## 0.1.2
+
+### Patch Changes
+
+- [#13](https://github.com/Siftline/toolkit/pull/13) [`85c52a1`](https://github.com/Siftline/toolkit/commit/85c52a1d5cb178e47129c3d25f1c50b7a40ea5a8) Thanks [@l0st0](https://github.com/l0st0)! - Build against `@siftline/core` 0.2.0, with no behaviour change.
+- Updated dependencies [[`85c52a1`](https://github.com/Siftline/toolkit/commit/85c52a1d5cb178e47129c3d25f1c50b7a40ea5a8), [`85c52a1`](https://github.com/Siftline/toolkit/commit/85c52a1d5cb178e47129c3d25f1c50b7a40ea5a8), [`85c52a1`](https://github.com/Siftline/toolkit/commit/85c52a1d5cb178e47129c3d25f1c50b7a40ea5a8), [`85c52a1`](https://github.com/Siftline/toolkit/commit/85c52a1d5cb178e47129c3d25f1c50b7a40ea5a8)]:
+  - @siftline/core@0.2.0
+
 ## 0.1.1
 
 ### Patch Changes
