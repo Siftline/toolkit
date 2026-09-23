@@ -1,5 +1,32 @@
 # @siftline/core
 
+## 0.2.0
+
+### Minor Changes
+
+- [#13](https://github.com/Siftline/toolkit/pull/13) [`85c52a1`](https://github.com/Siftline/toolkit/commit/85c52a1d5cb178e47129c3d25f1c50b7a40ea5a8) Thanks [@l0st0](https://github.com/l0st0)! - Make `CreateJudgeOptions.retry` optional. `createJudge({ client })` now uses the `"prompt"` policy:
+  1 retry and 10 s per attempt, so an exhausted rate limit throws `JudgeExhaustedError` within
+  seconds. An explicit `retry` behaves exactly as in 0.1. Pass `retry: "patient"` for batch work that
+  must survive a 429. Each `RetryMode` member now documents its retries, timeout and use.
+
+- [#13](https://github.com/Siftline/toolkit/pull/13) [`85c52a1`](https://github.com/Siftline/toolkit/commit/85c52a1d5cb178e47129c3d25f1c50b7a40ea5a8) Thanks [@l0st0](https://github.com/l0st0)! - Add a second type parameter to `Rule`: `Rule<Q, A extends string = string>`, with `action: A | null`.
+  Pass your Action ids as `A` and a Rule naming any other id fails to compile; `null` is always
+  allowed. The default keeps existing code and Rules read from JSON compiling unchanged, and
+  `routeDecision` accepts `Rule<Q, A>[]` as it is. `Decision` is not parameterised. Add an optional
+  third argument to `validateRules(rules, recipe, actionIds?)`: given a list, each non-null `action`
+  outside it is reported as `unknown Action "<id>"`, alongside the Recipe checks. Without the list it
+  behaves exactly as in 0.1.
+
+- [#13](https://github.com/Siftline/toolkit/pull/13) [`85c52a1`](https://github.com/Siftline/toolkit/commit/85c52a1d5cb178e47129c3d25f1c50b7a40ea5a8) Thanks [@l0st0](https://github.com/l0st0)! - Rename the `Record` type to `SiftlineRecord`, so importing it no longer shadows TypeScript's global
+  `Record<K, V>`. There is no deprecated alias: change `import type { Record } from "@siftline/core"`
+  to `import type { SiftlineRecord } from "@siftline/core"` and rename its uses. The Judge's call
+  signature is now `judge(record: SiftlineRecord, recipe)`. `recordSchema`, `Decision.recordId` and
+  the Record and Decision line formats are unchanged.
+
+### Patch Changes
+
+- [#13](https://github.com/Siftline/toolkit/pull/13) [`85c52a1`](https://github.com/Siftline/toolkit/commit/85c52a1d5cb178e47129c3d25f1c50b7a40ea5a8) Thanks [@l0st0](https://github.com/l0st0)! - Accept any zod 4 from 4.6.5 up, so an app on zod 4 installs one copy.
+
 ## 0.1.1
 
 ### Patch Changes
