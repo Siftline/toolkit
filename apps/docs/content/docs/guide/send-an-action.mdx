@@ -43,17 +43,6 @@ same Decision is ever sent twice:
   ../../../examples/support-inbox/output/webhook-request.json
 </include>
 
-## Slack
-
-The Slack adapter posts one message to an incoming webhook. It needs the Recipe because a
-Score's level description lives there, not in the Decision:
-
-<include lang="json" meta='title="the built Slack request"'>
-  ../../../examples/support-inbox/output/slack-request.json
-</include>
-
-Slack has no idempotency of its own, so a redelivery past your own guard posts twice.
-
 ## Failures
 
 `dispatch` returns `null` and sends nothing when the Decision went to Review or its Rule

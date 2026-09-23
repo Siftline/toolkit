@@ -1,4 +1,4 @@
-import { dispatch, slackIncomingWebhook } from "@siftline/actions";
+import { dispatch, webhook } from "@siftline/actions";
 import type { Decision, Recipe } from "@siftline/core";
 
 import { actions } from "./actions";
@@ -12,5 +12,5 @@ export async function send(decision: Decision, recipe: Recipe) {
 
 // Preview is `build` without `perform`: the exact request, and nothing sent.
 export async function preview(decision: Decision, recipe: Recipe) {
-  return slackIncomingWebhook.build(decision, actions.escalations.config, recipe);
+  return webhook.build(decision, actions.escalations.config, recipe);
 }

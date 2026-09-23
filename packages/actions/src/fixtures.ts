@@ -42,7 +42,7 @@ export function routedDecision(): Decision {
     confidence: 0.7,
     review: false,
     rule: "r2",
-    action: "act_slack_revenue",
+    action: "act_revenue",
     usage: { inputTokens: 300, outputTokens: 11 },
   };
 }

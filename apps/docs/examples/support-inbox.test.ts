@@ -209,8 +209,8 @@ describe("the guide's running example", () => {
     await expect(serializeDecision(routed)).toMatchFileSnapshot(output("routed-decision.jsonl"));
     expect(routed.action).toBe("escalations");
 
-    const slack = await preview(routed, recipe);
-    await expect(requestJson(slack)).toMatchFileSnapshot(output("slack-request.json"));
+    const previewed = await preview(routed, recipe);
+    await expect(requestJson(previewed)).toMatchFileSnapshot(output("preview-request.json"));
 
     const fetchImpl = vi.fn<ActionFetch>(async () => new Response("ok", { status: 200 }));
 
@@ -264,7 +264,7 @@ describe("the guide's running example", () => {
     const child = spawn(process.execPath, [path("send.ts"), path("recipe-v2.json")], {
       env: {
         ...process.env,
-        SLACK_WEBHOOK_URL: `${base}/slack`,
+        ESCALATIONS_WEBHOOK_URL: `${base}/escalations`,
         TICKETS_WEBHOOK_URL: `${base}/tickets`,
         TICKETS_WEBHOOK_SECRET: "shared-secret",
       },

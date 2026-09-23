@@ -51,7 +51,7 @@ A named, configured outbound effect that a Rule selects for a Decision, such as 
 _Avoid_: output, integration, connector
 
 **Action kind**:
-The type of an Action, which decides how its request is built: webhook or Slack incoming webhook. Each Action kind has exactly one Adapter.
+The type of an Action, which decides how its request is built. Today the only one is webhook. Each Action kind has exactly one Adapter.
 _Avoid_: action type, channel
 
 **Adapter**:

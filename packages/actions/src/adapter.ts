@@ -5,7 +5,7 @@ import { ActionBuildError } from "./errors";
 import { VERSION } from "./version";
 
 /** Cloud's `action.kind` strings. */
-export type ActionKind = "webhook" | "slack_incoming_webhook";
+export type ActionKind = "webhook";
 
 /** Everything needed to send an Action, and nothing that depends on a clock or randomness. */
 export interface ActionRequest {

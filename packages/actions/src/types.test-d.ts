@@ -7,13 +7,7 @@
 // oxlint-disable typescript/no-unnecessary-type-parameters
 
 import { defineActions, dispatch } from "@siftline/actions";
-import type {
-  ActionId,
-  ActionSet,
-  Dispatched,
-  SlackIncomingWebhookConfig,
-  WebhookConfig,
-} from "@siftline/actions";
+import type { ActionId, ActionSet, Dispatched, WebhookConfig } from "@siftline/actions";
 import { choice, defineRecipe } from "@siftline/core";
 import type { Decision, Recipe, Rule } from "@siftline/core";
 
@@ -26,20 +20,13 @@ type Equal<A, B> =
 
 const actions = defineActions({
   "linear-tickets": { kind: "webhook", config: { url: "https://example.com/tickets" } },
-  escalations: {
-    kind: "slack_incoming_webhook",
-    config: { url: "https://hooks.slack.com/services/T0/B0/X" },
-  },
+  escalations: { kind: "webhook", config: { url: "https://example.com/escalations" } },
   audit: { kind: "webhook", config: { url: "https://example.com/audit", secret: "s" } },
 });
 
-type _Kind = Expect<Equal<(typeof actions)["escalations"]["kind"], "slack_incoming_webhook">>;
+type _Kind = Expect<Equal<(typeof actions)["escalations"]["kind"], "webhook">>;
 
 type _WebhookConfig = Expect<Equal<(typeof actions)["linear-tickets"]["config"], WebhookConfig>>;
-
-type _SlackConfig = Expect<
-  Equal<(typeof actions)["escalations"]["config"], SlackIncomingWebhookConfig>
->;
 
 type _Accepted = Expect<typeof actions extends ActionSet ? true : false>;
 
@@ -55,9 +42,9 @@ defineActions({
 
 defineActions({
   escalations: {
-    kind: "slack_incoming_webhook",
-    // @ts-expect-error — Slack's config is `{ url }` and nothing else
-    config: { url: "https://hooks.slack.com/services/T0/B0/X", secret: "s" },
+    kind: "webhook",
+    // @ts-expect-error — a webhook config has `url`, `secret` and `headers`, nothing else
+    config: { url: "https://example.com/escalations", token: "t" },
   },
 });
 

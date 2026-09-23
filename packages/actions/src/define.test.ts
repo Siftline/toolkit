@@ -18,10 +18,6 @@ describe("defineActions", () => {
         kind: "webhook",
         config: { url: "https://example.com/escalations", secret: "s3cret" },
       },
-      digest: {
-        kind: "slack_incoming_webhook",
-        config: { url: "https://hooks.slack.com/services/T0/B0/X" },
-      },
     });
 
     expect(actions).toEqual({
@@ -29,10 +25,6 @@ describe("defineActions", () => {
       escalations: {
         kind: "webhook",
         config: { url: "https://example.com/escalations", secret: "s3cret" },
-      },
-      digest: {
-        kind: "slack_incoming_webhook",
-        config: { url: "https://hooks.slack.com/services/T0/B0/X" },
       },
     });
   });
@@ -46,9 +38,9 @@ describe("defineActions", () => {
     expect(() =>
       defineActions({
         alerts: {
-          kind: "slack_incoming_webhook",
-          // @ts-expect-error — Slack's config is `{ url }` and nothing else
-          config: { url: "https://hooks.slack.com/services/T0/B0/X", secret: "s" },
+          kind: "webhook",
+          // @ts-expect-error — a webhook config has `url`, `secret` and `headers`, nothing else
+          config: { url: "https://example.com/alerts", token: "t" },
         },
       }),
     ).toThrow(/^Action "alerts": config: /);
