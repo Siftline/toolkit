@@ -1,24 +1,16 @@
-import { perform, slackIncomingWebhook, webhook } from "@siftline/actions";
-import type { ActionFetch } from "@siftline/actions";
+import { dispatch, slackIncomingWebhook } from "@siftline/actions";
 import type { Decision, Recipe } from "@siftline/core";
 
-export async function sendWebhook(decision: Decision, recipe: Recipe, fetchImpl: ActionFetch) {
-  const request = await webhook.build(
-    decision,
-    { url: "https://example.com/hooks/siftline", secret: "shared-secret" },
-    recipe,
-  );
+import { actions } from "./actions";
 
-  // One attempt, no retries. `retryable` on the error says whether a second try is worth it.
-  const response = await perform(request, fetchImpl);
-
-  return { request, response };
+export async function send(decision: Decision, recipe: Recipe) {
+  // `null` when the Decision went to Review or its Rule selected no Action. Otherwise one attempt
+  // through the global `fetch`, no retries: `retryable` on the error says whether a second try is
+  // worth it.
+  return dispatch(decision, actions, recipe);
 }
 
-export async function buildSlack(decision: Decision, recipe: Recipe) {
-  return slackIncomingWebhook.build(
-    decision,
-    { url: "https://hooks.slack.com/services/T000/B000/XXXX" },
-    recipe,
-  );
+// Preview is `build` without `perform`: the exact request, and nothing sent.
+export async function preview(decision: Decision, recipe: Recipe) {
+  return slackIncomingWebhook.build(decision, actions.escalations.config, recipe);
 }

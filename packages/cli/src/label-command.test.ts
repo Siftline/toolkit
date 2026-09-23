@@ -3,8 +3,8 @@ import { parseDecision } from "@siftline/core";
 import type {
   Decision,
   JsonValue,
-  Record,
   Rule,
+  SiftlineRecord,
   SystemOneClient,
   SystemOneRequest,
 } from "@siftline/core";
@@ -17,17 +17,17 @@ import { harness, recordedError, recordings, RECIPE_PATH, stateOf, textFile } fr
 
 const replay = createReplayClient(recordings);
 
-const RECORDS: Record[] = ["si-01", "si-02", "si-03", "si-04", "si-05", "si-06"].map(
+const RECORDS: SiftlineRecord[] = ["si-01", "si-02", "si-03", "si-04", "si-05", "si-06"].map(
   (recorded, offset) => ({ id: `r${offset + 1}`, state: stateOf(recorded) }),
 );
 
 const IN_ORDER = RECORDS.map((record) => record.id);
 
-function jsonl(records: readonly Record[]): string {
+function jsonl(records: readonly SiftlineRecord[]): string {
   return records.map((record) => JSON.stringify(record)).join("\n");
 }
 
-function recordsFile(records: readonly Record[]): string {
+function recordsFile(records: readonly SiftlineRecord[]): string {
   return textFile(jsonl(records), "records.jsonl");
 }
 
@@ -340,7 +340,7 @@ describe("SIGINT", () => {
 
 // ─── Progress and drift ─────────────────────────────────────────────────────────────────
 
-const MANY: Record[] = Array.from({ length: 120 }, (_unused, offset) => ({
+const MANY: SiftlineRecord[] = Array.from({ length: 120 }, (_unused, offset) => ({
   id: `r${offset + 1}`,
   state: stateOf("si-01"),
 }));

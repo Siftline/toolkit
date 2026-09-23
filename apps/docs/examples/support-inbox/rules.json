@@ -6,7 +6,7 @@
       "comparator": "is",
       "value": true
     },
-    "action": "slack_incoming_webhook"
+    "action": "escalations"
   },
   {
     "id": "urgent-complaint",
@@ -15,7 +15,7 @@
       "comparator": "atLeast",
       "value": 2
     },
-    "action": "webhook"
+    "action": "linear-tickets"
   },
   {
     "id": "ticket",
@@ -24,7 +24,7 @@
       "comparator": "isOneOf",
       "value": ["complaint", "question"]
     },
-    "action": "webhook"
+    "action": "linear-tickets"
   },
   {
     "id": "ignore",

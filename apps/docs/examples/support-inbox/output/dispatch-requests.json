@@ -1,0 +1,70 @@
+[
+  {
+    "path": "/slack",
+    "headers": {
+      "content-type": "application/json",
+      "idempotency-key": "0192f3c2-7b1e-7c4a-9f0e-000000000001:escalations",
+      "user-agent": "siftline-actions/<version>"
+    },
+    "body": {
+      "text": "*support-inbox* · msg-1\ncategory: complaint (100%)\nwants_human: yes (98%)\nurgency: 2 · Today (90%)\nrule escalate"
+    }
+  },
+  {
+    "path": "/tickets",
+    "headers": {
+      "content-type": "application/json",
+      "idempotency-key": "0192f3c2-7b1e-7c4a-9f0e-000000000002:linear-tickets",
+      "user-agent": "siftline-actions/<version>",
+      "x-siftline-signature": "sha256=bbc070b8d15bf920a168bc45dc8b6b04a946cc430c77153de28e9502cd8f57c7"
+    },
+    "body": {
+      "format": 1,
+      "id": "0192f3c2-7b1e-7c4a-9f0e-000000000002",
+      "recordId": "msg-2",
+      "recipe": {
+        "name": "support-inbox",
+        "version": 2
+      },
+      "model": "jev-1.13.0",
+      "judgedAt": "2026-09-22T09:00:00.000Z",
+      "trimmed": false,
+      "answers": {
+        "category": "question",
+        "wants_human": false,
+        "urgency": 0
+      },
+      "questions": {
+        "category": {
+          "confidence": 1,
+          "probabilities": {
+            "complaint": 0,
+            "question": 1,
+            "other": 0
+          }
+        },
+        "wants_human": {
+          "probability": 0.02,
+          "confidence": 0.96
+        },
+        "urgency": {
+          "score": 0.2,
+          "confidence": 0.85,
+          "probabilities": {
+            "0": 0.85,
+            "1": 0.1,
+            "2": 0.05
+          }
+        }
+      },
+      "confidence": 0.85,
+      "review": false,
+      "rule": "ticket",
+      "action": "linear-tickets",
+      "usage": {
+        "inputTokens": 400,
+        "outputTokens": 60
+      }
+    }
+  }
+]

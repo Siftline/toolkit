@@ -5,7 +5,7 @@ import type { Answers, Decision, IndexOf } from "./decision";
 import { questionName } from "./recipe";
 import type { Questions, Recipe } from "./recipe";
 
-// Six comparators, closed. No negation, no compounds. Confidence is not a comparator.
+// Four comparators, closed. No negation, no compounds. Confidence is not a comparator.
 export const ruleConditionSchema = z.discriminatedUnion("comparator", [
   z
     .object({
@@ -63,10 +63,14 @@ export type RuleCondition<Q extends Questions = Questions> = {
   [K in keyof Q & string]: ConditionFor<K, Q[K]>;
 }[keyof Q & string];
 
-export interface Rule<Q extends Questions = Questions> {
+/**
+ * `A` is the union of Action ids the Rule may select. It defaults to any string, which is what
+ * Rules read from JSON carry; `validateRules` checks those against a list at runtime.
+ */
+export interface Rule<Q extends Questions = Questions, A extends string = string> {
   id: string;
   condition: RuleCondition<Q>;
-  action: string | null;
+  action: A | null;
 }
 
 /** What a Decision carries after routing: the Rule that matched and the Action it names. */
@@ -115,7 +119,8 @@ export function evaluateRules(answers: Answers, rules: Rule[]): Routing {
 /**
  * `NoInfer` keeps `Q` coming from the Decision alone, so an unannotated Rule literal is checked
  * against it instead of widening it. Inside a generic body TS cannot see that `Rule<Q>` narrows
- * `Rule`, so the public signature is an overload and the implementation is erased.
+ * `Rule`, so the public signature is an overload and the implementation is erased. Rules typed
+ * against Action ids, `Rule<Q, A>`, fit as they are: `action` only narrows.
  */
 export function routeDecision<Q extends Questions>(
   decision: Decision<Q>,
@@ -133,8 +138,15 @@ const comparatorsFor = {
   score: ["is", "atLeast", "atMost"],
 } as const;
 
-/** The portal's stale-Rule warning. Never runs inside `evaluateRules`. */
-export function validateRules(rules: Rule[], recipe: Recipe): RuleProblem[] {
+/**
+ * The portal's stale-Rule warning. Never runs inside `evaluateRules`. With `actionIds`, a
+ * non-null `action` outside the list is a problem too; without it, Actions go unchecked.
+ */
+export function validateRules(
+  rules: Rule[],
+  recipe: Recipe,
+  actionIds?: readonly string[],
+): RuleProblem[] {
   const problems: RuleProblem[] = [];
   const seen = new Set<string>();
 
@@ -145,6 +157,11 @@ export function validateRules(rules: Rule[], recipe: Recipe): RuleProblem[] {
 
     if (seen.has(rule.id)) report(`duplicate id "${rule.id}"`);
     seen.add(rule.id);
+
+    // Before the condition checks, whose early exits would otherwise skip it.
+    if (actionIds && rule.action !== null && !actionIds.includes(rule.action)) {
+      report(`unknown Action "${rule.action}"`);
+    }
 
     const { question, comparator, value } = rule.condition;
     const asked = recipe.questions[question];

@@ -30,11 +30,7 @@ export const client = createScriptedClient([
 
 export async function judgeScripted() {
   // `now` and `id` pin the Decision's clock and id, so the output is byte-stable.
-  const judge = createJudge({
-    client,
-    retry: "prompt",
-    now: () => new Date("2026-09-22T09:00:00Z"),
-  });
+  const judge = createJudge({ client, now: () => new Date("2026-09-22T09:00:00Z") });
 
   return judge({ id: "msg-1", state: "Refund me now and get me a human." }, recipe, {
     id: "0192f3c2-7b1e-7c4a-9f0e-000000000001",

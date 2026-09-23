@@ -7,15 +7,22 @@ npm install @siftline/actions
 ```
 
 ```ts
-import { perform, webhook } from "@siftline/actions";
+import { defineActions, dispatch } from "@siftline/actions";
 
-const request = await webhook.build(decision, { url, secret }, recipe);
-const { status, body, truncated } = await perform(request, fetch);
+const actions = defineActions({
+  "linear-tickets": { kind: "webhook", config: { url, secret } },
+  escalations: { kind: "slack_incoming_webhook", config: { url: slackUrl } },
+});
+
+const sent = await dispatch(decision, actions, recipe);
 ```
 
-`build` is pure and `perform` sends once, so a preview is `build` without `perform`. The
-webhook body is the Decision line, signed with HMAC-SHA256 when a `secret` is set;
-`slackIncomingWebhook` posts one message.
+`defineActions` checks every config when you call it. `dispatch` sends the Action the Decision
+selected, once, through the global `fetch` (or the one you pass as `{ fetch }`), and returns
+`{ action, request, response }`. It returns `null` for a Decision that went to Review or
+selected no Action. A preview is an Adapter's `build` without sending. The webhook body is the
+Decision line, signed with HMAC-SHA256 when a `secret` is set; `slackIncomingWebhook` posts one
+message.
 
 The guide and the full reference live at
 [docs.siftline.dev](https://docs.siftline.dev/docs/packages/actions).

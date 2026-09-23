@@ -1,7 +1,7 @@
 import { mkdirSync, readdirSync, statSync, writeFileSync } from "node:fs";
 import { join, posix } from "node:path";
 
-import { RendererEvent } from "typedoc";
+import { Converter, ReflectionKind, ReflectionType, RendererEvent, UnionType } from "typedoc";
 import { MarkdownPageEvent } from "typedoc-plugin-markdown";
 
 const SITE_BASE = "/docs/api";
@@ -52,6 +52,31 @@ function writeMeta(dir, meta) {
 }
 
 export function load(app) {
+  // typedoc-plugin-markdown renders a union member's own JSDoc only when some member is an object
+  // literal. For a union of literals, such as `RetryMode`, list them under the alias's comment.
+  app.converter.on(Converter.EVENT_RESOLVE_END, (context) => {
+    for (const alias of context.project.getReflectionsByKind(ReflectionKind.TypeAlias)) {
+      const { type, comment } = alias;
+
+      if (!(type instanceof UnionType) || !type.elementSummaries || !comment) continue;
+
+      if (type.types.some((member) => member instanceof ReflectionType)) continue;
+
+      type.types.forEach((member, i) => {
+        const summary = type.elementSummaries[i];
+
+        if (!summary?.length) return;
+
+        comment.summary.push(
+          { kind: "text", text: "\n\n- " },
+          { kind: "code", text: `\`${member.toString()}\`` },
+          { kind: "text", text: ": " },
+          ...summary,
+        );
+      });
+    }
+  });
+
   app.renderer.on(MarkdownPageEvent.BEGIN, (page) => {
     // The root page's name is the package name, never "index" — discriminate on the variant.
     const isRoot = page.model?.variant === "project";

@@ -37,23 +37,30 @@ without the network; see [`@siftline/core/testing`](/docs/packages/core-testing)
 
 ## Judge one Record
 
-`createJudge` takes the client, a retry mode and an optional in-flight cap. The function it
-returns judges one Record against one Recipe and resolves to a Decision:
+`createJudge` takes the client, an optional retry mode and an optional in-flight cap. The
+function it returns judges one Record against one Recipe and resolves to a Decision:
 
 <include lang="ts" meta='title="judge.ts"'>
   ../../../examples/support-inbox/judge.ts
 </include>
 
 `retry` is `"prompt"` or `"patient"`, which pick the retry policy and the per-attempt
-timeout. `maxInFlight` gates concurrent calls FIFO and defaults to 8. Pass `now` and a call
-`id` to pin the clock and the Decision id, which is what makes a Decision byte-stable in a
-test.
+timeout. It defaults to `"prompt"`: 1 retry and 10 s per attempt, so a request handler gets a
+`JudgeExhaustedError` within seconds instead of stalling while the rate limit holds. A batch
+has no caller waiting, so pass `"patient"`: 5 retries and 30 s per attempt carry a long run
+through a 429, as the batch under [Measure it](#measure-it) does. `maxInFlight` gates
+concurrent calls FIFO and defaults to 8. Pass `now` and a call `id` to pin the clock and the
+Decision id, which is what makes a Decision byte-stable in a test.
 
 ## Route it
 
 `routeDecision` is pure. Typed against the Recipe's questions, the Rules array rejects a
-label the Recipe lacks at compile time; `validateRules(rules, recipe)` does the same check at
-runtime for Rules that arrive as JSON.
+label the Recipe lacks at compile time. The second type argument does the same for Actions:
+`ActionId<typeof actions>` from `@siftline/actions` is the union of the ids you passed to
+[`defineActions`](/docs/guide/send-an-action), so a misspelt Action id fails to compile too. For
+Rules that arrive as JSON, `validateRules(rules, recipe, Object.keys(actions))` makes both
+checks at runtime and returns every problem it finds. Without the list it checks the Recipe
+alone.
 
 <include lang="ts" meta='title="route.ts"'>
   ../../../examples/support-inbox/route.ts

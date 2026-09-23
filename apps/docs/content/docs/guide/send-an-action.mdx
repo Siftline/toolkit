@@ -3,16 +3,30 @@ title: Send an Action
 description: Turn a routed Decision into an HTTP request, then send it.
 ---
 
-Sending is the one step the CLI does not do. A Decision names an Action by kind, and
-`@siftline/actions` turns it into a request:
+Sending is the one step the CLI does not do. A Decision names an Action by its id, and
+`@siftline/actions` sends it:
 
 ```bash
 npm install @siftline/actions
 ```
 
-Building the request and sending it are two calls. `build` is pure: the same Decision,
-config and Recipe always produce the same bytes, so a preview is just `build` without
-`perform`. `perform` sends once with a `fetch` you pass in.
+Declare your Actions once with `defineActions`. Each has an id, an Action kind and a config
+for that kind. Two Actions may share a kind: tickets can go to one webhook and escalations to
+another. Every config is checked against its kind's schema when you define it, so a missing URL
+fails at startup rather than on the first Record.
+
+<include lang="ts" meta='title="actions.ts"'>
+  ../../../examples/support-inbox/actions.ts
+</include>
+
+`dispatch(decision, actions, recipe)` sends a routed Decision to the Action it selected. It
+builds the request with that Action's Adapter, sends it once through the global `fetch`, and
+returns `{ action, request, response }`. Pass `{ fetch }` to send through another one, such as
+a test stub or a Worker's.
+
+Building and sending are still two steps underneath. An Adapter's `build` is pure: the same
+Decision, config and Recipe always produce the same bytes. So a preview is `build` alone, with
+nothing sent:
 
 <include lang="ts" meta='title="act.ts"'>
   ../../../examples/support-inbox/act.ts
@@ -22,7 +36,7 @@ config and Recipe always produce the same bytes, so a preview is just `build` wi
 
 The body is the Decision line itself, with no envelope, so the receiver runs `parseDecision`
 on it. With a `secret` the request carries an HMAC-SHA256 of the body. Every request carries an
-`Idempotency-Key` of `<decision id>:<action kind>`, which is the key to deduplicate on if the
+`Idempotency-Key` of `<decision id>:<action id>`, which is the key to deduplicate on if the
 same Decision is ever sent twice:
 
 <include lang="json" meta='title="the built webhook request"'>
@@ -42,9 +56,16 @@ Slack has no idempotency of its own, so a redelivery past your own guard posts t
 
 ## Failures
 
-`build` throws `ActionBuildError` when the Decision selected no Action, which is what an
-Unsure Decision looks like. `perform` throws `ActionFailedError` on a non-2xx status or a
-`fetch` that rejects, with the `status` and a `retryable` flag that is true for 408, 429, 5xx
-and network failures. It retries nothing and sets no timeout: pass a `signal` for that.
+`dispatch` returns `null` and sends nothing when the Decision went to Review or its Rule
+selected no Action. It throws `ActionBuildError` when the Decision names an Action id you did
+not define, which is what a stale Rule looks like. `defineActions` throws the same error for an
+unknown kind or an invalid config, naming the Action id.
+
+A send that does not land throws `ActionFailedError`: a non-2xx status or a `fetch` that
+rejects. It carries the `status` and a `retryable` flag that is true for 408, 429, 5xx and
+network failures. `dispatch` retries nothing and sets no timeout: pass `{ signal }` for that.
+
+`build` alone throws `ActionBuildError` when the Decision selected no Action. It does not check
+`review`; `dispatch` does, because it is the step that sends.
 
 Next: [everything above from TypeScript](/docs/guide/from-code).

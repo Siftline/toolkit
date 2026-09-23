@@ -26,6 +26,15 @@ as the Recipe's own, the count that would be Unsure, and every miss. The guide s
 Record to stdout in input order. With `--rules` every Decision is routed first. The guide shows
 [both](/docs/guide/label-records).
 
+`label` never sends. A routed Decision names the Action its Rule selected, and the CLI stops
+there. To send, pipe the Decisions into a short script that calls `dispatch` from
+`@siftline/actions`, with the URLs and secrets in its environment.
+[The guide](/docs/guide/label-records#sending) shows it:
+
+```bash
+npx siftline label recipe.json records.jsonl --rules rules.json | node send.ts recipe.json
+```
+
 ## Options
 
 | Option                   | Applies to | Effect                                                         |

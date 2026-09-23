@@ -13,7 +13,8 @@ it first matters; this page is where to come back to.
 One piece of text to sort, with an id. Its `state` is a string, a JSON object or a JSON array,
 so an email can be `{ subject, sender, text }` rather than a flattened string. The Engine sees
 nothing else about it. In the hosted app a Record also carries the sender, the timestamp and
-the Source it came from; the toolkit's `Record` type is the Engine's view, the id and the state.
+the Source it came from; the toolkit's `SiftlineRecord` type is the Engine's view, the id and
+the state.
 
 ```json
 { "id": "msg-1", "state": { "subject": "Charged twice", "text": "Refund me now." } }
@@ -74,9 +75,11 @@ Review" is not a Rule; it is built in and runs before any Rule is looked at.
 
 ## Action
 
-Where a Decision goes: an outbound webhook carrying the Decision line, a Slack incoming
-webhook carrying a short message, or nothing. A Rule names an Action by kind; the adapter in
-`@siftline/actions` builds the request. The hosted app can also forward an email; the toolkit
+Where a Decision goes: a named, configured outbound effect such as `linear-tickets`, or
+nothing. A Rule names an Action by its id. Each Action has exactly one Action kind, which
+decides how its request is built: an outbound webhook carrying the Decision line, or a Slack
+incoming webhook carrying a short message. Two Actions can share a kind and send to different
+places. The adapter for the kind in `@siftline/actions` builds the request. The hosted app can also forward an email; the toolkit
 has no adapter for that.
 
 ## Fixture

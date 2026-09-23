@@ -11,8 +11,12 @@ each described, and the answer is the index of the level the model picks. The ve
   ../../../examples/support-inbox/recipe-v2.json
 </include>
 
-Rules are a JSON array. Each Rule has an id, one condition on one Question, and the Action it
-selects, or `null` for none. The first Rule whose condition matches wins:
+Rules are a JSON array. Each Rule has an id, one condition on one Question, and the id of the
+Action it selects, or `null` for none. An Action is a named, configured outbound effect, such as
+`linear-tickets`. Its Action kind, webhook or Slack incoming webhook, decides how its request is
+built. Two Actions can share a kind and send to different places, so a Rule names the Action by
+its id, never the kind. You define the Actions themselves in code, when you
+[send them](/docs/guide/send-an-action). The first Rule whose condition matches wins:
 
 <include lang="json" meta='title="rules.json"'>
   ../../../examples/support-inbox/rules.json
@@ -28,8 +32,8 @@ There are four comparators, six pairings with a kind, and no more:
 
 No negation, no compound conditions, and confidence is not a comparator. A Rule that needs
 two conditions is two Rules, and order does the rest. Reading the file above: anyone who asks
-for a person goes to Slack; otherwise an urgent Record and any complaint or question become a
-webhook; `other` goes nowhere.
+for a person goes to `escalations`, a Slack incoming webhook; otherwise an urgent Record and
+any complaint or question go to `linear-tickets`, a webhook; `other` goes nowhere.
 
 Pass the file to `label` and every Decision is routed:
 
@@ -41,10 +45,11 @@ npx siftline label recipe.json records.jsonl --rules rules.json > decisions.json
   ../../../examples/support-inbox/output/siftline-label-routed.jsonl
 </include>
 
-`rule` names the Rule that matched and `action` the kind it selected. `msg-3` is Unsure
+`rule` names the Rule that matched and `action` the id of the Action it selected. `msg-3` is Unsure
 again, and both stay `null` for it: the review gate runs before the first Rule is read.
 
 A Rule that no longer fits the Recipe, say one that names a label you removed, is refused when
-the file is loaded, and the run exits `2` before any call is made.
+the file is loaded, and the run exits `2` before any call is made. The CLI never sees your
+Actions, so it does not check Action ids; from code, `validateRules` can.
 
 Next: [build and send the Action a Decision selected](/docs/guide/send-an-action).

@@ -9,11 +9,21 @@ npm install @siftline/actions
 
 ESM only. Node 22.14 or newer. Depends on `@siftline/core` for the Decision and Recipe types.
 
-Building a request and sending it are two steps. An Adapter's `build(decision, config, recipe)`
-turns a Decision into an `ActionRequest`: method, URL, headers, body and the idempotency key.
-`perform(request, fetch, { signal })` sends it. Preview is `build` without `perform`, and
-nothing in a request depends on a clock or randomness, so the same Decision, config and Recipe
-always build the same bytes. The guide shows [both requests](/docs/guide/send-an-action).
+`defineActions(definitions)` declares your Actions, keyed by Action id. Each value is
+`{ kind, config }`, with the config typed by that kind's Adapter. Every config is parsed against
+its kind's `configSchema` at once, and the ids stay literal keys in the result.
+`ActionId<typeof actions>` reads those ids back as a union, for typing Rules:
+`Rule<Q, ActionId<typeof actions>>` rejects an Action id you did not define.
+`dispatch(decision, actions, recipe, { fetch?, signal? })` sends a routed Decision to the Action
+it selected and returns `{ action, request, response }`, or `null` when the Decision went to
+Review or selected no Action.
+
+Underneath, building a request and sending it are two steps. An Adapter's
+`build(decision, config, recipe)` turns a Decision into an `ActionRequest`: method, URL,
+headers, body and the idempotency key. `perform(request, { fetch?, signal? })` sends it.
+`dispatch` only composes the two. Preview is `build` without `perform`, and nothing in a request
+depends on a clock or randomness, so the same Decision, config and Recipe always build the same
+bytes. The guide shows [both requests](/docs/guide/send-an-action).
 
 ## Adapters
 
@@ -35,14 +45,15 @@ twice.
 
 `perform` sends once, with no retries and no timeout of its own, and keeps the first 4096 bytes
 of the response body, cut on a code-point boundary. It returns `{ status, body, truncated }`.
-The `fetch` parameter is typed narrower than the global one, so the global `fetch` and a stub
-both fit without a cast.
+`dispatch` sends through `perform` and adds no retry or timeout either. `fetch` defaults to the
+global one, read on each call. The option is typed narrower than the global `fetch`, so the
+global one and a stub both fit without a cast. `signal` goes to `fetch` unchanged.
 
 ## Errors
 
-| Class               | `code`          | Thrown when                                                                                                              |
-| ------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------ |
-| `ActionBuildError`  | `action_build`  | The Decision selected no Action, which is what Unsure looks like.                                                        |
-| `ActionFailedError` | `action_failed` | A non-2xx status or a `fetch` that threw. Carries `status` and `retryable`, true for 408, 429, 5xx and network failures. |
+| Class               | `code`          | Thrown when                                                                                                                                       |
+| ------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ActionBuildError`  | `action_build`  | An unknown kind or an invalid config in `defineActions`, an Action id `dispatch` was not given, or `build` on a Decision that selected no Action. |
+| `ActionFailedError` | `action_failed` | A non-2xx status or a `fetch` that threw. Carries `status` and `retryable`, true for 408, 429, 5xx and network failures.                          |
 
 Both extend core's `SiftlineError`.

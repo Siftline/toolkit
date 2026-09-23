@@ -30,10 +30,10 @@ import type {
   Question,
   Questions,
   Recipe,
-  Record,
   Rule,
   RuleCondition,
   SiftlineError,
+  SiftlineRecord,
   SystemOneClient,
 } from "@siftline/core";
 import type { TypeSafeClient } from "@typesafe-ai/sdk";
@@ -124,7 +124,12 @@ type _FromDiskQuestion = Expect<Equal<typeof anyQuestion, Question | undefined>>
 
 type _ErasedAnswers = Expect<Equal<Answers, { [x: string]: string | boolean | number }>>;
 
-type _RecordFields = Expect<Equal<keyof Record, "id" | "state" | "trimmed">>;
+type _RecordFields = Expect<Equal<keyof SiftlineRecord, "id" | "state" | "trimmed">>;
+
+// Importing `SiftlineRecord` leaves TypeScript's global `Record<K, V>` unshadowed.
+declare const tally: Record<string, number>;
+
+type _GlobalRecord = Expect<Equal<typeof tally, { [x: string]: number }>>;
 
 declare const decision: Decision<(typeof recipe)["questions"]>;
 
@@ -271,11 +276,71 @@ void evaluateRules(decision.answers, parsedRules);
 
 // @ts-expect-error — an erased Rule is not a Rule<Q>: `value` is too wide
 routeDecision(decision, parsedRules);
+
+// Rules typed against Action ids: `A` bounds `action`, and `null` stays open.
+type Ids = "act_pager" | "act_slack_revenue";
+
+const typedRules: Rule<(typeof recipe)["questions"], Ids>[] = [
+  {
+    id: "t1",
+    condition: { question: "urgency", comparator: "atLeast", value: 3 },
+    action: "act_pager",
+  },
+  { id: "t2", condition: { question: "angry", comparator: "is", value: true }, action: null },
+  {
+    id: "t3",
+    condition: { question: "team", comparator: "is", value: "billing" },
+    // @ts-expect-error — `act_pagr` is not one of the Action ids
+    action: "act_pagr",
+  },
+];
+
+type _TypedAction = Expect<Equal<(typeof typedRules)[number]["action"], Ids | null>>;
+
+type _DefaultAction = Expect<Equal<Rule["action"], string | null>>;
+
+const anyAction: Rule<(typeof recipe)["questions"]> = {
+  id: "d1",
+  condition: { question: "angry", comparator: "is", value: true },
+  action: "anything-at-all",
+};
+
+void anyAction;
+
+type _TypedRuleNarrows = Narrows<Rule<(typeof recipe)["questions"], Ids>, ParsedRule>;
+
+const typedRouted = routeDecision(decision, typedRules);
+
+type _TypedRouted = Expect<Equal<typeof typedRouted, Decision<(typeof recipe)["questions"]>>>;
+
+// Typed against an older Recipe that still had the `support` label.
+const olderRecipe = defineRecipe({
+  name: "feedback-widget",
+  version: 2,
+  model: "jev-1.13.0",
+  questions: {
+    team: choice("Route to the team that owns the problem", {
+      billing: "Charges, invoices, refunds",
+      support: "Everything else",
+    }),
+  },
+});
+
+const staleRules: Rule<(typeof olderRecipe)["questions"], Ids>[] = [
+  {
+    id: "s1",
+    condition: { question: "team", comparator: "is", value: "support" },
+    action: "act_pager",
+  },
+];
+
+// @ts-expect-error — `support` is not a label of the Decision's Recipe
+routeDecision(decision, staleRules);
 // ─── Judge ──────────────────────────────────────────────────────────────────────────────
 
 declare const client: SystemOneClient;
 
-declare const record: Record;
+declare const record: SiftlineRecord;
 
 const judge = createJudge({ client, retry: "prompt" });
 
@@ -291,8 +356,10 @@ const judgedFromDisk = judge(record, fromDisk);
 
 type _JudgedFromDisk = Expect<Equal<typeof judgedFromDisk, Promise<Decision>>>;
 
-// @ts-expect-error — `retry` has no default
-createJudge({ client });
+// `retry` defaults to "prompt", so the client alone makes a Judge.
+const judgeByDefault = createJudge({ client });
+
+type _JudgeByDefault = Expect<Equal<typeof judgeByDefault, typeof judge>>;
 
 // ─── Fixtures ───────────────────────────────────────────────────────────────────────────
 

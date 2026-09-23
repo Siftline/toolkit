@@ -1,8 +1,8 @@
 # Siftline toolkit
 
 The published half of Siftline: the Engine, the CLI over it and the Action adapters. The
-hosted app lives in the private `Siftline/cloud` repo, which owns the full glossary. Terms
-shared with it are copied verbatim; edit them there first, then mirror here.
+hosted app lives in the private `Siftline/cloud` repo. This file owns the Engine's terms;
+cloud mirrors them verbatim and keeps its own terms (Source, Review queue and the rest) there.
 
 ## Language
 
@@ -11,7 +11,7 @@ The text-sorting library: judge, recipe, fixtures and rules evaluator. Implement
 _Avoid_: core, library, SDK
 
 **Record**:
-One normalised input to the Engine: text, sender, timestamp, the Source it came from, and the raw payload. Every Decision is about exactly one Record.
+One normalised input to the Engine: an id and the state to judge, as text or JSON. Every Decision is about exactly one Record. Sender, Source and raw payload belong to whoever supplies the Record; the Engine never sees them.
 _Avoid_: message, item, event, entry
 
 **Recipe**:
@@ -39,7 +39,7 @@ Where an Unsure Record waits for a person to answer instead of the model. The ho
 _Avoid_: queue, triage, manual
 
 **Rule**:
-One entry in a Recipe's ordered list that maps a Decision's answers to an Action or to nothing. The first matching Rule wins; "send to Review when unsure" is built in, not a Rule.
+One entry in a Recipe's ordered list that maps a Decision's answers to an Action, by its id, or to nothing. The first matching Rule wins; "send to Review when unsure" is built in, not a Rule.
 _Avoid_: trigger, workflow, automation
 
 **Fixture**:
@@ -47,13 +47,17 @@ One labelled example for a Recipe: an input and the answers a person says are ri
 _Avoid_: example (the UI word for it), test case, training data, label
 
 **Action**:
-An outbound effect performed on one decision record: outbound webhook, Slack incoming webhook, email forward, or nothing.
+A named, configured outbound effect that a Rule selects for a Decision, such as "linear-tickets". Each Action has an id and exactly one Action kind. Two Actions can share a kind and send to different places.
 _Avoid_: output, integration, connector
 
+**Action kind**:
+The type of an Action, which decides how its request is built: webhook or Slack incoming webhook. Each Action kind has exactly one Adapter.
+_Avoid_: action type, channel
+
 **Adapter**:
-The concrete implementation of a source or action for one platform. Adapters are thin; the Engine never depends on them.
+The concrete implementation of one Action kind: it builds the request an Action sends for a Decision. Adapters are thin; the Engine never depends on them.
 _Avoid_: plugin, driver
 
 **Judge**:
-The Engine module that sends one Record's Questions to the pinned model in one request and returns the raw answers. It owns retries and the in-flight cap; it never selects an Action.
+The Engine module that sends one Record's Questions to the pinned model in one request and returns a Decision with no Rule applied. It chooses how patiently the injected client retries and caps calls in flight; it never selects an Action.
 _Avoid_: classifier, client (the injected transport is the client; the Judge wraps it)
