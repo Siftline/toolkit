@@ -3,7 +3,6 @@ import {
   ActionFailedError,
   defineActions,
   dispatch,
-  slackIncomingWebhook,
   webhook,
 } from "@siftline/actions";
 import type { ActionFetch, ActionFetchInit } from "@siftline/actions";
@@ -16,10 +15,7 @@ import { feedbackWidget, routedDecision } from "./fixtures";
 const calls: { url: string; init: ActionFetchInit }[] = [];
 
 const actions = defineActions({
-  act_slack_revenue: {
-    kind: "slack_incoming_webhook",
-    config: { url: "https://hooks.slack.com/services/T0/B0/X" },
-  },
+  act_revenue: { kind: "webhook", config: { url: "https://hooks.example.com/revenue" } },
   act_ticket: {
     kind: "webhook",
     config: { url: "https://hooks.example.com/siftline", secret: "shared-secret" },
@@ -87,28 +83,6 @@ describe("dispatch", () => {
     );
 
     expect(calls).toHaveLength(0);
-  });
-
-  it("sends the Slack request build produces, once", async () => {
-    const decision = routedDecision();
-    const recipe = feedbackWidget();
-
-    const built = await slackIncomingWebhook.build(
-      decision,
-      actions.act_slack_revenue.config,
-      recipe,
-    );
-
-    const sent = await dispatch(decision, actions, recipe, { fetch: responder("ok") });
-
-    expect(sent).toEqual({
-      action: "act_slack_revenue",
-      request: built,
-      response: { status: 200, body: "ok", truncated: false },
-    });
-    expect(calls).toEqual([
-      { url: built.url, init: { method: "POST", headers: built.headers, body: built.body } },
-    ]);
   });
 
   it("sends the webhook request build produces, once", async () => {

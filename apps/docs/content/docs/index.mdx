@@ -7,7 +7,7 @@ icon: Rocket
 Siftline asks a model a fixed set of questions about each piece of text and gives you the
 answers as plain values: a label, a yes/no, a level. You write the questions once, measure how
 well they are answered on examples you label, then run them on real text and route each answer
-to a webhook, a Slack channel, or nowhere. There is no generated prose anywhere in the loop.
+to a webhook or nowhere. There is no generated prose anywhere in the loop.
 
 The toolkit is three npm packages, all ESM-only, all on Node 22.14 or newer.
 
@@ -25,7 +25,7 @@ The toolkit is three npm packages, all ESM-only, all on Node 22.14 or newer.
   <Card
     title="@siftline/actions"
     href="/docs/packages/actions"
-    description="Adapters that carry a Decision to a webhook or to Slack."
+    description="The webhook adapter that carries a Decision to your endpoint."
   />
 </Cards>
 

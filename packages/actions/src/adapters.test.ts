@@ -13,9 +13,8 @@ afterEach(() => {
 
 describe("adapters", () => {
   it("is keyed by cloud's action kinds", () => {
-    expect(Object.keys(adapters)).toEqual(["webhook", "slack_incoming_webhook"]);
+    expect(Object.keys(adapters)).toEqual(["webhook"]);
     expect(adapters.webhook.kind).toBe("webhook");
-    expect(adapters.slack_incoming_webhook.kind).toBe("slack_incoming_webhook");
   });
 
   it("rejects a config with no url", () => {

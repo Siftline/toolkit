@@ -10,10 +10,7 @@ const recipe = parseRecipe(readFileSync(process.argv[2] ?? "recipe.json", "utf8"
 // The ids rules.json selects. URLs and the secret come from the environment, never from a file;
 // an unset one fails here, before anything is sent.
 const actions = defineActions({
-  escalations: {
-    kind: "slack_incoming_webhook",
-    config: { url: process.env.SLACK_WEBHOOK_URL ?? "" },
-  },
+  escalations: { kind: "webhook", config: { url: process.env.ESCALATIONS_WEBHOOK_URL ?? "" } },
   "linear-tickets": {
     kind: "webhook",
     config: {

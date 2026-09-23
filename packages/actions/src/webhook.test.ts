@@ -30,7 +30,7 @@ describe("webhook.build", () => {
   it("derives the idempotency key from the Decision and its Action", async () => {
     const request = await webhook.build(routedDecision(), { url }, feedbackWidget());
 
-    expect(request.idempotencyKey).toBe("0192f3c2-7b1e-7c4a-9f0e-3a1b2c3d4e5f:act_slack_revenue");
+    expect(request.idempotencyKey).toBe("0192f3c2-7b1e-7c4a-9f0e-3a1b2c3d4e5f:act_revenue");
     expect(request.headers["Idempotency-Key"]).toBe(request.idempotencyKey);
   });
 

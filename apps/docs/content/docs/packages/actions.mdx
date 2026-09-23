@@ -1,6 +1,6 @@
 ---
 title: "@siftline/actions"
-description: Adapters that carry a Decision to a webhook or to Slack.
+description: The webhook adapter that carries a Decision to your endpoint.
 ---
 
 ```bash
@@ -23,23 +23,20 @@ Underneath, building a request and sending it are two steps. An Adapter's
 headers, body and the idempotency key. `perform(request, { fetch?, signal? })` sends it.
 `dispatch` only composes the two. Preview is `build` without `perform`, and nothing in a request
 depends on a clock or randomness, so the same Decision, config and Recipe always build the same
-bytes. The guide shows [both requests](/docs/guide/send-an-action).
+bytes. The guide shows [the built request](/docs/guide/send-an-action).
 
 ## Adapters
 
-| Export                 | `kind`                   | Body                                                      |
-| ---------------------- | ------------------------ | --------------------------------------------------------- |
-| `webhook`              | `webhook`                | The Decision line, no envelope. `parseDecision` reads it. |
-| `slackIncomingWebhook` | `slack_incoming_webhook` | One mrkdwn message with each answer and its confidence.   |
+| Export    | `kind`    | Body                                                      |
+| --------- | --------- | --------------------------------------------------------- |
+| `webhook` | `webhook` | The Decision line, no envelope. `parseDecision` reads it. |
 
 `adapters` maps each `kind` to its adapter, and every adapter carries a `configSchema` for a
 config that arrives as JSON. The webhook config is `{ url, secret?, headers? }`; with a
-`secret` the request carries `X-Siftline-Signature: sha256=<HMAC-SHA256 of the body>`. The
-Slack config is `{ url }`.
+`secret` the request carries `X-Siftline-Signature: sha256=<HMAC-SHA256 of the body>`.
 
 Every request carries `Idempotency-Key: <decision.id>:<decision.action>` and a `User-Agent`
-naming the package version. Slack ignores the key, so a redelivery past your own guard posts
-twice.
+naming the package version.
 
 ## Sending
 

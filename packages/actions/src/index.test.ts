@@ -5,7 +5,6 @@ import {
   defineActions,
   dispatch,
   perform,
-  slackIncomingWebhook,
   VERSION,
   webhook,
 } from "@siftline/actions";
@@ -23,8 +22,7 @@ it("exposes the adapters, the performer and the dispatcher", () => {
   expect(defineActions).toBeTypeOf("function");
   expect(dispatch).toBeTypeOf("function");
   expect(webhook.kind).toBe("webhook");
-  expect(slackIncomingWebhook.kind).toBe("slack_incoming_webhook");
-  expect(Object.values(adapters)).toHaveLength(2);
+  expect(Object.values(adapters)).toHaveLength(1);
 });
 
 it("puts both errors under the toolkit taxonomy", () => {

@@ -60,7 +60,7 @@ is all: the CLI holds no webhook URL and no secret. [Rules](/docs/guide/route-wi
 next. To send, pipe the Decisions into a short script that keeps its secrets in the environment:
 
 ```bash
-export SLACK_WEBHOOK_URL=... TICKETS_WEBHOOK_URL=... TICKETS_WEBHOOK_SECRET=...
+export ESCALATIONS_WEBHOOK_URL=... TICKETS_WEBHOOK_URL=... TICKETS_WEBHOOK_SECRET=...
 npx siftline label recipe.json records.jsonl --rules rules.json | node send.ts recipe.json
 ```
 
