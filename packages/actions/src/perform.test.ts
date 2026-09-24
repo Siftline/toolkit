@@ -2,7 +2,7 @@ import { ActionFailedError, perform, webhook } from "@siftline/actions";
 import type { ActionFetch, ActionFetchInit, ActionRequest } from "@siftline/actions";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { feedbackWidget, routedDecision } from "./fixtures";
+import { feedbackWidget, routedDecision, routedRecord } from "./fixtures";
 
 const calls: { url: string; init: ActionFetchInit }[] = [];
 
@@ -12,6 +12,7 @@ beforeEach(async () => {
   calls.length = 0;
   request = await webhook.build(
     routedDecision(),
+    routedRecord(),
     { url: "https://hooks.example.com/siftline" },
     feedbackWidget(),
   );

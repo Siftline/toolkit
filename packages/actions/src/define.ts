@@ -1,12 +1,10 @@
 import type { ActionKind, Adapter } from "./adapter";
 import { adapters } from "./adapters";
 import { ActionBuildError } from "./errors";
-import type { SlackIncomingWebhookConfig } from "./slack";
 import type { WebhookConfig } from "./webhook";
 
 interface ConfigByKind {
   webhook: WebhookConfig;
-  slack_incoming_webhook: SlackIncomingWebhookConfig;
 }
 
 type KindById = { [id: string]: ActionKind };

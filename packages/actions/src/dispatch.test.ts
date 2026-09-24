@@ -3,23 +3,19 @@ import {
   ActionFailedError,
   defineActions,
   dispatch,
-  slackIncomingWebhook,
   webhook,
 } from "@siftline/actions";
 import type { ActionFetch, ActionFetchInit } from "@siftline/actions";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { feedbackWidget, routedDecision } from "./fixtures";
+import { feedbackWidget, routedDecision, routedRecord } from "./fixtures";
 
 // Imported by package name, not by relative path: this asserts the published `exports` map.
 
 const calls: { url: string; init: ActionFetchInit }[] = [];
 
 const actions = defineActions({
-  act_slack_revenue: {
-    kind: "slack_incoming_webhook",
-    config: { url: "https://hooks.slack.com/services/T0/B0/X" },
-  },
+  act_revenue: { kind: "webhook", config: { url: "https://hooks.example.com/revenue" } },
   act_ticket: {
     kind: "webhook",
     config: { url: "https://hooks.example.com/siftline", secret: "shared-secret" },
@@ -55,7 +51,7 @@ describe("dispatch", () => {
     const decision = { ...routedDecision(), review: true };
 
     await expect(
-      dispatch(decision, actions, feedbackWidget(), { fetch: responder("ok") }),
+      dispatch(decision, routedRecord(), actions, feedbackWidget(), { fetch: responder("ok") }),
     ).resolves.toBeNull();
     expect(calls).toHaveLength(0);
   });
@@ -64,7 +60,7 @@ describe("dispatch", () => {
     const decision = { ...routedDecision(), action: null };
 
     await expect(
-      dispatch(decision, actions, feedbackWidget(), { fetch: responder("ok") }),
+      dispatch(decision, routedRecord(), actions, feedbackWidget(), { fetch: responder("ok") }),
     ).resolves.toBeNull();
     expect(calls).toHaveLength(0);
   });
@@ -75,7 +71,10 @@ describe("dispatch", () => {
     await Promise.all(
       cases.map(async (id) => {
         const decision = { ...routedDecision(), action: id };
-        const sending = dispatch(decision, actions, feedbackWidget(), { fetch: responder("ok") });
+
+        const sending = dispatch(decision, routedRecord(), actions, feedbackWidget(), {
+          fetch: responder("ok"),
+        });
 
         await expect(sending).rejects.toBeInstanceOf(ActionBuildError);
         await expect(sending).rejects.toMatchObject({
@@ -89,34 +88,34 @@ describe("dispatch", () => {
     expect(calls).toHaveLength(0);
   });
 
-  it("sends the Slack request build produces, once", async () => {
-    const decision = routedDecision();
-    const recipe = feedbackWidget();
-
-    const built = await slackIncomingWebhook.build(
-      decision,
-      actions.act_slack_revenue.config,
-      recipe,
-    );
-
-    const sent = await dispatch(decision, actions, recipe, { fetch: responder("ok") });
-
-    expect(sent).toEqual({
-      action: "act_slack_revenue",
-      request: built,
-      response: { status: 200, body: "ok", truncated: false },
+  it("hands the Record to a Body template", async () => {
+    const templated = defineActions({
+      act_revenue: {
+        kind: "webhook",
+        config: {
+          url: "https://hooks.example.com/revenue",
+          body: '{ "content": "{{record.text}}" }',
+        },
+      },
     });
-    expect(calls).toEqual([
-      { url: built.url, init: { method: "POST", headers: built.headers, body: built.body } },
+
+    await dispatch(routedDecision(), routedRecord(), templated, feedbackWidget(), {
+      fetch: responder("ok"),
+    });
+
+    expect(calls.map((call) => JSON.parse(call.init.body))).toEqual([
+      { content: 'Charged twice, "refund" now\nplease' },
     ]);
   });
 
   it("sends the webhook request build produces, once", async () => {
     const decision = { ...routedDecision(), action: "act_ticket" };
     const recipe = feedbackWidget();
-    const built = await webhook.build(decision, actions.act_ticket.config, recipe);
+    const built = await webhook.build(decision, routedRecord(), actions.act_ticket.config, recipe);
 
-    const sent = await dispatch(decision, actions, recipe, { fetch: responder("ok") });
+    const sent = await dispatch(decision, routedRecord(), actions, recipe, {
+      fetch: responder("ok"),
+    });
 
     expect(sent).toEqual({
       action: "act_ticket",
@@ -133,7 +132,7 @@ describe("dispatch", () => {
   it("sends through the global fetch when none is passed", async () => {
     vi.stubGlobal("fetch", responder("ok"));
 
-    await dispatch(routedDecision(), actions, feedbackWidget());
+    await dispatch(routedDecision(), routedRecord(), actions, feedbackWidget());
 
     expect(calls).toHaveLength(1);
   });
@@ -141,7 +140,7 @@ describe("dispatch", () => {
   it("hands the signal to fetch", async () => {
     const signal = new AbortController().signal;
 
-    await dispatch(routedDecision(), actions, feedbackWidget(), {
+    await dispatch(routedDecision(), routedRecord(), actions, feedbackWidget(), {
       fetch: responder("ok"),
       signal,
     });
@@ -159,7 +158,7 @@ describe("dispatch", () => {
 
     await Promise.all(
       cases.map(async ([status, retryable]) => {
-        const sending = dispatch(routedDecision(), actions, feedbackWidget(), {
+        const sending = dispatch(routedDecision(), routedRecord(), actions, feedbackWidget(), {
           fetch: responder("nope", status),
         });
 
@@ -174,7 +173,7 @@ describe("dispatch", () => {
   it("fails retryably when fetch itself throws", async () => {
     const cause = new Error("ECONNRESET");
 
-    const sending = dispatch(routedDecision(), actions, feedbackWidget(), {
+    const sending = dispatch(routedDecision(), routedRecord(), actions, feedbackWidget(), {
       fetch: rejecter(cause),
     });
 

@@ -19,14 +19,16 @@ fails at startup rather than on the first Record.
   ../../../examples/support-inbox/actions.ts
 </include>
 
-`dispatch(decision, actions, recipe)` sends a routed Decision to the Action it selected. It
-builds the request with that Action's Adapter, sends it once through the global `fetch`, and
-returns `{ action, request, response }`. Pass `{ fetch }` to send through another one, such as
-a test stub or a Worker's.
+`dispatch(decision, record, actions, recipe)` sends a routed Decision to the Action it selected.
+`record` is the Record the Decision is about, as you know it: `{ text, sender?, source? }`. A
+Decision carries only the Record's id, and a Body template may want its text. It builds the
+request with that Action's Adapter, sends it once through the global `fetch`, and returns
+`{ action, request, response }`. Pass `{ fetch }` to send through another one, such as a test
+stub or a Worker's.
 
 Building and sending are still two steps underneath. An Adapter's `build` is pure: the same
-Decision, config and Recipe always produce the same bytes. So a preview is `build` alone, with
-nothing sent:
+Decision, Record, config and Recipe always produce the same bytes. So a preview is `build`
+alone, with nothing sent:
 
 <include lang="ts" meta='title="act.ts"'>
   ../../../examples/support-inbox/act.ts
@@ -34,38 +36,61 @@ nothing sent:
 
 ## The webhook
 
-The body is the Decision line itself, with no envelope, so the receiver runs `parseDecision`
-on it. With a `secret` the request carries an HMAC-SHA256 of the body. Every request carries an
-`Idempotency-Key` of `<decision id>:<action id>`, which is the key to deduplicate on if the
-same Decision is ever sent twice:
+Without a Body template, the body is the Decision line itself, with no envelope, so the
+receiver runs `parseDecision` on it. With a `secret` the request carries an HMAC-SHA256 of the
+body. Every request carries an `Idempotency-Key` of `<decision id>:<action id>`, which is the
+key to deduplicate on if the same Decision is ever sent twice:
 
 <include lang="json" meta='title="the built webhook request"'>
   ../../../examples/support-inbox/output/webhook-request.json
 </include>
 
-## Slack
+## Shape the body
 
-The Slack adapter posts one message to an incoming webhook. It needs the Recipe because a
-Score's level description lives there, not in the Decision:
+A receiver that wants its own JSON, such as a Discord webhook, gets a Body template: the webhook
+config's `body`. It MUST be valid JSON. Its string values may hold variables, and nothing else in
+it changes:
 
-<include lang="json" meta='title="the built Slack request"'>
-  ../../../examples/support-inbox/output/slack-request.json
+| Variable             | Value                                                          |
+| -------------------- | -------------------------------------------------------------- |
+| `{{record.id}}`      | The Decision's `recordId`                                      |
+| `{{record.text}}`    | `text` from the Record you pass                                |
+| `{{record.sender}}`  | `sender` from the Record you pass, if any                      |
+| `{{record.source}}`  | `source` from the Record you pass, if any                      |
+| `{{answers.<name>}}` | The answer to that Question: a label, a boolean, a level index |
+| `{{decision.id}}`    | The Decision's id                                              |
+| `{{recipe.name}}`    | The Recipe's name                                              |
+| `{{rule}}`           | The id of the Rule that selected the Action                    |
+
+A string value that is exactly one variable becomes that value with its type:
+`"{{answers.wants_human}}"` sends `true`, not `"true"`. A variable inside other text becomes
+text, escaped as JSON, so quotes and newlines in a Record's text cannot break the body. An absent
+value, such as a `sender` you did not pass, is `null` on its own and nothing inside text. Object
+keys are never rendered. There are no filters and no conditions.
+
+`defineActions` rejects a template that is not JSON, a variable outside the table, or a stray
+`{{`. It cannot know your Questions, so `build` rejects an `answers.<name>` the Recipe does not
+ask, before anything is sent. With a `secret`, the signature covers the rendered body.
+
+The `escalations` Action above posts Discord's shape. Its preview:
+
+<include lang="json" meta='title="the previewed escalations request"'>
+  ../../../examples/support-inbox/output/preview-request.json
 </include>
-
-Slack has no idempotency of its own, so a redelivery past your own guard posts twice.
 
 ## Failures
 
 `dispatch` returns `null` and sends nothing when the Decision went to Review or its Rule
 selected no Action. It throws `ActionBuildError` when the Decision names an Action id you did
 not define, which is what a stale Rule looks like. `defineActions` throws the same error for an
-unknown kind or an invalid config, naming the Action id.
+unknown kind, an invalid config or an invalid Body template, naming the Action id.
 
 A send that does not land throws `ActionFailedError`: a non-2xx status or a `fetch` that
 rejects. It carries the `status` and a `retryable` flag that is true for 408, 429, 5xx and
 network failures. `dispatch` retries nothing and sets no timeout: pass `{ signal }` for that.
 
-`build` alone throws `ActionBuildError` when the Decision selected no Action. It does not check
+`build` alone throws `ActionBuildError` when the Decision selected no Action, or when a Body
+template names a Question the Recipe does not ask. It does not check
 `review`; `dispatch` does, because it is the step that sends.
 
 Next: [everything above from TypeScript](/docs/guide/from-code).

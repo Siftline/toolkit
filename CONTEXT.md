@@ -51,12 +51,16 @@ A named, configured outbound effect that a Rule selects for a Decision, such as 
 _Avoid_: output, integration, connector
 
 **Action kind**:
-The type of an Action, which decides how its request is built: webhook or Slack incoming webhook. Each Action kind has exactly one Adapter.
+The type of an Action, which decides how its request is built. Today the only one is webhook. Each Action kind has exactly one Adapter.
 _Avoid_: action type, channel
 
 **Adapter**:
 The concrete implementation of one Action kind: it builds the request an Action sends for a Decision. Adapters are thin; the Engine never depends on them.
 _Avoid_: plugin, driver
+
+**Body template**:
+The JSON a webhook Action sends in place of the Decision line, with variables drawn from the Decision, its Record and its Recipe in its string values. It holds no logic. An Action without one sends the Decision line.
+_Avoid_: template (alone: the UI word for Recipe), payload
 
 **Judge**:
 The Engine module that sends one Record's Questions to the pinned model in one request and returns a Decision with no Rule applied. It chooses how patiently the injected client retries and caps calls in flight; it never selects an Action.

@@ -25,7 +25,8 @@
     "fumadocs-ui": "npm:@fumadocs/base-ui@16.15.11",
     "lucide-react": "1.43.0",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "zod": "4.6.5"
   },
   "devDependencies": {
     "@siftline/actions": "workspace:*",

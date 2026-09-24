@@ -1,0 +1,16 @@
+{
+  "method": "POST",
+  "url": "https://example.com/hooks/escalations",
+  "headers": {
+    "Content-Type": "application/json",
+    "Idempotency-Key": "0192f3c2-7b1e-7c4a-9f0e-000000000001:escalations",
+    "User-Agent": "siftline-actions/<version>"
+  },
+  "body": {
+    "content": "Escalated by escalate, urgency 2. anna@example.com wrote:\nYou charged my card twice this month. I want the second charge refunded now, and I want to talk to an actual person, not a bot.",
+    "allowed_mentions": {
+      "parse": []
+    }
+  },
+  "idempotencyKey": "0192f3c2-7b1e-7c4a-9f0e-000000000001:escalations"
+}

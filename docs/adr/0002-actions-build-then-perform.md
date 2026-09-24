@@ -14,4 +14,5 @@ app can log the exact request before sending it.
 
 - Email forward is not an MVP adapter: it needs a transport that is neither `fetch` nor a
   binding the packages may touch (cloud ADR 0001). It returns with an injected sender.
-- Webhook and Slack incoming webhook are the MVP adapters.
+- Webhook is the only MVP adapter. The Slack incoming webhook adapter shipped in 0.1.0 and was
+  removed on 2026-09-23 to keep the MVP to one Action kind. Slack returns only as a new decision.

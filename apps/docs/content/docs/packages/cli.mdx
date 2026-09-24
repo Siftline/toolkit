@@ -32,7 +32,7 @@ there. To send, pipe the Decisions into a short script that calls `dispatch` fro
 [The guide](/docs/guide/label-records#sending) shows it:
 
 ```bash
-npx siftline label recipe.json records.jsonl --rules rules.json | node send.ts recipe.json
+npx siftline label recipe.json records.jsonl --rules rules.json | node send.ts recipe.json records.jsonl
 ```
 
 ## Options

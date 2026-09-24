@@ -2,7 +2,7 @@ import { adapters, webhook } from "@siftline/actions";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { ZodError } from "zod";
 
-import { feedbackWidget, routedDecision } from "./fixtures";
+import { feedbackWidget, routedDecision, routedRecord } from "./fixtures";
 
 const config = { url: "https://hooks.example.com/siftline", secret: "test-secret" };
 
@@ -13,9 +13,8 @@ afterEach(() => {
 
 describe("adapters", () => {
   it("is keyed by cloud's action kinds", () => {
-    expect(Object.keys(adapters)).toEqual(["webhook", "slack_incoming_webhook"]);
+    expect(Object.keys(adapters)).toEqual(["webhook"]);
     expect(adapters.webhook.kind).toBe("webhook");
-    expect(adapters.slack_incoming_webhook.kind).toBe("slack_incoming_webhook");
   });
 
   it("rejects a config with no url", () => {
@@ -33,10 +32,10 @@ describe("determinism", () => {
     vi.useFakeTimers();
 
     vi.setSystemTime(new Date("2026-09-21T14:03:11.204Z"));
-    const first = await webhook.build(routedDecision(), config, feedbackWidget());
+    const first = await webhook.build(routedDecision(), routedRecord(), config, feedbackWidget());
 
     vi.setSystemTime(new Date("2031-05-04T09:00:00.000Z"));
-    const second = await webhook.build(routedDecision(), config, feedbackWidget());
+    const second = await webhook.build(routedDecision(), routedRecord(), config, feedbackWidget());
 
     expect(second).toEqual(first);
     expect(second.idempotencyKey).toBe(first.idempotencyKey);
