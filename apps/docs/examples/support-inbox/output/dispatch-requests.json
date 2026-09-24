@@ -7,51 +7,9 @@
       "user-agent": "siftline-actions/<version>"
     },
     "body": {
-      "format": 1,
-      "id": "0192f3c2-7b1e-7c4a-9f0e-000000000001",
-      "recordId": "msg-1",
-      "recipe": {
-        "name": "support-inbox",
-        "version": 2
-      },
-      "model": "jev-1.13.0",
-      "judgedAt": "2026-09-22T09:00:00.000Z",
-      "trimmed": false,
-      "answers": {
-        "category": "complaint",
-        "wants_human": true,
-        "urgency": 2
-      },
-      "questions": {
-        "category": {
-          "confidence": 1,
-          "probabilities": {
-            "complaint": 1,
-            "question": 0,
-            "other": 0
-          }
-        },
-        "wants_human": {
-          "probability": 0.99,
-          "confidence": 0.98
-        },
-        "urgency": {
-          "score": 1.9,
-          "confidence": 0.9,
-          "probabilities": {
-            "0": 0.01,
-            "1": 0.09,
-            "2": 0.9
-          }
-        }
-      },
-      "confidence": 0.9,
-      "review": false,
-      "rule": "escalate",
-      "action": "escalations",
-      "usage": {
-        "inputTokens": 400,
-        "outputTokens": 60
+      "content": "Escalated by escalate, urgency 2. anna@example.com wrote:\nYou charged my card twice this month. I want the second charge refunded now, and I want to talk to an actual person, not a bot.",
+      "allowed_mentions": {
+        "parse": []
       }
     }
   },

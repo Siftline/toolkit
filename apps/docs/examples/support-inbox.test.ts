@@ -12,6 +12,7 @@ import type { RunDeps } from "@siftline/cli";
 import {
   parseDecision,
   parseRecipe,
+  recordSchema,
   ruleSchema,
   serializeDecision,
   validateRules,
@@ -20,7 +21,7 @@ import type { JsonValue, SystemOneClient, SystemOneResult } from "@siftline/core
 import { createReplayClient, parseReplayLines } from "@siftline/core/testing";
 import { describe, expect, it, onTestFinished, vi } from "vitest";
 
-import { preview, send } from "./support-inbox/act";
+import { preview, recordContext, send } from "./support-inbox/act";
 import { actions } from "./support-inbox/actions";
 import { recipe } from "./support-inbox/recipe";
 import { route, rules } from "./support-inbox/route";
@@ -32,6 +33,25 @@ const dir = new URL("support-inbox/", import.meta.url);
 const path = (name: string) => fileURLToPath(new URL(name, dir));
 
 const output = (name: string) => path(`output/${name}`);
+
+const records = new Map(
+  readFileSync(path("records.jsonl"), "utf8")
+    .split("\n")
+    .filter((line) => line.trim() !== "")
+    .map((line) => {
+      const record = recordSchema.parse(JSON.parse(line));
+
+      return [record.id, recordContext(record)] as const;
+    }),
+);
+
+function recordFor(decision: { recordId: string }) {
+  const record = records.get(decision.recordId);
+
+  if (record === undefined) throw new Error(`no Record ${decision.recordId}`);
+
+  return record;
+}
 
 const recorded = createReplayClient(
   parseReplayLines(
@@ -209,7 +229,7 @@ describe("the guide's running example", () => {
     await expect(serializeDecision(routed)).toMatchFileSnapshot(output("routed-decision.jsonl"));
     expect(routed.action).toBe("escalations");
 
-    const previewed = await preview(routed, recipe);
+    const previewed = await preview(routed, recordFor(routed), recipe);
     await expect(requestJson(previewed)).toMatchFileSnapshot(output("preview-request.json"));
 
     const fetchImpl = vi.fn<ActionFetch>(async () => new Response("ok", { status: 200 }));
@@ -219,14 +239,14 @@ describe("the guide's running example", () => {
       vi.unstubAllGlobals();
     });
 
-    expect(await send({ ...routed, review: true }, recipe)).toBeNull();
+    expect(await send({ ...routed, review: true }, recordFor(routed), recipe)).toBeNull();
 
     // msg-2 as `siftline label --rules` routed it: rules.json, not this test, picked the Action.
     const [, line] = readFileSync(output("siftline-label-routed.jsonl"), "utf8").split("\n");
     const ticket = parseDecision(line ?? "");
     expect([ticket.rule, ticket.action]).toEqual(["ticket", "linear-tickets"]);
 
-    const sent = await send(ticket, recipe);
+    const sent = await send(ticket, recordFor(ticket), recipe);
 
     if (sent === null) throw new Error("dispatch sent nothing");
 
@@ -261,14 +281,18 @@ describe("the guide's running example", () => {
 
     const base = `http://127.0.0.1:${address.port}`;
 
-    const child = spawn(process.execPath, [path("send.ts"), path("recipe-v2.json")], {
-      env: {
-        ...process.env,
-        ESCALATIONS_WEBHOOK_URL: `${base}/escalations`,
-        TICKETS_WEBHOOK_URL: `${base}/tickets`,
-        TICKETS_WEBHOOK_SECRET: "shared-secret",
+    const child = spawn(
+      process.execPath,
+      [path("send.ts"), path("recipe-v2.json"), path("records.jsonl")],
+      {
+        env: {
+          ...process.env,
+          ESCALATIONS_WEBHOOK_URL: `${base}/escalations`,
+          TICKETS_WEBHOOK_URL: `${base}/tickets`,
+          TICKETS_WEBHOOK_SECRET: "shared-secret",
+        },
       },
-    });
+    );
 
     createReadStream(output("siftline-label-routed.jsonl")).pipe(child.stdin);
 

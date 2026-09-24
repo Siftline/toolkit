@@ -58,6 +58,10 @@ _Avoid_: action type, channel
 The concrete implementation of one Action kind: it builds the request an Action sends for a Decision. Adapters are thin; the Engine never depends on them.
 _Avoid_: plugin, driver
 
+**Body template**:
+The JSON a webhook Action sends in place of the Decision line, with variables drawn from the Decision, its Record and its Recipe in its string values. It holds no logic. An Action without one sends the Decision line.
+_Avoid_: template (alone: the UI word for Recipe), payload
+
 **Judge**:
 The Engine module that sends one Record's Questions to the pinned model in one request and returns a Decision with no Rule applied. It chooses how patiently the injected client retries and caps calls in flight; it never selects an Action.
 _Avoid_: classifier, client (the injected transport is the client; the Judge wraps it)

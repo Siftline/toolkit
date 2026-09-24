@@ -33,6 +33,7 @@
         "lucide-react": "1.43.0",
         "react": "19.3.0",
         "react-dom": "19.3.0",
+        "zod": "4.6.5",
       },
       "devDependencies": {
         "@siftline/actions": "workspace:*",
@@ -58,9 +59,9 @@
     },
     "packages/actions": {
       "name": "@siftline/actions",
-      "version": "0.1.1",
+      "version": "0.2.0",
       "dependencies": {
-        "@siftline/core": "^0.1.1",
+        "@siftline/core": "^0.2.0",
         "zod": "^4.6.5",
       },
       "devDependencies": {
@@ -74,12 +75,12 @@
     },
     "packages/cli": {
       "name": "@siftline/cli",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "bin": {
         "siftline": "./dist/cli.mjs",
       },
       "dependencies": {
-        "@siftline/core": "^0.1.0",
+        "@siftline/core": "^0.2.0",
         "@typesafe-ai/sdk": "0.6.0",
         "zod": "4.6.5",
       },
@@ -103,7 +104,7 @@
     },
     "packages/core": {
       "name": "@siftline/core",
-      "version": "0.1.1",
+      "version": "0.2.0",
       "dependencies": {
         "zod": "^4.6.5",
       },
