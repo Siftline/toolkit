@@ -61,16 +61,17 @@ next. To send, pipe the Decisions into a short script that keeps its secrets in 
 
 ```bash
 export ESCALATIONS_WEBHOOK_URL=... TICKETS_WEBHOOK_URL=... TICKETS_WEBHOOK_SECRET=...
-npx siftline label recipe.json records.jsonl --rules rules.json | node send.ts recipe.json
+npx siftline label recipe.json records.jsonl --rules rules.json | node send.ts recipe.json records.jsonl
 ```
 
 <include lang="ts" meta='title="send.ts"'>
   ../../../examples/support-inbox/send.ts
 </include>
 
-It parses each line with `parseDecision` and calls `dispatch` once. A Decision that went to
-Review, such as `msg-3`, or whose Rule selected no Action, sends nothing. The Action ids MUST be
-the ones `rules.json` names; an id the Rules select but the script does not define throws.
+It parses each line with `parseDecision`, finds the Record it is about in `records.jsonl`, and
+calls `dispatch` once. A Decision line carries only the Record's id; the `escalations` Body
+template wants the sender and the text. A Decision that went to Review, such as `msg-3`, or
+whose Rule selected no Action, sends nothing. The Action ids MUST be the ones `rules.json` names; an id the Rules select but the script does not define throws.
 Node runs the `.ts` file as is from 22.18 on the 22 line, and from 23.6. On 22.14 to 22.17, add
 `--experimental-strip-types`. [Send an Action](/docs/guide/send-an-action) covers `defineActions`,
 `dispatch` and their errors.

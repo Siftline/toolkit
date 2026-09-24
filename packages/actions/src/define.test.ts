@@ -76,3 +76,47 @@ describe("defineActions", () => {
     ).toThrow(ActionBuildError);
   });
 });
+
+function withBody(body: string) {
+  return () =>
+    defineActions({ discord: { kind: "webhook", config: { url: "https://example.com/", body } } });
+}
+
+describe("defineActions with a Body template", () => {
+  it("keeps the template as written", () => {
+    const body = '{ "content": "{{record.text}}" }';
+
+    expect(withBody(body)().discord.config.body).toBe(body);
+  });
+
+  it.each([
+    [
+      "JSON that does not parse",
+      '{ "content": "{{record.text}}" ',
+      /^Action "discord": config\.body: not valid JSON/,
+    ],
+    [
+      "a variable outside the set",
+      '{ "content": "{{record.body}}" }',
+      'Action "discord": config.body: unknown variable {{record.body}}',
+    ],
+    [
+      "a bare namespace",
+      '["{{answers}}"]',
+      'Action "discord": config.body: unknown variable {{answers}}',
+    ],
+    [
+      "a filter",
+      '{ "a": "{{ record.text | upper }}" }',
+      'Action "discord": config.body: unknown variable {{ record.text | upper }}',
+    ],
+    [
+      "a stray opening",
+      '{ "a": { "b": "costs {{ 5" } }',
+      'Action "discord": config.body: stray "{{" in "costs {{ 5"',
+    ],
+  ])("rejects %s at startup", (_, body, message) => {
+    expect(withBody(body)).toThrow(ActionBuildError);
+    expect(withBody(body)).toThrow(message);
+  });
+});

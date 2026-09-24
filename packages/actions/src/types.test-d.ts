@@ -7,7 +7,13 @@
 // oxlint-disable typescript/no-unnecessary-type-parameters
 
 import { defineActions, dispatch } from "@siftline/actions";
-import type { ActionId, ActionSet, Dispatched, WebhookConfig } from "@siftline/actions";
+import type {
+  ActionId,
+  ActionSet,
+  Dispatched,
+  RecordContext,
+  WebhookConfig,
+} from "@siftline/actions";
 import { choice, defineRecipe } from "@siftline/core";
 import type { Decision, Recipe, Rule } from "@siftline/core";
 
@@ -54,7 +60,9 @@ declare const decision: Decision;
 
 declare const recipe: Recipe;
 
-const sent = dispatch(decision, actions, recipe, { signal: new AbortController().signal });
+declare const record: RecordContext;
+
+const sent = dispatch(decision, record, actions, recipe, { signal: new AbortController().signal });
 
 type _Sent = Expect<
   Equal<Awaited<typeof sent>, Dispatched<"linear-tickets" | "escalations" | "audit"> | null>
@@ -65,10 +73,21 @@ type _SentAction = Expect<
 >;
 
 // @ts-expect-error — `dispatch` takes Actions, not a bare config
-void dispatch(decision, { tickets: { url: "https://example.com/" } }, recipe);
+void dispatch(decision, record, { tickets: { url: "https://example.com/" } }, recipe);
 
-// @ts-expect-error — only `defineActions` makes an `ActionSet`; a hand-written one is unchecked
-void dispatch(decision, { tickets: { kind: "webhook", config: { url: "not a url" } } }, recipe);
+void dispatch(
+  decision,
+  record,
+  // @ts-expect-error — only `defineActions` makes an `ActionSet`; a hand-written one is unchecked
+  { tickets: { kind: "webhook", config: { url: "not a url" } } },
+  recipe,
+);
+
+// @ts-expect-error — the Record is required, even for an Action without a Body template
+void dispatch(decision, actions, recipe);
+
+// @ts-expect-error — a RecordContext needs its `text`
+void dispatch(decision, { sender: "ana@example.com" }, actions, recipe);
 
 void sent;
 

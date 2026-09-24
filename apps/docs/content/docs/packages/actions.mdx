@@ -14,26 +14,32 @@ ESM only. Node 22.14 or newer. Depends on `@siftline/core` for the Decision and 
 its kind's `configSchema` at once, and the ids stay literal keys in the result.
 `ActionId<typeof actions>` reads those ids back as a union, for typing Rules:
 `Rule<Q, ActionId<typeof actions>>` rejects an Action id you did not define.
-`dispatch(decision, actions, recipe, { fetch?, signal? })` sends a routed Decision to the Action
-it selected and returns `{ action, request, response }`, or `null` when the Decision went to
-Review or selected no Action.
+`dispatch(decision, record, actions, recipe, { fetch?, signal? })` sends a routed Decision to the
+Action it selected and returns `{ action, request, response }`, or `null` when the Decision went to
+Review or selected no Action. `record` is a `RecordContext`, `{ text, sender?, source? }`: the
+Record the Decision is about, as its supplier knows it. It is required, even for an Action with no
+Body template.
 
 Underneath, building a request and sending it are two steps. An Adapter's
-`build(decision, config, recipe)` turns a Decision into an `ActionRequest`: method, URL,
+`build(decision, record, config, recipe)` turns a Decision into an `ActionRequest`: method, URL,
 headers, body and the idempotency key. `perform(request, { fetch?, signal? })` sends it.
 `dispatch` only composes the two. Preview is `build` without `perform`, and nothing in a request
-depends on a clock or randomness, so the same Decision, config and Recipe always build the same
-bytes. The guide shows [the built request](/docs/guide/send-an-action).
+depends on a clock or randomness, so the same Decision, Record, config and Recipe always build the
+same bytes. The guide shows [the built request](/docs/guide/send-an-action).
 
 ## Adapters
 
-| Export    | `kind`    | Body                                                      |
-| --------- | --------- | --------------------------------------------------------- |
-| `webhook` | `webhook` | The Decision line, no envelope. `parseDecision` reads it. |
+| Export    | `kind`    | Body                                                                                        |
+| --------- | --------- | ------------------------------------------------------------------------------------------- |
+| `webhook` | `webhook` | The Decision line, no envelope, which `parseDecision` reads; or the rendered Body template. |
 
 `adapters` maps each `kind` to its adapter, and every adapter carries a `configSchema` for a
-config that arrives as JSON. The webhook config is `{ url, secret?, headers? }`; with a
-`secret` the request carries `X-Siftline-Signature: sha256=<HMAC-SHA256 of the body>`.
+config that arrives as JSON. The webhook config is `{ url, secret?, headers?, body? }`;
+with a `secret` the request carries `X-Siftline-Signature: sha256=<HMAC-SHA256 of the body>`.
+`body` is a Body template: JSON whose string values may hold `{{record.text}}` and the other
+variables [the guide lists](/docs/guide/send-an-action#shape-the-body). A value that is one
+variable keeps its type; a variable inside text is escaped as JSON. `defineActions` parses the
+template, and `build` checks its Question names against the Recipe.
 
 Every request carries `Idempotency-Key: <decision.id>:<decision.action>` and a `User-Agent`
 naming the package version.
@@ -48,9 +54,9 @@ global one and a stub both fit without a cast. `signal` goes to `fetch` unchange
 
 ## Errors
 
-| Class               | `code`          | Thrown when                                                                                                                                       |
-| ------------------- | --------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `ActionBuildError`  | `action_build`  | An unknown kind or an invalid config in `defineActions`, an Action id `dispatch` was not given, or `build` on a Decision that selected no Action. |
-| `ActionFailedError` | `action_failed` | A non-2xx status or a `fetch` that threw. Carries `status` and `retryable`, true for 408, 429, 5xx and network failures.                          |
+| Class               | `code`          | Thrown when                                                                                                                                                                                                                 |
+| ------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `ActionBuildError`  | `action_build`  | An unknown kind, an invalid config or Body template in `defineActions`, an Action id `dispatch` was not given, `build` on a Decision that selected no Action, or a Body template naming a Question the Recipe does not ask. |
+| `ActionFailedError` | `action_failed` | A non-2xx status or a `fetch` that threw. Carries `status` and `retryable`, true for 408, 429, 5xx and network failures.                                                                                                    |
 
 Both extend core's `SiftlineError`.

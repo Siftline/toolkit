@@ -11,17 +11,21 @@ import { defineActions, dispatch } from "@siftline/actions";
 
 const actions = defineActions({
   "linear-tickets": { kind: "webhook", config: { url, secret } },
-  escalations: { kind: "webhook", config: { url: escalationsUrl } },
+  escalations: {
+    kind: "webhook",
+    config: { url: discordUrl, body: '{ "content": "{{record.sender}}: {{record.text}}" }' },
+  },
 });
 
-const sent = await dispatch(decision, actions, recipe);
+const sent = await dispatch(decision, { text, sender }, actions, recipe);
 ```
 
 `defineActions` checks every config when you call it. `dispatch` sends the Action the Decision
 selected, once, through the global `fetch` (or the one you pass as `{ fetch }`), and returns
 `{ action, request, response }`. It returns `null` for a Decision that went to Review or
 selected no Action. A preview is an Adapter's `build` without sending. The webhook body is the
-Decision line, signed with HMAC-SHA256 when a `secret` is set.
+Decision line, or the Action's Body template rendered with the Decision and the Record you pass.
+It is signed with HMAC-SHA256 when a `secret` is set.
 
 The guide and the full reference live at
 [docs.siftline.dev](https://docs.siftline.dev/docs/packages/actions).

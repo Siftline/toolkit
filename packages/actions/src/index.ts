@@ -1,6 +1,6 @@
 export { adapters } from "./adapters";
 
-export type { ActionKind, ActionRequest, Adapter } from "./adapter";
+export type { ActionKind, ActionRequest, Adapter, RecordContext } from "./adapter";
 
 export { defineActions } from "./define";
 

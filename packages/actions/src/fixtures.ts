@@ -3,6 +3,8 @@ import { readFileSync } from "node:fs";
 import { parseDecision, parseRecipe } from "@siftline/core";
 import type { Decision, Recipe } from "@siftline/core";
 
+import type { RecordContext } from "./adapter";
+
 // Core's checked-in vectors, read rather than re-pasted: the reference Decision line is the
 // HMAC body byte for byte, and the Recipes are the ones every package's tests share.
 function read(name: string): string {
@@ -44,5 +46,14 @@ export function routedDecision(): Decision {
     rule: "r2",
     action: "act_revenue",
     usage: { inputTokens: 300, outputTokens: 11 },
+  };
+}
+
+/** The Record behind `routedDecision`, as its supplier knows it. Quotes and a newline on purpose. */
+export function routedRecord(): RecordContext {
+  return {
+    text: 'Charged twice, "refund" now\nplease',
+    sender: "ana@example.com",
+    source: "widget",
   };
 }
