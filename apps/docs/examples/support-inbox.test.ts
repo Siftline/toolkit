@@ -18,7 +18,7 @@ import {
 } from "@siftline/core";
 import type { JsonValue, SystemOneClient, SystemOneResult } from "@siftline/core";
 import { createReplayClient, parseReplayLines } from "@siftline/core/testing";
-import { describe, expect, it, onTestFinished, vi } from "vitest";
+import { describe, expect, it, onTestFinished, vi } from "vite-plus/test";
 
 import { preview, send } from "./support-inbox/act";
 import { actions } from "./support-inbox/actions";

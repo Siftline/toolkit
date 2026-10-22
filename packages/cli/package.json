@@ -37,11 +37,11 @@
     "access": "public"
   },
   "scripts": {
-    "build": "tsdown",
-    "dev": "tsdown --watch",
-    "lint": "oxlint --type-aware --deny-warnings",
-    "lint:fix": "oxlint --type-aware --deny-warnings --fix",
-    "test": "vitest run",
+    "build": "vp pack",
+    "dev": "vp pack --watch",
+    "lint": "vp lint --type-aware --deny-warnings",
+    "lint:fix": "vp lint --type-aware --deny-warnings --fix",
+    "test": "vp test run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -53,9 +53,8 @@
     "@arethetypeswrong/core": "0.18.5",
     "@siftline/config": "workspace:*",
     "publint": "0.3.24",
-    "tsdown": "0.23.0",
     "typescript": "7.0.2",
-    "vitest": "4.1.11"
+    "vite-plus": "catalog:"
   },
   "engines": {
     "node": ">=22.14"

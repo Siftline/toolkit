@@ -19,13 +19,12 @@
     "./tsdown": "./tsdown.ts"
   },
   "scripts": {
-    "lint": "oxlint --type-aware --deny-warnings",
-    "lint:fix": "oxlint --type-aware --deny-warnings --fix",
+    "lint": "vp lint --type-aware --deny-warnings",
+    "lint:fix": "vp lint --type-aware --deny-warnings --fix",
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "tsdown": "0.23.0",
     "typescript": "7.0.2",
-    "vitest": "4.1.11"
+    "vite-plus": "catalog:"
   }
 }

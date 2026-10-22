@@ -1,4 +1,4 @@
-import { defineConfig, type ViteUserConfig } from "vitest/config";
+import { defineConfig, type ViteUserConfig } from "vite-plus";
 
 export function defineVitestConfig(overrides: ViteUserConfig["test"] = {}): ViteUserConfig {
   return defineConfig({

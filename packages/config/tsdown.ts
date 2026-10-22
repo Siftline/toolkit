@@ -1,4 +1,4 @@
-import { defineConfig, type UserConfig } from "tsdown";
+import { defineConfig, type UserConfig } from "vite-plus/pack";
 
 export function defineLibraryConfig(entry: string[]): UserConfig {
   return defineConfig({

@@ -7,13 +7,13 @@
   "sideEffects": false,
   "scripts": {
     "api": "typedoc",
-    "build": "vite build && cp .output/public/_shell.html .output/public/index.html",
+    "build": "vp build && cp .output/public/_shell.html .output/public/index.html",
     "deploy": "wrangler deploy",
-    "dev": "vite dev",
-    "lint": "oxlint --type-aware --deny-warnings",
-    "lint:fix": "oxlint --type-aware --deny-warnings --fix",
+    "dev": "vp dev",
+    "lint": "vp lint --type-aware --deny-warnings",
+    "lint:fix": "vp lint --type-aware --deny-warnings --fix",
     "preview": "wrangler dev",
-    "test": "vitest run",
+    "test": "vp test run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -44,8 +44,8 @@
     "typedoc": "0.28.20",
     "typedoc-plugin-markdown": "4.13.1",
     "typescript": "6.0.3",
-    "vite": "8.3.0",
-    "vitest": "4.1.11",
+    "vite": "catalog:",
+    "vite-plus": "catalog:",
     "wrangler": "4.135.0"
   },
   "//examples": "The three published packages and the SDK are here for examples/: the site's snippets are typechecked and run against the built packages, never copied by hand.",

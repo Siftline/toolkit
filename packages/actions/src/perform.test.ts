@@ -1,6 +1,6 @@
 import { ActionFailedError, perform, webhook } from "@siftline/actions";
 import type { ActionFetch, ActionFetchInit, ActionRequest } from "@siftline/actions";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vite-plus/test";
 
 import { feedbackWidget, routedDecision } from "./fixtures";
 

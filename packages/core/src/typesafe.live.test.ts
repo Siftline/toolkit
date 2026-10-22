@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 
 import { createJudge, parseDecision, parseRecipe, serializeDecision } from "@siftline/core";
 import { TypeSafeClient } from "@typesafe-ai/sdk";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 const apiKey = process.env["TYPESAFE_API_KEY"];
 

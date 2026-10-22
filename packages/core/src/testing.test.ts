@@ -10,7 +10,7 @@ import {
   replayLineSchema,
 } from "@siftline/core/testing";
 import type { ReplayLine } from "@siftline/core/testing";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 // Imported by package name, not by relative path: this asserts the published `exports` map.
 

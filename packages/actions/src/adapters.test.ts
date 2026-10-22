@@ -1,5 +1,5 @@
 import { adapters, webhook } from "@siftline/actions";
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vite-plus/test";
 import { ZodError } from "zod";
 
 import { feedbackWidget, routedDecision } from "./fixtures";

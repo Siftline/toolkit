@@ -9,8 +9,8 @@
     "./styles/globals.css": "./src/styles/globals.css"
   },
   "scripts": {
-    "lint": "oxlint --type-aware --deny-warnings",
-    "lint:fix": "oxlint --type-aware --deny-warnings --fix",
+    "lint": "vp lint --type-aware --deny-warnings",
+    "lint:fix": "vp lint --type-aware --deny-warnings --fix",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
