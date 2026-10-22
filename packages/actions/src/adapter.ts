@@ -5,7 +5,7 @@ import { ActionBuildError } from "./errors";
 import { VERSION } from "./version";
 
 /** Cloud's `action.kind` strings. */
-export type ActionKind = "webhook" | "slack_incoming_webhook";
+export type ActionKind = "webhook";
 
 /** Everything needed to send an Action, and nothing that depends on a clock or randomness. */
 export interface ActionRequest {
@@ -16,10 +16,25 @@ export interface ActionRequest {
   idempotencyKey: string;
 }
 
+/**
+ * The Record a Decision is about, as its supplier knows it. The Engine's Record has no sender or
+ * Source; they exist only where the Record came from. Its id is the Decision's `recordId`.
+ */
+export interface RecordContext {
+  text: string;
+  sender?: string;
+  source?: string;
+}
+
 export interface Adapter<C> {
   kind: ActionKind;
   configSchema: ZodType<C>;
-  build: (decision: Decision, config: C, recipe: Recipe) => Promise<ActionRequest>;
+  build: (
+    decision: Decision,
+    record: RecordContext,
+    config: C,
+    recipe: Recipe,
+  ) => Promise<ActionRequest>;
 }
 
 /** The key the receiver deduplicates on, and the `Idempotency-Key` header. */

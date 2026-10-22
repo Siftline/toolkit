@@ -77,8 +77,8 @@ Review" is not a Rule; it is built in and runs before any Rule is looked at.
 
 Where a Decision goes: a named, configured outbound effect such as `linear-tickets`, or
 nothing. A Rule names an Action by its id. Each Action has exactly one Action kind, which
-decides how its request is built: an outbound webhook carrying the Decision line, or a Slack
-incoming webhook carrying a short message. Two Actions can share a kind and send to different
+decides how its request is built. The only kind is an outbound webhook carrying the Decision
+line. Two Actions can share a kind and send to different
 places. The adapter for the kind in `@siftline/actions` builds the request. The hosted app can also forward an email; the toolkit
 has no adapter for that.
 

@@ -10,7 +10,7 @@ elsewhere and is not open source.
 | ------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------- |
 | `@siftline/core`    | The engine: recipes, rules, fixtures, the Judge and the Decision format. | [packages/core](https://docs.siftline.dev/docs/packages/core)       |
 | `@siftline/cli`     | `siftline test` and `siftline label` — a recipe from the terminal.       | [packages/cli](https://docs.siftline.dev/docs/packages/cli)         |
-| `@siftline/actions` | Adapters that carry a Decision somewhere: webhook and Slack.             | [packages/actions](https://docs.siftline.dev/docs/packages/actions) |
+| `@siftline/actions` | The webhook adapter that carries a Decision to your endpoint.            | [packages/actions](https://docs.siftline.dev/docs/packages/actions) |
 
 `@siftline/ui` and `@siftline/config` are private: they are consumed just-in-time from
 source inside this repo and are never published. `config` holds what every package

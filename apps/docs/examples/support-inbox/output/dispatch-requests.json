@@ -1,13 +1,16 @@
 [
   {
-    "path": "/slack",
+    "path": "/escalations",
     "headers": {
       "content-type": "application/json",
       "idempotency-key": "0192f3c2-7b1e-7c4a-9f0e-000000000001:escalations",
       "user-agent": "siftline-actions/<version>"
     },
     "body": {
-      "text": "*support-inbox* · msg-1\ncategory: complaint (100%)\nwants_human: yes (98%)\nurgency: 2 · Today (90%)\nrule escalate"
+      "content": "Escalated by escalate, urgency 2. anna@example.com wrote:\nYou charged my card twice this month. I want the second charge refunded now, and I want to talk to an actual person, not a bot.",
+      "allowed_mentions": {
+        "parse": []
+      }
     }
   },
   {
