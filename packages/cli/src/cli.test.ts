@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 
-import { expect, it } from "vitest";
+import { expect, it } from "vite-plus/test";
 
 import packageJson from "../package.json" with { type: "json" };
 import { RECIPE_PATH } from "./harness";

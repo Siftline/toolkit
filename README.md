@@ -14,7 +14,7 @@ elsewhere and is not open source.
 
 `@siftline/ui` and `@siftline/config` are private: they are consumed just-in-time from
 source inside this repo and are never published. `config` holds what every package
-shares: the tsconfig bases, the Vitest base and the tsdown base.
+shares: the tsconfig bases and the tsdown base `vp pack` builds with.
 
 All three are on npm with provenance. 0.1.0 is the first release with the Engine in it: the
 Recipe, Decision and Fixture formats, the Judge and its in-flight gate, Rules and routing, the
@@ -23,57 +23,67 @@ the package pages and the API reference live at [docs.siftline.dev](https://docs
 
 ## Getting started
 
+Install the global [Vite+](https://viteplus.dev) CLI, `vp`, then:
+
 ```sh
-bun install
-bun run check
+vp install
+vp run check
 ```
 
-Bun 1.4.2 installs; Node 24 runs everything. No script is run with `bun --bun`:
-Vitest, Vite and wrangler are only supported on Node. `.node-version` pins the runtime
-and `packageManager` pins the installer, so CI and your machine agree.
+`vp` brings the Node in `.node-version` (24) and the pnpm in `packageManager` (12.14.0),
+so CI and your machine agree. pnpm installs; Node runs everything.
 
-`bun install` needs no lifecycle scripts: `bun pm untrusted` reports zero untrusted
-dependencies, so there is no `trustedDependencies` list in the root `package.json`. If a
-future dependency needs one, add it there and say so here.
+Only two dependencies may run install scripts: `esbuild` and `workerd`, listed under
+`allowBuilds` in `pnpm-workspace.yaml`. pnpm fails the install on any other dependency
+that wants one; if a future dependency needs it, add it there and say so here.
 
 ## Scripts
 
-`bun run check` is the whole gate, and it is exactly what CI runs:
+`vp run check` is the whole gate, and it is exactly what CI runs:
 
 ```sh
-bun run check   # turbo run build lint typecheck test format:check
+vp run check   # build, lint, typecheck and test in every package, then format:check
 ```
 
+Run one of the names below with `vp run <name>` at the root for every package, or inside a
+package for that one. They are `vp run` tasks, defined in each package's `vite.config.ts`
+and cached: each waits for the builds of the workspace packages it depends on, and `test`
+also for its own package's build, so a rerun on an unchanged tree replays from the cache.
 The three published packages and `apps/docs` expose the same names, so you never have to
 look one up:
 
-| Script      | What it does                                                   |
-| ----------- | -------------------------------------------------------------- |
-| `build`     | Bundle with tsdown; `apps/docs` prerenders to `.output`.       |
-| `dev`       | Watch mode.                                                    |
-| `lint`      | `oxlint --type-aware --deny-warnings`.                         |
-| `lint:fix`  | The same, with `--fix`.                                        |
-| `typecheck` | `tsc --noEmit` — TypeScript 7 (Go), except in `apps/docs`.     |
-| `test`      | Vitest, colocated `src/**/*.test.ts`, no globals, no coverage. |
+| Name        | What it does                                                                   |
+| ----------- | ------------------------------------------------------------------------------ |
+| `build`     | Bundle with `vp pack` (tsdown); `apps/docs` prerenders to `.output`.           |
+| `dev`       | Watch mode.                                                                    |
+| `lint`      | `vp lint --type-aware --deny-warnings` (oxlint).                               |
+| `lint:fix`  | The same, with `--fix`.                                                        |
+| `typecheck` | `tsc --noEmit` — TypeScript 7 (Go), except in `apps/docs`.                     |
+| `test`      | `vp test run` (Vitest), colocated `src/**/*.test.ts`, no globals, no coverage. |
 
 `@siftline/ui` and `@siftline/config` do not have all of them, and should not. They are
 private and consumed just-in-time from source: nothing bundles them, nothing watches them
-and neither has a test, so `build`, `dev` and `test` would be scripts that do nothing. Both
+and neither has a test, so `build`, `dev` and `test` would be tasks that do nothing. Both
 carry `lint`, `lint:fix` and `typecheck`, which is all there is to run. `apps/docs` adds
 `api` (typedoc), `preview` and `deploy` on top of the shared six.
+
+`vp run dev` starts every package's `dev` at once. Stop it with Ctrl-C (or by process
+group): `vp run` forwards no signal from its own pid, so killing that alone can orphan the
+watchers.
 
 Formatting is root-only, because there is one config for the repo:
 
 ```sh
-bun run format         # oxfmt, writes
-bun run format:check   # oxfmt --check, what `check` runs
+vp run format         # vp fmt (oxfmt), writes
+vp run format:check   # vp fmt --check, what `check` runs
 ```
 
 `packages/core` also has `test:live`, which talks to the real TypeSafe API. It skips
-itself when `TYPESAFE_API_KEY` is absent, Turborepo never runs it, and in CI it runs only
+itself when `TYPESAFE_API_KEY` is absent, `check` never runs it, and in CI it runs only
 through the manually dispatched `live.yml`.
 
-oxlint and oxfmt are the only lint and format tools here. ESLint and Prettier do not
+oxlint and oxfmt, run through Vite+ (`vp lint`, `vp fmt`) and configured in the root
+`vite.config.ts`, are the only lint and format tools here. ESLint and Prettier do not
 enter this repo. Install the [oxc VS Code
 extension](https://marketplace.visualstudio.com/items?itemName=oxc.oxc-vscode) and
 `.vscode/settings.json` gives you fix-and-format on save, so formatting never becomes a
@@ -119,18 +129,18 @@ every package except `apps/docs`. If you need to know which compiler a package i
 about to run, `cd` into it and ask: `./node_modules/.bin/tsc --version`.
 
 `build` and `typecheck` are siblings, never a chain: declarations are emitted with
-`--noCheck`, so a green `build` is not a typecheck. `bun run check` and CI cover both.
+`--noCheck`, so a green `build` is not a typecheck. `vp run check` and CI cover both.
 
 ## Changesets
 
 Anything that changes a published package needs a changeset:
 
 ```sh
-bun changeset
+pnpm changeset
 ```
 
 Pick the packages, pick the bump, write the line a consumer would want to read. If a
-change needs no release, record that deliberately with `bun changeset --empty`
+change needs no release, record that deliberately with `pnpm changeset --empty`
 rather than skipping the step: CI fails a PR that touches a published package without
 one.
 
@@ -168,18 +178,18 @@ logged in to npm as a maintainer with 2FA:
 
 ```sh
 npm view @siftline/core            # confirm the 24h post-deletion block has lapsed
-bun ci
-bun run build
+vp install --frozen-lockfile
+vp run build
 cd packages/core    && npm publish --access public --otp <code> && cd -   # 0.0.2
 cd packages/cli     && npm publish --access public --otp <code> && cd -   # 0.0.1
 cd packages/actions && npm publish --access public --otp <code> && cd -   # 0.0.1
 ```
 
-`devEngines.packageManager` names Bun, and npm treats a mismatch as fatal unless
+`devEngines.packageManager` names pnpm, and npm treats a mismatch as fatal unless
 `onFail` says otherwise. The root `package.json` therefore sets `"onFail": "warn"`:
 without it every npm command inside this repo dies with `EBADDEVENGINES`, including
 the publishes above and the ones `release.yml` runs. The warning npm prints is
-expected, and Bun is still the declared package manager for installs.
+expected, and pnpm is still the declared package manager for installs.
 
 Pass `--otp` on the command line: Changesets strips `NPM_CONFIG_OTP` from the environment,
 and these publishes are local, so there is no OIDC and therefore no provenance on this

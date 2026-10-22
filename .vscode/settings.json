@@ -8,6 +8,9 @@
   "oxc.fmt.enable": true,
   "oxc.lint.run": "onType",
   "oxc.requireConfig": true,
+  "oxc.disableNestedConfig": true,
+  "oxc.fmt.disableNestedConfig": true,
+  "editor.formatOnSaveMode": "file",
   "[javascript]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
   "[javascriptreact]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
   "[typescript]": { "editor.defaultFormatter": "oxc.oxc-vscode" },
@@ -21,6 +24,6 @@
     "**/dist": true,
     "**/.output": true,
     "**/node_modules": true,
-    "bun.lock": true
+    "pnpm-lock.yaml": true
   }
 }

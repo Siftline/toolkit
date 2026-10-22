@@ -1,5 +1,5 @@
 import { slackIncomingWebhook } from "@siftline/actions";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 import { feedbackWidget, routedDecision } from "./fixtures";
 

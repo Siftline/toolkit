@@ -10,7 +10,7 @@ import {
   webhook,
 } from "@siftline/actions";
 import { SiftlineError } from "@siftline/core";
-import { expect, it } from "vitest";
+import { expect, it } from "vite-plus/test";
 
 // Imported by package name, not by relative path: this asserts the published `exports` map.
 

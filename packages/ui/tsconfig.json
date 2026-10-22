@@ -1,4 +1,4 @@
 {
   "extends": "@siftline/config/app.json",
-  "include": ["src/**/*.ts", "src/**/*.tsx"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts"]
 }

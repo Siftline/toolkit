@@ -63,9 +63,12 @@ jobs:
       - name: Set up the toolchain
         uses: ./.github/actions/setup
 
+      # Through the root script: a bump rewrites the caret ranges on `@siftline/core`, and
+      # pnpm-lock.yaml must follow in the same commit or the next frozen install fails.
       - name: Version packages
         uses: changesets/action/version@v2.1.2
         with:
+          script: pnpm run version-packages
           pr-base-branch: main
 
   pack:
@@ -89,7 +92,7 @@ jobs:
 
       # `files: ["dist"]`, so npm pack needs the build to have run.
       - name: Build
-        run: bun run build
+        run: vp run build
 
       - name: Pack
         id: pack

@@ -1,7 +1,7 @@
 import { run, USAGE, VERSION } from "@siftline/cli";
 import { VERSION as ENGINE_VERSION } from "@siftline/core";
 import { createReplayClient } from "@siftline/core/testing";
-import { expect, it } from "vitest";
+import { expect, it } from "vite-plus/test";
 
 import { harness, RECIPE_PATH } from "./harness";
 

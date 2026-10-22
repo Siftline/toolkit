@@ -27,7 +27,7 @@ import type {
   SystemOneResult,
 } from "@siftline/core";
 import { createReplayClient, parseReplayLines } from "@siftline/core/testing";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { ZodError } from "zod";
 
 // Imported by package name, not by relative path: this asserts the published `exports` map.
@@ -390,18 +390,18 @@ describe("the denominators", () => {
   });
 });
 
-describe("scoreResults", () => {
-  function resultWith(expected: FixtureResult["expect"]): FixtureResult {
-    return {
-      index: 1,
-      id: "fixture:1",
-      decision: referenceDecision,
-      expect: expected,
-      mismatches: compareAnswers(expected, referenceDecision.answers),
-      review: referenceDecision.review,
-    } satisfies FixtureResult;
-  }
+function resultWith(expected: FixtureResult["expect"]): FixtureResult {
+  return {
+    index: 1,
+    id: "fixture:1",
+    decision: referenceDecision,
+    expect: expected,
+    mismatches: compareAnswers(expected, referenceDecision.answers),
+    review: referenceDecision.review,
+  } satisfies FixtureResult;
+}
 
+describe("scoreResults", () => {
   it("folds with the minimum over the asserted Questions only", () => {
     const report = scoreResults(
       [

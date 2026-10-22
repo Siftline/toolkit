@@ -1,6 +1,6 @@
 name: Set up the toolchain
 description: >-
-  Bun, Node and a frozen install — the preamble every job in this repo shares.
+  Vite+, Node, pnpm and a frozen install — the preamble every job in this repo shares.
   Checkout is deliberately not part of this: a local composite action can only be
   resolved once the repository is already on disk, so each job keeps its own
   `actions/checkout` step (and its own `ref`, `fetch-depth` and credential choices).
@@ -8,17 +8,13 @@ description: >-
 runs:
   using: composite
   steps:
-    - name: Set up Bun
-      uses: oven-sh/setup-bun@v2
-
+    # Node comes from `.node-version` and pnpm from `packageManager`; vp's shims pick both.
     # No `registry-url` anywhere: it writes an .npmrc that sends npm down the token path
     # and silently skips the OIDC exchange that trusted publishing needs.
-    - name: Set up Node
-      uses: actions/setup-node@v7
+    # Not `--prod`: typedoc, Vite and wrangler are all devDependencies.
+    - name: Set up Vite+ and install (frozen lockfile)
+      uses: voidzero-dev/setup-vp@68f39c78aaf39be468cabd2afb09c162574c84af # v1.21.2
       with:
-        node-version-file: .node-version
-
-    # Not `--production`: typedoc, Vite and wrangler are all devDependencies.
-    - name: Install (frozen lockfile)
-      run: bun ci
-      shell: bash
+        cache: true
+        run-install: |
+          args: [--frozen-lockfile]

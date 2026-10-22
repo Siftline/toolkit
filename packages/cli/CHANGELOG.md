@@ -88,7 +88,7 @@
   is the strict Record validator the CLI was hand-rolling. Rules and Fixtures now check a value
   against its Question through one function, so a Fixture problem reads as the Rule problem
   does, with ` for question "<name>"` appended: `value "yes" is not a boolean for question
-"wants_human"`. The Recipe-fitting label problem is unchanged.
+  "wants_human"`. The Recipe-fitting label problem is unchanged.
 
   `@siftline/actions` shares the three fixed headers between the adapters. No wire change.
 

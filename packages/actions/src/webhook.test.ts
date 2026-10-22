@@ -1,6 +1,6 @@
 import { ActionBuildError, VERSION, webhook } from "@siftline/actions";
 import { serializeDecision } from "@siftline/core";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 // `hmacSha256Hex` is package-internal, like core's `questionName`. The pinned vector's body
 // is the reference Decision line, which no `build` can produce: it carries no Action.

@@ -20,7 +20,7 @@ import type {
 } from "@siftline/core";
 import { createReplayClient, createScriptedClient, parseReplayLines } from "@siftline/core/testing";
 import type { ReplayLine } from "@siftline/core/testing";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 // Imported by package name, not by relative path: this asserts the published `exports` map.
 
@@ -355,17 +355,17 @@ describe("judging the recorded corpus", () => {
 
 // ─── Answer mapping ─────────────────────────────────────────────────────────────────────
 
+function judgeOnce(result: SystemOneResult, recipe: Recipe = supportInbox): Promise<Decision> {
+  const judge = createJudge({
+    client: createScriptedClient([{ response: result }]),
+    retry: "prompt",
+    now: clock,
+  });
+
+  return judge({ id: "rec", state: "hello" }, recipe, { id: "dec" });
+}
+
 describe("mapping answers", () => {
-  function judgeOnce(result: SystemOneResult, recipe: Recipe = supportInbox): Promise<Decision> {
-    const judge = createJudge({
-      client: createScriptedClient([{ response: result }]),
-      retry: "prompt",
-      now: clock,
-    });
-
-    return judge({ id: "rec", state: "hello" }, recipe, { id: "dec" });
-  }
-
   it("breaks a Choice tie on the lowest Recipe-order label", async () => {
     const decision = await judgeOnce(
       resultWith({

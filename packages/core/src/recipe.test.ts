@@ -11,7 +11,7 @@ import {
   serializeRecipe,
 } from "@siftline/core";
 import type { JsonValue } from "@siftline/core";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 import { ZodError } from "zod";
 
 // Imported by package name, not by relative path: this asserts the published `exports` map.

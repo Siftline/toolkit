@@ -10,7 +10,7 @@ import type {
 } from "@siftline/core";
 import { createReplayClient, createScriptedClient } from "@siftline/core/testing";
 import type { ReplayLine } from "@siftline/core/testing";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it } from "vite-plus/test";
 
 import type { Harness } from "./harness";
 import { harness, recordedError, recordings, RECIPE_PATH, stateOf, textFile } from "./harness";
