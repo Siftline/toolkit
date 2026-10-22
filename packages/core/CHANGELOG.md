@@ -55,7 +55,7 @@
   A Fixture is `{ state, expect, id?, origin?, by? }`, where `state` is any `EntryType` and
   `expect` is `Answers<Q>` made partial, so a Fixture written through `defineFixtures` carries
   the Recipe's literal labels and level indices. A line serializes as `id, origin, by, state,
-expect` with absent optionals omitted, and round-trips byte for byte. `parseFixtures` skips
+  expect` with absent optionals omitted, and round-trips byte for byte. `parseFixtures` skips
   blank lines and names the 1-based bad one.
 
   `validateFixtures(fixtures, recipe)` reports an unknown Question, a label outside the Choice,
@@ -155,7 +155,7 @@ expect` with absent optionals omitted, and round-trips byte for byte. `parseFixt
   is the strict Record validator the CLI was hand-rolling. Rules and Fixtures now check a value
   against its Question through one function, so a Fixture problem reads as the Rule problem
   does, with ` for question "<name>"` appended: `value "yes" is not a boolean for question
-"wants_human"`. The Recipe-fitting label problem is unchanged.
+  "wants_human"`. The Recipe-fitting label problem is unchanged.
 
   `@siftline/actions` shares the three fixed headers between the adapters. No wire change.
 
