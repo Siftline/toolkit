@@ -24,24 +24,23 @@ the package pages and the API reference live at [docs.siftline.dev](https://docs
 ## Getting started
 
 ```sh
-bun install
-bun run check
+pnpm install
+pnpm run check
 ```
 
-Bun 1.4.2 installs; Node 24 runs everything. No script is run with `bun --bun`:
-Vitest, Vite and wrangler are only supported on Node. `.node-version` pins the runtime
+pnpm 12.14.0 installs; Node 24 runs everything. `.node-version` pins the runtime
 and `packageManager` pins the installer, so CI and your machine agree.
 
-`bun install` needs no lifecycle scripts: `bun pm untrusted` reports zero untrusted
-dependencies, so there is no `trustedDependencies` list in the root `package.json`. If a
-future dependency needs one, add it there and say so here.
+Only two dependencies may run install scripts: `esbuild` and `workerd`, listed under
+`allowBuilds` in `pnpm-workspace.yaml`. pnpm fails the install on any other dependency
+that wants one; if a future dependency needs it, add it there and say so here.
 
 ## Scripts
 
-`bun run check` is the whole gate, and it is exactly what CI runs:
+`pnpm run check` is the whole gate, and it is exactly what CI runs:
 
 ```sh
-bun run check   # turbo run build lint typecheck test format:check
+pnpm run check   # turbo run build lint typecheck test format:check
 ```
 
 The three published packages and `apps/docs` expose the same names, so you never have to
@@ -65,8 +64,8 @@ carry `lint`, `lint:fix` and `typecheck`, which is all there is to run. `apps/do
 Formatting is root-only, because there is one config for the repo:
 
 ```sh
-bun run format         # oxfmt, writes
-bun run format:check   # oxfmt --check, what `check` runs
+pnpm run format         # oxfmt, writes
+pnpm run format:check   # oxfmt --check, what `check` runs
 ```
 
 `packages/core` also has `test:live`, which talks to the real TypeSafe API. It skips
@@ -119,18 +118,18 @@ every package except `apps/docs`. If you need to know which compiler a package i
 about to run, `cd` into it and ask: `./node_modules/.bin/tsc --version`.
 
 `build` and `typecheck` are siblings, never a chain: declarations are emitted with
-`--noCheck`, so a green `build` is not a typecheck. `bun run check` and CI cover both.
+`--noCheck`, so a green `build` is not a typecheck. `pnpm run check` and CI cover both.
 
 ## Changesets
 
 Anything that changes a published package needs a changeset:
 
 ```sh
-bun changeset
+pnpm changeset
 ```
 
 Pick the packages, pick the bump, write the line a consumer would want to read. If a
-change needs no release, record that deliberately with `bun changeset --empty`
+change needs no release, record that deliberately with `pnpm changeset --empty`
 rather than skipping the step: CI fails a PR that touches a published package without
 one.
 
@@ -168,18 +167,18 @@ logged in to npm as a maintainer with 2FA:
 
 ```sh
 npm view @siftline/core            # confirm the 24h post-deletion block has lapsed
-bun ci
-bun run build
+pnpm install --frozen-lockfile
+pnpm run build
 cd packages/core    && npm publish --access public --otp <code> && cd -   # 0.0.2
 cd packages/cli     && npm publish --access public --otp <code> && cd -   # 0.0.1
 cd packages/actions && npm publish --access public --otp <code> && cd -   # 0.0.1
 ```
 
-`devEngines.packageManager` names Bun, and npm treats a mismatch as fatal unless
+`devEngines.packageManager` names pnpm, and npm treats a mismatch as fatal unless
 `onFail` says otherwise. The root `package.json` therefore sets `"onFail": "warn"`:
 without it every npm command inside this repo dies with `EBADDEVENGINES`, including
 the publishes above and the ones `release.yml` runs. The warning npm prints is
-expected, and Bun is still the declared package manager for installs.
+expected, and pnpm is still the declared package manager for installs.
 
 Pass `--otp` on the command line: Changesets strips `NPM_CONFIG_OTP` from the environment,
 and these publishes are local, so there is no OIDC and therefore no provenance on this

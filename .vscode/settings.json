@@ -21,6 +21,6 @@
     "**/dist": true,
     "**/.output": true,
     "**/node_modules": true,
-    "bun.lock": true
+    "pnpm-lock.yaml": true
   }
 }

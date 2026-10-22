@@ -33,7 +33,7 @@ page with `<include>`, never pasted. `typecheck` covers the directory, and
 recorded corpus and a scripted client, writing what each produces to
 `examples/support-inbox/output/`. Those files are what the guide shows as printed, so a
 page cannot claim an output the code no longer produces. After a deliberate change, refresh
-them with `bunx vitest run examples -u` and read the diff.
+them with `pnpm exec vitest run examples -u` and read the diff.
 
 ## Three deliberate dependency lines
 
@@ -41,7 +41,7 @@ them with `bunx vitest run examples -u` and read the diff.
 typedoc imports the TypeScript JavaScript compiler API, which the 7.0.2 package does not
 ship (ADR 0004, summarised in the [root README](../../README.md)). The pin is a
 devDependency and nothing published comes out of it, but the nearest `tsc` to this package
-is that one, so `bun run typecheck` here runs the 6.0 compiler with 6.0 semantics. The rest
+is that one, so `pnpm run typecheck` here runs the 6.0 compiler with 6.0 semantics. The rest
 of the repo is checked by `tsgo` at 7.0. In other words: "no `typescript` other than 7.0.2
 appears in any `package.json`" holds everywhere except here, and this app is the one
 place TypeScript 7 semantics are not enforced. `./node_modules/.bin/tsc --version` prints
@@ -113,7 +113,7 @@ assets-only Worker only ever contains the no-op Worker bundle. It refuses to dep
 shaped reached the output. Run it yourself after a build:
 
 ```sh
-bun run build
+pnpm run build
 ./scripts/assert-no-secret-assets.sh
 ```
 
@@ -130,9 +130,9 @@ silently: the prompts never appear and it overwrites whatever is there. Once the
 exists and is attached to `siftline-docs`, later deploys are a no-op for DNS and CI is safe.
 
 ```sh
-bun run build
+pnpm run build
 ./scripts/assert-no-secret-assets.sh
-bun run deploy   # answer the prompts
+pnpm run deploy   # answer the prompts
 ```
 
 ## Escape hatch: running this app with SSR

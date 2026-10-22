@@ -6,7 +6,7 @@ written by a human, consumed by [Changesets](https://github.com/changesets/chang
 ## Adding one
 
 ```sh
-bun changeset
+pnpm changeset
 ```
 
 Pick the published packages the change affects (`@siftline/core`, `@siftline/cli`,
@@ -16,12 +16,12 @@ change.
 
 ## The escape hatch
 
-CI runs `bun changeset status --since=origin/main` and fails a pull request that touches a
+CI runs `pnpm changeset status --since=origin/main` and fails a pull request that touches a
 published package without a changeset. When a change needs no release (a test,
 a comment, an internal refactor), record that deliberately:
 
 ```sh
-bun changeset --empty
+pnpm changeset --empty
 ```
 
 That writes a changeset with no version bumps, which satisfies the gate and leaves a trace

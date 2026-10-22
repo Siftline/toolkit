@@ -1,0 +1,14 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Was bunfig.toml's `install.exact`: everything but published runtime ranges is pinned exactly.
+saveExact: true
+
+# Bun linked `@siftline/core: ^0.2.0` to the workspace copy; pnpm does so only with this on.
+linkWorkspacePackages: true
+
+# The install scripts bun ran through its default trusted list (`bun pm untrusted` reported none).
+allowBuilds:
+  esbuild: true
+  workerd: true

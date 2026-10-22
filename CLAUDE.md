@@ -1,6 +1,6 @@
 # Siftline toolkit
 
-Bun installs, Node runs, Turborepo orchestrates. Start here, then read `README.md`.
+pnpm installs, Node runs, Turborepo orchestrates. Start here, then read `README.md`.
 
 <!-- intent-skills:start -->
 
@@ -8,8 +8,8 @@ Bun installs, Node runs, Turborepo orchestrates. Start here, then read `README.m
 
 Before editing files for a substantial task:
 
-- Run `bunx @tanstack/intent@latest list` from the workspace root to see available local skills.
-- If a listed skill matches the task, run `bunx @tanstack/intent@latest load <package>#<skill>` before changing files.
+- Run `pnpm dlx @tanstack/intent@latest list` from the workspace root to see available local skills.
+- If a listed skill matches the task, run `pnpm dlx @tanstack/intent@latest load <package>#<skill>` before changing files.
 - Use the loaded `SKILL.md` guidance while making the change.
 - Monorepos: when working across packages, run the skill check from the workspace root and prefer the local skill for the package being changed.
 - Multiple matches: prefer the most specific local skill for the package or concern you are changing; load additional skills only when the task spans multiple packages or concerns.
@@ -18,9 +18,9 @@ Before editing files for a substantial task:
 
 ## Before you hand work back
 
-- `bun run check` at the root MUST pass. It is exactly what CI runs.
-- Every published package you touched MUST have a changeset: `bun changeset`.
-  Deliberately release-less: `bun changeset --empty`.
+- `pnpm run check` at the root MUST pass. It is exactly what CI runs.
+- Every published package you touched MUST have a changeset: `pnpm changeset`.
+  Deliberately release-less: `pnpm changeset --empty`.
 
 ## Rules
 
@@ -33,7 +33,7 @@ Before editing files for a substantial task:
 - Lint with oxlint, format with oxfmt. ESLint and Prettier stay out.
 - TypeScript 7 everywhere except `apps/docs`, pinned to 6.0.x for typedoc. Its
   `typecheck` runs on 6 too.
-- Run scripts on Node with `bun run`. `bun --bun` breaks Vitest, Vite and wrangler.
+- Run scripts with `pnpm run`.
 - Conventional Commits, signed off: `git commit -s`.
 
 ## Agent skills
