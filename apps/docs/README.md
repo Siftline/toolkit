@@ -63,7 +63,7 @@ Fumadocs utilities (`text-fd-muted-foreground`, `bg-fd-primary`, …) unknown to
 so they were parked at the front of the class string instead of taking their place in
 Tailwind's order. Importing `@siftline/ui`'s tokens here instead was tried first and
 rejected: its `@theme` block redefines `--font-sans` and `--font-mono`, which visibly
-changes the site's typography. `.oxfmtrc.json` therefore points at `app.css`, and
+changes the site's typography. The `fmt` block in the root `vite.config.ts` therefore points at `app.css`, and
 `packages/ui` stays unused until something here needs it.
 
 ## How the static build works

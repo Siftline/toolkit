@@ -8,7 +8,7 @@ copied file against the upstream tree.
 
 ## Installed plugins
 
-- `anti-slop`: `tools/oxlint/anti-slop/index.ts`. Registered in the root `.oxlintrc.json`. Every
+- `anti-slop`: `tools/oxlint/anti-slop/index.ts`. Registered in the root `vite.config.ts` `lint` block. Every
   generic rule runs at `error`, alongside the native `oxc/no-accumulating-spread`.
 - `anti-slop-effect`: `tools/oxlint/anti-slop/effect/index.ts`. Copied but not registered. No
   package declares `effect` directly.
@@ -24,5 +24,5 @@ together.
 
 None to the vendored files. Repository wiring:
 
-- `.oxlintrc.json` and `.oxfmtrc.json` ignore this directory and agent tooling directories.
+- The `lint` and `fmt` blocks in `vite.config.ts` ignore this directory and agent tooling directories.
 - `turbo.json` adds this directory to the `lint` task inputs, so rule changes invalidate the cache.
