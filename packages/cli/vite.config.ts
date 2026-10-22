@@ -8,6 +8,8 @@ export default defineConfig({
     // https://viteplus.dev/guide/vitest-v5#remove-unneeded-compatibility-settings
     // https://vitest.dev/guide/migration/#clearmocks-is-enabled-by-default
     clearMocks: false,
+    globals: false,
+    include: ["src/**/*.test.ts"],
   },
   // tsdown's shebang plugin chmods any entry chunk whose first line is `#!`.
   pack: defineLibraryConfig(["src/index.ts", "src/cli.ts"]),

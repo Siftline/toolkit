@@ -12,40 +12,47 @@ export default defineConfig({
     // https://viteplus.dev/guide/vitest-v5#remove-unneeded-compatibility-settings
     // https://vitest.dev/guide/migration/#clearmocks-is-enabled-by-default
     clearMocks: false,
+    globals: false,
+    include: ["src/**/*.test.ts", "examples/**/*.test.ts"],
   },
   server: {
     port: 3000,
   },
-  plugins: lazyPlugins(() => [
-    fumadocsMdx(),
-    tailwindcss(),
-    tanstackStart({
-      spa: {
-        enabled: true,
-        prerender: {
-          enabled: true,
-          crawlLinks: true,
-        },
-      },
+  // The tests read the built `.output` and run the examples on Node; none of these plugins
+  // belongs in that run, and the old standalone Vitest config never loaded them.
+  plugins:
+    process.env.VITEST === undefined
+      ? (lazyPlugins(() => [
+          fumadocsMdx(),
+          tailwindcss(),
+          tanstackStart({
+            spa: {
+              enabled: true,
+              prerender: {
+                enabled: true,
+                crawlLinks: true,
+              },
+            },
 
-      pages: [
-        {
-          path: "/docs",
-        },
-        {
-          path: "/api/search",
-        },
-        {
-          path: "llms-full.txt",
-        },
-        {
-          path: "llms.txt",
-        },
-      ],
-    }),
-    react(),
-    nitro(),
-  ]),
+            pages: [
+              {
+                path: "/docs",
+              },
+              {
+                path: "/api/search",
+              },
+              {
+                path: "llms-full.txt",
+              },
+              {
+                path: "llms.txt",
+              },
+            ],
+          }),
+          react(),
+          nitro(),
+        ]) ?? [])
+      : [],
   resolve: {
     tsconfigPaths: true,
     alias: {

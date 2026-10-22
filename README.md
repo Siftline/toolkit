@@ -14,7 +14,7 @@ elsewhere and is not open source.
 
 `@siftline/ui` and `@siftline/config` are private: they are consumed just-in-time from
 source inside this repo and are never published. `config` holds what every package
-shares: the tsconfig bases, the Vitest base and the tsdown base.
+shares: the tsconfig bases and the tsdown base `vp pack` builds with.
 
 All three are on npm with provenance. 0.1.0 is the first release with the Engine in it: the
 Recipe, Decision and Fixture formats, the Judge and its in-flight gate, Rules and routing, the

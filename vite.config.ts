@@ -4,12 +4,10 @@ export default defineConfig({
   staged: {
     "*": "vp check --fix",
   },
+  // Each project keeps its own test block. The packages' `test` scripts are what `check`
+  // runs, after their builds; this only makes a bare `vp test` at the root use them.
   test: {
-    // Vitest v4 compatibility: preserve mock call history.
-    // Remove after tests no longer rely on calls from setup or earlier tests.
-    // https://viteplus.dev/guide/vitest-v5#remove-unneeded-compatibility-settings
-    // https://vitest.dev/guide/migration/#clearmocks-is-enabled-by-default
-    clearMocks: false,
+    projects: ["apps/docs", "packages/actions", "packages/cli", "packages/core"],
   },
   fmt: {
     sortImports: true,

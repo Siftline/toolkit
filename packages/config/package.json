@@ -2,12 +2,11 @@
   "name": "@siftline/config",
   "version": "0.0.0",
   "private": true,
-  "description": "Shared build config for this repo: tsconfig bases, the Vitest base and the tsdown base. Consumed just-in-time, never published.",
+  "description": "Shared build config for this repo: tsconfig bases and the tsdown base for vp pack. Consumed just-in-time, never published.",
   "files": [
     "base.json",
     "library.json",
     "app.json",
-    "vitest.ts",
     "tsdown.ts"
   ],
   "type": "module",
@@ -15,7 +14,6 @@
     "./base.json": "./base.json",
     "./library.json": "./library.json",
     "./app.json": "./app.json",
-    "./vitest": "./vitest.ts",
     "./tsdown": "./tsdown.ts"
   },
   "scripts": {
