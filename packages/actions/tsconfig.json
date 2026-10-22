@@ -7,5 +7,5 @@
       "@siftline/actions": ["./src/index.ts"]
     }
   },
-  "include": ["src/**/*.ts", "tsdown.config.ts", "vitest.config.ts"]
+  "include": ["src/**/*.ts", "vite.config.ts"]
 }

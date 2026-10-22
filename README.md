@@ -46,14 +46,14 @@ pnpm run check   # turbo run build lint typecheck test format:check
 The three published packages and `apps/docs` expose the same names, so you never have to
 look one up:
 
-| Script      | What it does                                                   |
-| ----------- | -------------------------------------------------------------- |
-| `build`     | Bundle with tsdown; `apps/docs` prerenders to `.output`.       |
-| `dev`       | Watch mode.                                                    |
-| `lint`      | `oxlint --type-aware --deny-warnings`.                         |
-| `lint:fix`  | The same, with `--fix`.                                        |
-| `typecheck` | `tsc --noEmit` — TypeScript 7 (Go), except in `apps/docs`.     |
-| `test`      | Vitest, colocated `src/**/*.test.ts`, no globals, no coverage. |
+| Script      | What it does                                                                   |
+| ----------- | ------------------------------------------------------------------------------ |
+| `build`     | Bundle with `vp pack` (tsdown); `apps/docs` prerenders to `.output`.           |
+| `dev`       | Watch mode.                                                                    |
+| `lint`      | `vp lint --type-aware --deny-warnings` (oxlint).                               |
+| `lint:fix`  | The same, with `--fix`.                                                        |
+| `typecheck` | `tsc --noEmit` — TypeScript 7 (Go), except in `apps/docs`.                     |
+| `test`      | `vp test run` (Vitest), colocated `src/**/*.test.ts`, no globals, no coverage. |
 
 `@siftline/ui` and `@siftline/config` do not have all of them, and should not. They are
 private and consumed just-in-time from source: nothing bundles them, nothing watches them
@@ -64,15 +64,16 @@ carry `lint`, `lint:fix` and `typecheck`, which is all there is to run. `apps/do
 Formatting is root-only, because there is one config for the repo:
 
 ```sh
-pnpm run format         # oxfmt, writes
-pnpm run format:check   # oxfmt --check, what `check` runs
+pnpm run format         # vp fmt (oxfmt), writes
+pnpm run format:check   # vp fmt --check, what `check` runs
 ```
 
 `packages/core` also has `test:live`, which talks to the real TypeSafe API. It skips
 itself when `TYPESAFE_API_KEY` is absent, Turborepo never runs it, and in CI it runs only
 through the manually dispatched `live.yml`.
 
-oxlint and oxfmt are the only lint and format tools here. ESLint and Prettier do not
+oxlint and oxfmt, run through Vite+ (`vp lint`, `vp fmt`) and configured in the root
+`vite.config.ts`, are the only lint and format tools here. ESLint and Prettier do not
 enter this repo. Install the [oxc VS Code
 extension](https://marketplace.visualstudio.com/items?itemName=oxc.oxc-vscode) and
 `.vscode/settings.json` gives you fix-and-format on save, so formatting never becomes a

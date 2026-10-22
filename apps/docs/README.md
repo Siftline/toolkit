@@ -11,11 +11,11 @@ The Siftline documentation site: [Fumadocs](https://fumadocs.dev) on
 | ----------- | ------------------------------------------------------------------- |
 | `api`       | typedoc, regenerating `content/docs/api` from core and actions.     |
 | `dev`       | Vite dev server on port 3000.                                       |
-| `build`     | `vite build`, then copies `_shell.html` to `index.html`.            |
+| `build`     | `vp build`, then copies `_shell.html` to `index.html`.              |
 | `preview`   | `wrangler dev` over `.output/public`, the way Cloudflare serves it. |
-| `test`      | Vitest assertions over the built `.output/public`.                  |
+| `test`      | `vp test run`: assertions over the built `.output/public`.          |
 | `typecheck` | `tsc --noEmit` — on TypeScript **6.0.3** here, see below.           |
-| `lint`      | `oxlint --type-aware --deny-warnings`.                              |
+| `lint`      | `vp lint --type-aware --deny-warnings`.                             |
 | `lint:fix`  | The same, with `--fix`.                                             |
 | `deploy`    | `wrangler deploy`.                                                  |
 
@@ -33,7 +33,7 @@ page with `<include>`, never pasted. `typecheck` covers the directory, and
 recorded corpus and a scripted client, writing what each produces to
 `examples/support-inbox/output/`. Those files are what the guide shows as printed, so a
 page cannot claim an output the code no longer produces. After a deliberate change, refresh
-them with `pnpm exec vitest run examples -u` and read the diff.
+them with `vp test run examples -u` from this directory and read the diff.
 
 ## Three deliberate dependency lines
 
@@ -63,8 +63,8 @@ Fumadocs utilities (`text-fd-muted-foreground`, `bg-fd-primary`, …) unknown to
 so they were parked at the front of the class string instead of taking their place in
 Tailwind's order. Importing `@siftline/ui`'s tokens here instead was tried first and
 rejected: its `@theme` block redefines `--font-sans` and `--font-mono`, which visibly
-changes the site's typography. The `fmt` block in the root `vite.config.ts` therefore points at `app.css`, and
-`packages/ui` stays unused until something here needs it.
+changes the site's typography. The `fmt` block in the root `vite.config.ts` therefore
+points at `app.css`, and `packages/ui` stays unused until something here needs it.
 
 ## How the static build works
 

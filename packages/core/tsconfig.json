@@ -8,5 +8,5 @@
       "@siftline/core/testing": ["./src/testing.ts"]
     }
   },
-  "include": ["src/**/*.ts", "tsdown.config.ts", "vitest.config.ts", "vitest.live.config.ts"]
+  "include": ["src/**/*.ts", "vite.config.ts", "vitest.live.config.ts"]
 }

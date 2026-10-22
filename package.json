@@ -11,7 +11,7 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "typecheck": "turbo run typecheck",
-    "version-packages": "changeset version && pnpm install --lockfile-only",
+    "version-packages": "changeset version && vp fmt && pnpm install --lockfile-only",
     "prepare": "vp config"
   },
   "devDependencies": {

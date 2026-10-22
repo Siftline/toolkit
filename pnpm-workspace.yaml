@@ -2,16 +2,21 @@ packages:
   - apps/*
   - packages/*
 
-# Was bunfig.toml's `install.exact`: everything but published runtime ranges is pinned exactly.
+# Everything but published runtime ranges is pinned exactly (see CLAUDE.md).
 saveExact: true
 
-# Bun linked `@siftline/core: ^0.2.0` to the workspace copy; pnpm does so only with this on.
+# Links the caret ranges on `@siftline/core` to the workspace copy, not the registry.
 linkWorkspacePackages: true
 
-# The install scripts bun ran through its default trusted list (`bun pm untrusted` reported none).
+# The only dependencies allowed to run install scripts.
 allowBuilds:
   esbuild: true
   workerd: true
+
+# vp picks Node from .node-version and pnpm from packageManager; pnpm must not switch them.
+pmOnFail: ignore
+runtimeOnFail: ignore
+
 catalog:
   vite: npm:@voidzero-dev/vite-plus-core@1.3.0
   vite-plus: 1.3.0

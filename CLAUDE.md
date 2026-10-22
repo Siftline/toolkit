@@ -30,7 +30,8 @@ Before editing files for a substantial task:
   ship a literal `workspace:` protocol. Private packages stay `workspace:*`.
 - `@siftline/ui` and `@siftline/config` are consumed just-in-time from source and carry
   only `lint`, `lint:fix` and `typecheck`. Leave the script table uneven.
-- Lint with oxlint, format with oxfmt. ESLint and Prettier stay out.
+- Lint with oxlint, format with oxfmt, both through Vite+ (`vp lint`, `vp fmt`) and the
+  root `vite.config.ts`. ESLint and Prettier stay out.
 - TypeScript 7 everywhere except `apps/docs`, pinned to 6.0.x for typedoc. Its
   `typecheck` runs on 6 too.
 - Run scripts with `pnpm run`.

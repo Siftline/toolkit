@@ -1,6 +1,5 @@
+import { defineLibraryConfig } from "@siftline/config/tsdown";
 import { defineConfig } from "vite-plus";
-
-import tsdownConfig from "./tsdown.config.js";
 
 export default defineConfig({
   test: {
@@ -10,5 +9,5 @@ export default defineConfig({
     // https://vitest.dev/guide/migration/#clearmocks-is-enabled-by-default
     clearMocks: false,
   },
-  pack: tsdownConfig,
+  pack: defineLibraryConfig(["src/index.ts", "src/testing.ts"]),
 });

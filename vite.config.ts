@@ -44,6 +44,10 @@ export default defineConfig({
       ".roo/**",
       ".windsurf/**",
       "tools/oxlint/anti-slop/**",
+      // vp config rewrites its Vite+ section on every install, unformatted. AGENTS.md is a
+      // symlink to CLAUDE.md, so both names are listed.
+      "AGENTS.md",
+      "CLAUDE.md",
     ],
   },
   lint: {

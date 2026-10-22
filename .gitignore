@@ -29,4 +29,6 @@ apps/docs/content/docs/api
 
 # Agent worktrees
 .claude/
+
+# Vitest attachments and cache
 .vitest/
