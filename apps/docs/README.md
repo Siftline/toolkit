@@ -19,9 +19,11 @@ The Siftline documentation site: [Fumadocs](https://fumadocs.dev) on
 | `lint:fix`  | The same, with `--fix`.                                             |
 | `deploy`    | `wrangler deploy`.                                                  |
 
-`api` is a Turborepo task rather than something you usually run by hand: `build` depends on
-it, and it declares the `core` and `actions` sources as inputs, so changed package source
-regenerates the API pages before the site is built. The three entry points are the re-export
+`api`, `build`, `typecheck`, `lint` and `test` are `vp run` tasks in `vite.config.ts`;
+`dev`, `lint:fix`, `preview` and `deploy` are `package.json` scripts. `api` is rarely run by
+hand: `build` depends on it, and `vp run` tracks the `core` and `actions` sources it reads,
+so changed package source regenerates the API pages before the site is built. `build` is
+not cached, so `test` runs against a fresh `.output` every time. The three entry points are the re-export
 shims in `api-entries/`, one per published entry, and `typedoc-frontmatter.mjs` turns typedoc's
 relative `.mdx` links into site URLs and writes the `meta.json` files that title the sidebar.
 
@@ -41,7 +43,7 @@ them with `vp test run examples -u` from this directory and read the diff.
 typedoc imports the TypeScript JavaScript compiler API, which the 7.0.2 package does not
 ship (ADR 0004, summarised in the [root README](../../README.md)). The pin is a
 devDependency and nothing published comes out of it, but the nearest `tsc` to this package
-is that one, so `pnpm run typecheck` here runs the 6.0 compiler with 6.0 semantics. The rest
+is that one, so `vp run typecheck` here runs the 6.0 compiler with 6.0 semantics. The rest
 of the repo is checked by `tsgo` at 7.0. In other words: "no `typescript` other than 7.0.2
 appears in any `package.json`" holds everywhere except here, and this app is the one
 place TypeScript 7 semantics are not enforced. `./node_modules/.bin/tsc --version` prints
@@ -113,7 +115,7 @@ assets-only Worker only ever contains the no-op Worker bundle. It refuses to dep
 shaped reached the output. Run it yourself after a build:
 
 ```sh
-pnpm run build
+vp run build
 ./scripts/assert-no-secret-assets.sh
 ```
 
@@ -130,7 +132,7 @@ silently: the prompts never appear and it overwrites whatever is there. Once the
 exists and is attached to `siftline-docs`, later deploys are a no-op for DNS and CI is safe.
 
 ```sh
-pnpm run build
+vp run build
 ./scripts/assert-no-secret-assets.sh
 pnpm run deploy   # answer the prompts
 ```

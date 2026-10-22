@@ -23,13 +23,15 @@ the package pages and the API reference live at [docs.siftline.dev](https://docs
 
 ## Getting started
 
+Install the global [Vite+](https://viteplus.dev) CLI, `vp`, then:
+
 ```sh
-pnpm install
-pnpm run check
+vp install
+vp run check
 ```
 
-pnpm 12.14.0 installs; Node 24 runs everything. `.node-version` pins the runtime
-and `packageManager` pins the installer, so CI and your machine agree.
+`vp` brings the Node in `.node-version` (24) and the pnpm in `packageManager` (12.14.0),
+so CI and your machine agree. pnpm installs; Node runs everything.
 
 Only two dependencies may run install scripts: `esbuild` and `workerd`, listed under
 `allowBuilds` in `pnpm-workspace.yaml`. pnpm fails the install on any other dependency
@@ -37,16 +39,20 @@ that wants one; if a future dependency needs it, add it there and say so here.
 
 ## Scripts
 
-`pnpm run check` is the whole gate, and it is exactly what CI runs:
+`vp run check` is the whole gate, and it is exactly what CI runs:
 
 ```sh
-pnpm run check   # turbo run build lint typecheck test format:check
+vp run check   # build, lint, typecheck and test in every package, then format:check
 ```
 
+Run one of the names below with `vp run <name>` at the root for every package, or inside a
+package for that one. They are `vp run` tasks, defined in each package's `vite.config.ts`
+and cached: each waits for the builds of the workspace packages it depends on, and `test`
+also for its own package's build, so a rerun on an unchanged tree replays from the cache.
 The three published packages and `apps/docs` expose the same names, so you never have to
 look one up:
 
-| Script      | What it does                                                                   |
+| Name        | What it does                                                                   |
 | ----------- | ------------------------------------------------------------------------------ |
 | `build`     | Bundle with `vp pack` (tsdown); `apps/docs` prerenders to `.output`.           |
 | `dev`       | Watch mode.                                                                    |
@@ -57,19 +63,23 @@ look one up:
 
 `@siftline/ui` and `@siftline/config` do not have all of them, and should not. They are
 private and consumed just-in-time from source: nothing bundles them, nothing watches them
-and neither has a test, so `build`, `dev` and `test` would be scripts that do nothing. Both
+and neither has a test, so `build`, `dev` and `test` would be tasks that do nothing. Both
 carry `lint`, `lint:fix` and `typecheck`, which is all there is to run. `apps/docs` adds
 `api` (typedoc), `preview` and `deploy` on top of the shared six.
+
+`vp run dev` starts every package's `dev` at once. Stop it with Ctrl-C (or by process
+group): `vp run` forwards no signal from its own pid, so killing that alone can orphan the
+watchers.
 
 Formatting is root-only, because there is one config for the repo:
 
 ```sh
-pnpm run format         # vp fmt (oxfmt), writes
-pnpm run format:check   # vp fmt --check, what `check` runs
+vp run format         # vp fmt (oxfmt), writes
+vp run format:check   # vp fmt --check, what `check` runs
 ```
 
 `packages/core` also has `test:live`, which talks to the real TypeSafe API. It skips
-itself when `TYPESAFE_API_KEY` is absent, Turborepo never runs it, and in CI it runs only
+itself when `TYPESAFE_API_KEY` is absent, `check` never runs it, and in CI it runs only
 through the manually dispatched `live.yml`.
 
 oxlint and oxfmt, run through Vite+ (`vp lint`, `vp fmt`) and configured in the root
@@ -119,7 +129,7 @@ every package except `apps/docs`. If you need to know which compiler a package i
 about to run, `cd` into it and ask: `./node_modules/.bin/tsc --version`.
 
 `build` and `typecheck` are siblings, never a chain: declarations are emitted with
-`--noCheck`, so a green `build` is not a typecheck. `pnpm run check` and CI cover both.
+`--noCheck`, so a green `build` is not a typecheck. `vp run check` and CI cover both.
 
 ## Changesets
 
@@ -168,8 +178,8 @@ logged in to npm as a maintainer with 2FA:
 
 ```sh
 npm view @siftline/core            # confirm the 24h post-deletion block has lapsed
-pnpm install --frozen-lockfile
-pnpm run build
+vp install --frozen-lockfile
+vp run build
 cd packages/core    && npm publish --access public --otp <code> && cd -   # 0.0.2
 cd packages/cli     && npm publish --access public --otp <code> && cd -   # 0.0.1
 cd packages/actions && npm publish --access public --otp <code> && cd -   # 0.0.1

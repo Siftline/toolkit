@@ -1,6 +1,12 @@
 import { defineLibraryConfig } from "@siftline/config/tsdown";
 import { defineConfig } from "vite-plus";
 
+// Every workspace package this one depends on, built first.
+const dependencyBuilds = { task: "build", from: ["dependencies", "devDependencies"] } satisfies {
+  task: string;
+  from: ("dependencies" | "devDependencies")[];
+};
+
 // `mode` is "test" under Vitest unless `--mode` says otherwise.
 export default defineConfig(({ mode }) => ({
   test: {
@@ -17,4 +23,25 @@ export default defineConfig(({ mode }) => ({
       : { include: ["src/**/*.test.ts"], exclude: ["src/**/*.live.test.ts"] }),
   },
   pack: defineLibraryConfig(["src/index.ts", "src/testing.ts"]),
+  run: {
+    tasks: {
+      build: {
+        command: "vp pack",
+        dependsOn: [dependencyBuilds],
+      },
+      lint: {
+        command: "vp lint --type-aware --deny-warnings",
+        dependsOn: [dependencyBuilds],
+      },
+      typecheck: {
+        command: "tsc --noEmit",
+        dependsOn: [dependencyBuilds],
+      },
+      // The tests import this package by name, so they run against its own build.
+      test: {
+        command: "vp test run",
+        dependsOn: [dependencyBuilds, "build"],
+      },
+    },
+  },
 }));

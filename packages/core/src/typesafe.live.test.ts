@@ -6,7 +6,7 @@ import { describe, expect, it } from "vite-plus/test";
 
 const apiKey = process.env["TYPESAFE_API_KEY"];
 
-// Real Jev calls, billed. Only `pnpm run test:live` runs this; Turborepo never does.
+// Real Jev calls, billed. Only `vp run test:live` runs this; `check` never does.
 describe.skipIf(!apiKey)("live TypeSafe access", () => {
   it("has an API key to call with", () => {
     expect(apiKey).toBeTruthy();

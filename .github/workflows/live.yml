@@ -24,7 +24,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Run live tests
-        run: pnpm run test:live
+        run: vp run test:live
         working-directory: packages/core
         env:
           TYPESAFE_API_KEY: ${{ secrets.TYPESAFE_API_KEY }}

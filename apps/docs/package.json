@@ -6,15 +6,10 @@
   "type": "module",
   "sideEffects": false,
   "scripts": {
-    "api": "typedoc",
-    "build": "vp build && cp .output/public/_shell.html .output/public/index.html",
     "deploy": "wrangler deploy",
     "dev": "vp dev",
-    "lint": "vp lint --type-aware --deny-warnings",
     "lint:fix": "vp lint --type-aware --deny-warnings --fix",
-    "preview": "wrangler dev",
-    "test": "vp test run",
-    "typecheck": "tsc --noEmit"
+    "preview": "wrangler dev"
   },
   "dependencies": {
     "@tanstack/react-router": "1.170.38",

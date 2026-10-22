@@ -4,6 +4,12 @@ export default defineConfig({
   staged: {
     "*": "vp check --fix",
   },
+  run: {
+    tasks: {
+      // Root-only: one fmt config for the whole repo. Cached, unlike `format`, which writes.
+      "format:check": "vp fmt --check",
+    },
+  },
   // Each project keeps its own test block. The packages' `test` scripts are what `check`
   // runs, after their builds; this only makes a bare `vp test` at the root use them.
   test: {

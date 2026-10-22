@@ -1,6 +1,6 @@
 # Siftline toolkit
 
-pnpm installs, Node runs, Turborepo orchestrates. Start here, then read `README.md`.
+pnpm installs, Node runs, `vp run` orchestrates. Start here, then read `README.md`.
 
 <!-- intent-skills:start -->
 
@@ -18,7 +18,7 @@ Before editing files for a substantial task:
 
 ## Before you hand work back
 
-- `pnpm run check` at the root MUST pass. It is exactly what CI runs.
+- `vp run check` at the root MUST pass. It is exactly what CI runs.
 - Every published package you touched MUST have a changeset: `pnpm changeset`.
   Deliberately release-less: `pnpm changeset --empty`.
 
@@ -34,7 +34,8 @@ Before editing files for a substantial task:
   root `vite.config.ts`. ESLint and Prettier stay out.
 - TypeScript 7 everywhere except `apps/docs`, pinned to 6.0.x for typedoc. Its
   `typecheck` runs on 6 too.
-- Run scripts with `pnpm run`.
+- Run scripts and tasks with `vp run`; the build, lint, typecheck and test tasks live in
+  each package's `vite.config.ts`.
 - Conventional Commits, signed off: `git commit -s`.
 
 ## Agent skills

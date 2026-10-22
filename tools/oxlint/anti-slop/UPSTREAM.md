@@ -17,12 +17,13 @@ copied file against the upstream tree.
 
 ## Dependencies
 
-`@oxlint/plugins` is pinned to the root `oxlint` version, currently `1.83.0`. Upgrade the two
-together.
+`@oxlint/plugins` is pinned to the `oxlint` version `vite-plus` lints with, currently `1.88.0`.
+Upgrade the two together. `vp migrate` rewrites these imports to `vite-plus/lint/plugins`;
+revert that, so the files stay byte-identical to upstream.
 
 ## Local deviations
 
 None to the vendored files. Repository wiring:
 
 - The `lint` and `fmt` blocks in `vite.config.ts` ignore this directory and agent tooling directories.
-- `turbo.json` adds this directory to the `lint` task inputs, so rule changes invalidate the cache.
+- `vp run` tracks the files each `lint` task reads, so rule changes here invalidate its cache.

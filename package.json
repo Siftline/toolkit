@@ -3,14 +3,13 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "turbo run build",
-    "check": "turbo run build lint typecheck test format:check",
-    "dev": "turbo run dev",
+    "build": "vp run -r build",
+    "check": "vp run -r build && vp run -r lint && vp run -r typecheck && vp run -r test && vp run format:check",
+    "dev": "vp run -r --parallel dev",
     "format": "vp fmt",
-    "format:check": "vp fmt --check",
-    "lint": "turbo run lint",
-    "test": "turbo run test",
-    "typecheck": "turbo run typecheck",
+    "lint": "vp run -r lint",
+    "test": "vp run -r test",
+    "typecheck": "vp run -r typecheck",
     "version-packages": "changeset version && vp fmt && pnpm install --lockfile-only",
     "prepare": "vp config"
   },
@@ -21,7 +20,6 @@
     "@oxlint/plugins": "1.88.0",
     "@types/node": "24.13.5",
     "publint": "0.3.24",
-    "turbo": "2.10.13",
     "typescript": "7.0.2",
     "vite-plus": "catalog:"
   },

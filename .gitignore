@@ -1,10 +1,9 @@
 # Dependencies
 node_modules
 
-# Build output — Turborepo hashes source, never artifacts
+# Build output
 dist
 .output
-.turbo
 .tanstack
 .source
 .wrangler

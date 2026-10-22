@@ -17,9 +17,7 @@
     "./tsdown": "./tsdown.ts"
   },
   "scripts": {
-    "lint": "vp lint --type-aware --deny-warnings",
-    "lint:fix": "vp lint --type-aware --deny-warnings --fix",
-    "typecheck": "tsc --noEmit"
+    "lint:fix": "vp lint --type-aware --deny-warnings --fix"
   },
   "devDependencies": {
     "typescript": "7.0.2",

@@ -34,12 +34,8 @@
     "access": "public"
   },
   "scripts": {
-    "build": "vp pack",
     "dev": "vp pack --watch",
-    "lint": "vp lint --type-aware --deny-warnings",
-    "lint:fix": "vp lint --type-aware --deny-warnings --fix",
-    "test": "vp test run",
-    "typecheck": "tsc --noEmit"
+    "lint:fix": "vp lint --type-aware --deny-warnings --fix"
   },
   "dependencies": {
     "@siftline/core": "^0.2.0",

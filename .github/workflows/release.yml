@@ -92,7 +92,7 @@ jobs:
 
       # `files: ["dist"]`, so npm pack needs the build to have run.
       - name: Build
-        run: pnpm run build
+        run: vp run build
 
       - name: Pack
         id: pack

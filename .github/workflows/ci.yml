@@ -27,7 +27,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Check
-        run: pnpm run check
+        run: vp run check
 
       # Skipped on the version PR, and only there: that branch consumes the changesets
       # as it bumps, so it can never pass a gate it has to merge through.
@@ -53,7 +53,7 @@ jobs:
         uses: ./.github/actions/setup
 
       - name: Build the docs site
-        run: pnpm turbo run build --filter=@siftline/docs
+        run: vp run @siftline/docs#build
 
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v4

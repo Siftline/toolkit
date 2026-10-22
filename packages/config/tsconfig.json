@@ -1,4 +1,4 @@
 {
   "extends": "./library.json",
-  "include": ["tsdown.ts"]
+  "include": ["tsdown.ts", "vite.config.ts"]
 }
